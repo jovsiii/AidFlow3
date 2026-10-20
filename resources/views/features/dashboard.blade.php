@@ -251,7 +251,6 @@
                 </div>
 
                 <div class="border-t border-gray-200 flex-1 flex flex-col max-h-20vh overflow-auto">
-                    
                     <p class="text-gray-900 text-sm sticky top-0 bg-white">Audit Logs</p>
                     <div class="space-y-3 text-xs text-gray-700 flex-1">
                         @forelse($auditLogs as $log)

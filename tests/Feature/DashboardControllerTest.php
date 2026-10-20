@@ -29,9 +29,11 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
                 'BB' => 2,
                 'WC' => 1,
             ])
-        ->and($response->getData()['forecastFfp'])->toBe(134)
+        ->and($response->getData()['forecastFfp'])->toBe(55)
         ->and($response->getData()['forecastFamilyHeads'])->toBe(27)
-        ->and($response->getData()['forecastAnnualFfp'])->toBe(1602)
+        ->and($response->getData()['forecastAnnualFfp'])->toBe(664)
+        ->and($response->getData()['forecastAnnualFfpLean'])->toBe(425)
+        ->and($response->getData()['forecastAnnualFfpHigh'])->toBe(1416)
         ->and($response->getData()['forecastAnnualFamilyHeads'])->toBe(318)
         ->and($response->getData()['forecastYear'])->toBe(2026)
         ->and($response->getData()['auditLogs']->first()['accountName'])->toBe('Test Account');
