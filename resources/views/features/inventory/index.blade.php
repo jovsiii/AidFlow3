@@ -257,7 +257,7 @@
             </div>
         </div>
 
-        <div class="flex flex-col gap-4 w-80">
+        <div class="flex flex-col gap-4 w-80 h-[calc(82vh-120px)] min-h-0">
             <div class="bg-white rounded-lg border-2 border-red-600 p-4">
                 <div class="text-red-800 text-lg font-semibold mb-2">Stock Status Overview</div>
                 <div class="flex gap-3 items-center">
@@ -310,7 +310,7 @@
                 </div>
             </div>
             <div
-                class="bg-white rounded-[18px] border-[3px] border-[#ef4444] p-4 min-h-[calc(40vh-120px)] max-h-[calc(40vh-120px)] overflow-auto">
+                class="bg-white rounded-[18px] border-[3px] border-[#ef4444] p-4 flex-1 min-h-0 overflow-auto">
                 <div class="mb-2 text-[18px] font-bold text-[#8a1c1c] sticky top-0 bg-white py-2">Inventory Ledger</div>
                 <div class="flex flex-col divide-y divide-[#f0b5b5]">
                     @forelse ($inventoryItems as $item)
