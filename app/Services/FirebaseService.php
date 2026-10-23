@@ -123,9 +123,10 @@ class FirebaseService
                 $deduction = min($stock, $remaining);
                 $remaining -= $deduction;
                 $newStock = $stock - $deduction;
-                $updates["inventory/{$id}"] = $newStock > 0
-                    ? array_merge($item, ['stock' => $newStock])
-                    : null;
+                $updates["inventory/{$id}"] = array_merge($item, [
+                    'stock' => $newStock,
+                    'startingStock' => (int) ($item['startingStock'] ?? $stock),
+                ]);
             }
         }
 

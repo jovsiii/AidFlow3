@@ -14,12 +14,13 @@ class Inventory extends Model
         'category',
         'unit',
         'stock',
-        'minimumStock',
+        'startingStock',
         'received',
         'expirationDate',
     ];
 
     protected $casts = [
+        'startingStock' => 'integer',
         'received' => 'datetime',
         'expirationDate' => 'datetime',
     ];

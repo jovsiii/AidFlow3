@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 /** Lists and maintains inventory records stored in Firebase. */
 class InventoryController extends Controller
 {
-    private const DEFAULT_MINIMUM_STOCK = 50;
     private const NEAR_EXPIRY_MONTHS = 3;
     private const MINIMUM_STANDARD_RELIEF_PACKS = 1;
 
@@ -81,8 +80,18 @@ class InventoryController extends Controller
             return $expirationDate && \Carbon\Carbon::parse($expirationDate)->lt($today);
         });
         $lowStockAlerts = $activeInventoryItems
-            ->filter(fn ($item) => (int) ($item['stock'] ?? 0) <= (int) ($item['minimumStock'] ?? self::DEFAULT_MINIMUM_STOCK))
+            ->groupBy(fn ($item) => mb_strtolower(trim($item['name'] ?? 'Unnamed Item')))
+            ->map(function ($items) {
+                $item = $items->first();
+                $item['stock'] = $items->sum(fn ($record) => (int) ($record['stock'] ?? 0));
+                $item['startingStock'] = $items->sum(fn ($record) => (int) ($record['startingStock'] ?? $record['stock'] ?? 0));
+                $item['lowStockThreshold'] = (int) floor($item['startingStock'] * 0.25);
+
+                return $item;
+            })
+            ->filter(fn ($item) => $item['stock'] <= $item['lowStockThreshold'])
             ->values();
+        $lowStockItems = $lowStockAlerts->count();
         $nearExpiryAlerts = $activeInventoryItems
             ->filter(function ($item) use ($today) {
                 $expirationDate = $item['expirationDate'] ?? null;
@@ -103,13 +112,13 @@ class InventoryController extends Controller
                 $item = $items->first();
                 $item['records'] = $items->values();
                 $item['stock'] = $items->sum(fn ($item) => (int) ($item['stock'] ?? 0));
+                $item['startingStock'] = $items->sum(fn ($item) => (int) ($item['startingStock'] ?? $item['stock'] ?? 0));
 
                 return $item;
             })
             ->values();
 
         $totalItems = $inventoryItems->count();
-        $lowStockItems = $inventoryItems->filter(fn($item) => (int) ($item['stock'] ?? 0) <= (int) ($item['minimumStock'] ?? self::DEFAULT_MINIMUM_STOCK))->count();
         $goodItems = $inventoryItems->filter(function ($item) use ($today) {
             $expirationDate = $item['expirationDate'] ?? null;
 
@@ -171,12 +180,11 @@ class InventoryController extends Controller
             'category' => 'required|string',
             'unit' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'minimumStock' => 'nullable|integer|min:0',
             'received' => 'nullable|date',
             'expirationDate' => 'nullable|date',
         ]);
 
-        $validated['minimumStock'] = (int) ($validated['minimumStock'] ?? self::DEFAULT_MINIMUM_STOCK);
+        $validated['startingStock'] = (int) $validated['stock'];
 
         $firebase->createInventory($validated);
 
@@ -191,14 +199,13 @@ class InventoryController extends Controller
             'category' => 'required|string',
             'unit' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'minimumStock' => 'nullable|integer|min:0',
             'received' => 'nullable|date',
             'expirationDate' => 'nullable|date',
         ]);
 
         $existingItems = $firebase->getInventory();
         $existingItem = is_array($existingItems) ? ($existingItems[$id] ?? []) : [];
-        $validated['minimumStock'] = (int) ($validated['minimumStock'] ?? $existingItem['minimumStock'] ?? self::DEFAULT_MINIMUM_STOCK);
+        $validated['startingStock'] = (int) ($existingItem['startingStock'] ?? $existingItem['stock'] ?? $validated['stock']);
 
         $firebase->updateInventory($id, array_merge($existingItem, $validated));
 

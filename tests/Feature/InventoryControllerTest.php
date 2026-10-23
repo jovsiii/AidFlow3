@@ -12,7 +12,7 @@ it('combines inventory list rows with the same name and sums their stock', funct
             'category' => 'Food',
             'unit' => 'Piece',
             'stock' => 1,
-            'minimumStock' => 10,
+            'startingStock' => 30,
             'expirationDate' => now()->subDay()->toDateString(),
             'batch' => 'Batch A',
             'added' => now()->subDays(2)->toDateString(),
@@ -22,7 +22,7 @@ it('combines inventory list rows with the same name and sums their stock', funct
             'category' => 'Food',
             'unit' => 'Piece',
             'stock' => 2,
-            'minimumStock' => 10,
+            'startingStock' => 20,
             'expirationDate' => now()->addMonths(2)->toDateString(),
             'added' => now()->subDays(2)->toDateString(),
         ],
@@ -31,7 +31,7 @@ it('combines inventory list rows with the same name and sums their stock', funct
             'category' => 'Hygiene',
             'unit' => 'Piece',
             'stock' => 4,
-            'minimumStock' => 3,
+            'startingStock' => 20,
             'added' => now()->subDays(2)->toDateString(),
         ],
     ]);
@@ -45,8 +45,10 @@ it('combines inventory list rows with the same name and sums their stock', funct
         ->toBe(2)
         ->and($response->getData()['inventoryListItems']->firstWhere('name', 'Toothbrush')['records'])
         ->toHaveCount(1)
-        ->and($response->getData()['lowStockAlerts']->firstWhere('name', 'Toothbrush')['minimumStock'])
-        ->toBe(10)
+        ->and($response->getData()['lowStockAlerts']->firstWhere('name', 'Toothbrush')['stock'])
+        ->toBe(2)
+        ->and($response->getData()['lowStockAlerts']->firstWhere('name', 'Toothbrush')['lowStockThreshold'])
+        ->toBe(5)
         ->and($response->getData()['nearExpiryAlerts'])
         ->toHaveCount(1)
         ->and($response->getData()['standardReliefPackSupply'])
@@ -54,10 +56,11 @@ it('combines inventory list rows with the same name and sums their stock', funct
         ->and($response->getData()['minimumStandardReliefPacks'])
         ->toBe(1)
         ->and($html)
-        ->toContain('Expiration Date', 'Expired', 'Batch A', 'Inventory Alerts', 'Near expiry (within 3 months)', 'Only 0 standard relief packs');
+        ->toContain('Expiration Date', 'Expired', 'Batch A', 'Inventory Alerts', 'Near expiry (within 3 months)', 'Only 0 standard relief packs')
+        ->not->toContain('Configure Alert');
 });
 
-it('updates an item minimum-stock alert level without dropping its existing batch data', function () {
+it('preserves an item starting-stock baseline when updating inventory details', function () {
     $firebase = Mockery::mock(FirebaseService::class);
     $firebase->shouldReceive('getInventory')->once()->andReturn([
         'item-1' => [
@@ -65,14 +68,14 @@ it('updates an item minimum-stock alert level without dropping its existing batc
             'category' => 'Hygiene',
             'unit' => 'Piece',
             'stock' => 8,
-            'minimumStock' => 10,
+            'startingStock' => 20,
             'batch' => 'Batch A',
             'added' => now()->subDay()->toDateString(),
         ],
     ]);
     $firebase->shouldReceive('updateInventory')
         ->once()
-        ->with('item-1', Mockery::on(fn ($item) => $item['minimumStock'] === 5 && $item['batch'] === 'Batch A'))
+        ->with('item-1', Mockery::on(fn ($item) => $item['startingStock'] === 20 && $item['batch'] === 'Batch A'))
         ->andReturn(null);
 
     $request = Request::create('/features/inventory/item-1', 'PUT', [
@@ -80,7 +83,6 @@ it('updates an item minimum-stock alert level without dropping its existing batc
         'category' => 'Hygiene',
         'unit' => 'Piece',
         'stock' => 8,
-        'minimumStock' => 5,
         'received' => '',
         'expirationDate' => '',
     ]);
@@ -88,4 +90,33 @@ it('updates an item minimum-stock alert level without dropping its existing batc
     $response = (new InventoryController())->update($request, 'item-1', $firebase);
 
     expect($response->getSession()->get('success'))->toBe('Item updated successfully');
+});
+
+it('calculates low stock from the combined starting and remaining stock across batches', function () {
+    $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getInventory')->andReturn([
+        'batch-a' => [
+            'name' => 'Rice',
+            'category' => 'Food',
+            'unit' => 'Kg',
+            'stock' => 10,
+            'startingStock' => 40,
+        ],
+        'batch-b' => [
+            'name' => 'Rice',
+            'category' => 'Food',
+            'unit' => 'Kg',
+            'stock' => 10,
+            'startingStock' => 40,
+        ],
+    ]);
+
+    $response = (new InventoryController())->index(Request::create('/features/inventory'), $firebase);
+    $alert = $response->getData()['lowStockAlerts']->first();
+
+    expect($alert['name'])->toBe('Rice')
+        ->and($alert['stock'])->toBe(20)
+        ->and($alert['startingStock'])->toBe(80)
+        ->and($alert['lowStockThreshold'])->toBe(20)
+        ->and($response->getData()['lowStockItems'])->toBe(1);
 });

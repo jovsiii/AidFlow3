@@ -118,24 +118,19 @@
                             <thead>
                                 <tr class="border-b border-gray-300">
                                     <th class="px-3 py-2 font-normal text-gray-800">Date</th>
-                                    <th class="px-3 py-2 font-normal text-gray-800">Type</th>
                                     <th class="px-3 py-2 font-normal text-gray-800">Item</th>
                                     <th class="px-3 py-2 font-normal text-gray-800">Category</th>
                                     <th class="px-3 py-2 font-normal text-gray-800 text-right">Quantity</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($inventory->take(8) as $index => $item)
+                                @forelse($inventory->take(8) as $item)
                                     @php
-                                        $isOut = $index === 2 || $index === 6 || $index === 7;
-                                        $typeStr = $isOut ? 'Stock-Out' : 'Stock-In';
-                                        $typeColor = $isOut ? 'text-red-500' : 'text-green-500';
                                         $dateStr = !empty($item['received']) ?
                                             \Carbon\Carbon::parse($item['received'])->format('m/d/y') : date('m/d/y');
                                     @endphp
                                     <tr>
                                         <td class="px-3 py-1.5 text-gray-700 whitespace-nowrap">{{ $dateStr }}</td>
-                                        <td class="px-3 py-1.5 {{ $typeColor }}">{{ $typeStr }}</td>
                                         <td class="px-3 py-1.5 text-gray-700">{{ $item['name'] ?? 'Item' }}</td>
                                         <td class="px-3 py-1.5 text-gray-700">{{ $item['category'] ?? 'Category' }}</td>
                                         <td class="px-3 py-1.5 text-gray-700 text-right">{{ $item['stock'] ?? 0 }}

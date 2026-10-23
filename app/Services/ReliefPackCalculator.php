@@ -7,29 +7,38 @@ use Illuminate\Support\Collection;
 class ReliefPackCalculator
 {
     private const REQUIRED_ITEMS = [
-        'Toothbrush' => 5,
-        'Toothpaste' => 2,
-        'Shampoo' => 1,
-        'Bath Bar Soap' => 4,
-        'Laundry Bar Soap' => 2000,
-        'Sanitary Napkin' => 4,
-        'Comb' => 1,
-        'Disposable Shaving Razor' => 1,
-        'Nail Cutter' => 1,
-        'Bathroom Dipper' => 1,
-        '20L Square Plastic Bucket with Deep Cover and Plastic Handle' => 1,
-        'Blanket' => 1,
-        'Mosquito Net' => 1,
-        'Mat' => 1,
-        'Kitchen Utensils' => 1,
-        'Rice' => 6,
-        'Canned Sardines' => 5,
-        'Canned Tuna' => 5,
-        'Canned Beef Loaf' => 5,
-        'Coffee or Energy Drinks' => 5,
+        ['name' => 'Toothbrush', 'quantity' => 5, 'unit' => 'piece'],
+        ['name' => 'Toothpaste', 'quantity' => 2, 'unit' => 'piece'],
+        ['name' => 'Shampoo', 'quantity' => 1, 'unit' => 'bottle'],
+        ['name' => 'Bath Bar Soap', 'quantity' => 4, 'unit' => 'piece'],
+        ['name' => 'Laundry Bar Soap', 'quantity' => 2000, 'unit' => 'gram'],
+        ['name' => 'Sanitary Napkin', 'quantity' => 4, 'unit' => 'pack'],
+        ['name' => 'Comb', 'quantity' => 1, 'unit' => 'piece'],
+        ['name' => 'Disposable Shaving Razor', 'quantity' => 1, 'unit' => 'piece'],
+        ['name' => 'Nail Cutter', 'quantity' => 1, 'unit' => 'piece'],
+        ['name' => 'Bathroom Dipper', 'quantity' => 1, 'unit' => 'piece'],
+        [
+            'name' => '20L Square Plastic Bucket with Deep Cover and Plastic Handle',
+            'quantity' => 1,
+            'unit' => 'piece',
+        ],
+        ['name' => 'Blanket', 'quantity' => 1, 'unit' => 'piece'],
+        ['name' => 'Mosquito Net', 'quantity' => 1, 'unit' => 'piece'],
+        ['name' => 'Mat', 'quantity' => 1, 'unit' => 'piece'],
+        ['name' => 'Kitchen Utensils', 'quantity' => 1, 'unit' => 'set'],
+        ['name' => 'Rice', 'quantity' => 6, 'unit' => 'kg'],
+        ['name' => 'Canned Sardines', 'quantity' => 5, 'unit' => 'can'],
+        ['name' => 'Canned Tuna', 'quantity' => 5, 'unit' => 'can'],
+        ['name' => 'Canned Beef Loaf', 'quantity' => 5, 'unit' => 'can'],
+        ['name' => 'Coffee or Energy Drinks', 'quantity' => 5, 'unit' => 'sachet'],
     ];
 
     public function requiredItems(): array
+    {
+        return array_column(self::REQUIRED_ITEMS, 'quantity', 'name');
+    }
+
+    public function requiredItemDetails(): array
     {
         return self::REQUIRED_ITEMS;
     }
@@ -43,7 +52,7 @@ class ReliefPackCalculator
             ->groupBy(fn ($item) => mb_strtolower(trim($item['name'])))
             ->map(fn (Collection $items) => $items->sum(fn ($item) => (int) ($item['stock'] ?? 0)));
 
-        $completePacks = collect(self::REQUIRED_ITEMS)
+        $completePacks = collect($this->requiredItems())
             ->map(fn ($requiredQuantity, $itemName) => intdiv(
                 (int) ($stockByName->get(mb_strtolower($itemName), 0)),
                 $requiredQuantity

@@ -17,9 +17,15 @@ it('renders a qr generator with tent and food pack options', function () {
     expect($html)
         ->toContain('Generate QR Code')
         ->toContain('Tent Code')
+        ->toContain('Evacuation / Tent Code')
         ->toContain('Food Pack')
+        ->toContain('Download PDF')
         ->toContain('Number of Relief Pack QR Codes')
         ->toContain('id="foodPackQuantity"')
         ->toContain('max="1"')
-        ->toContain('1 relief pack(s) available.');
+        ->toContain('1 relief pack(s) available.')
+        ->toContain('Requirements for each relief pack')
+        ->toContain('Laundry Bar Soap: 2000 gram')
+        ->toContain('Rice: 6 kg')
+        ->toContain('Coffee or Energy Drinks: 5 sachet');
 });

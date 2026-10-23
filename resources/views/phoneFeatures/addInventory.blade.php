@@ -46,28 +46,7 @@
                 <select id="item_name" name="item_name" required
                     class="w-full rounded-[28px] border border-gray-300 bg-gray-100 px-5 py-4 text-lg text-[#1F1F1F] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100">
                     <option value="" disabled {{ old('item_name') ? '' : 'selected' }}>Item Name</option>
-                    @foreach ([
-                        'Toothbrush',
-                        'Toothpaste',
-                        'Shampoo',
-                        'Bath Bar Soap',
-                        'Laundry Bar Soap',
-                        'Sanitary Napkin',
-                        'Comb',
-                        'Disposable Shaving Razor',
-                        'Nail Cutter',
-                        'Bathroom Dipper',
-                        '20L Square Plastic Bucket with Deep Cover and Plastic Handle',
-                        'Blanket',
-                        'Mosquito Net',
-                        'Mat',
-                        'Kitchen Utensils',
-                        'Rice',
-                        'Canned Sardines',
-                        'Canned Tuna',
-                        'Canned Beef Loaf',
-                        'Coffee or Energy Drinks'
-                    ] as $item)
+                    @foreach ($itemDefaults as $item => $defaults)
                         <option value="{{ $item }}" {{ old('item_name') === $item ? 'selected' : '' }}>{{ $item }}</option>
                     @endforeach
                     <option value="Other" {{ old('item_name') === 'Other' ? 'selected' : '' }}>Other</option>
@@ -79,14 +58,8 @@
 
             <div>
                 <label for="quantity" class="ml-4 font-bold">Quantity</label>
-                <input id="quantity" name="quantity" type="number" min="0" placeholder="Quantity" required
-                    class="w-full rounded-[28px] border border-gray-300 bg-gray-100 px-5 py-4 text-lg text-[#1F1F1F] placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" />
-            </div>
-
-            <div>
-                <label for="minimumStock" class="ml-4 font-bold">Minimum Stock Alert Level</label>
-                <input id="minimumStock" name="minimumStock" type="number" min="0"
-                    value="{{ old('minimumStock', 50) }}" required
+                <input id="quantity" name="quantity" type="number" min="0" placeholder="Quantity"
+                    value="{{ old('quantity') }}" required
                     class="w-full rounded-[28px] border border-gray-300 bg-gray-100 px-5 py-4 text-lg text-[#1F1F1F] placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" />
             </div>
 
@@ -105,20 +78,10 @@
                 <label for="unit" class="ml-4 font-bold">Unit of Measurement</label>
                 <select id="unit" name="unit" required
                     class="w-full rounded-[28px] border border-gray-300 bg-gray-100 px-5 py-4 text-lg text-[#1F1F1F] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100">
-                    <option value="" disabled selected>Unit of Measurement</option>
-                    <option>Piece</option>
-                    <option>Pieces</option>
-                    <option>Can</option>
-                    <option>Cans</option>
-                    <option>Box</option>
-                    <option>Pack</option>
-                    <option>Packs</option>
-                    <option>Bottle</option>
-                    <option>Grams</option>
-                    <option>Set</option>
-                    <option>Sachets</option>
-                    <option>Litre</option>
-                    <option>Kg</option>
+                    <option value="" disabled {{ old('unit') ? '' : 'selected' }}>Unit of Measurement</option>
+                    @foreach (['Piece', 'Can', 'Box', 'Pack', 'Bottle', 'Gram', 'Set', 'Sachet', 'Litre', 'Kg'] as $unitOption)
+                        <option value="{{ $unitOption }}" {{ old('unit') === $unitOption ? 'selected' : '' }}>{{ $unitOption }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -196,11 +159,31 @@
         const expirationDateField = document.getElementById('expirationDateField');
         const expirationDateInput = document.getElementById('expiration_date');
         const categoriesWithExpiration = @json($expirationCategories);
+        const itemDefaults = @json($itemDefaults);
 
         function updateItemFields() {
             const isOtherItem = itemSelect.value === 'Other';
             otherItemInput.classList.toggle('hidden', !isOtherItem);
             otherItemInput.required = isOtherItem;
+        }
+
+        function applyItemDefaults(overwrite = true) {
+            const defaults = itemDefaults[itemSelect.value];
+            if (!defaults) {
+                return;
+            }
+
+            const quantityInput = document.getElementById('quantity');
+            const unitSelect = document.getElementById('unit');
+            if (overwrite || !quantityInput.value) {
+                quantityInput.value = defaults.quantity;
+            }
+            if (overwrite || !categorySelect.value) {
+                categorySelect.value = defaults.category;
+            }
+            if (overwrite || !unitSelect.value) {
+                unitSelect.value = defaults.unit;
+            }
         }
 
         function updateBatchFields() {
@@ -222,10 +205,14 @@
         }
 
         batchOptions.forEach(option => option.addEventListener('change', updateBatchFields));
-        itemSelect.addEventListener('change', updateItemFields);
-        itemSelect.addEventListener('change', updateExpirationDateField);
+        itemSelect.addEventListener('change', () => {
+            updateItemFields();
+            applyItemDefaults();
+            updateExpirationDateField();
+        });
         categorySelect.addEventListener('change', updateExpirationDateField);
         updateItemFields();
+        applyItemDefaults(false);
         updateBatchFields();
         updateExpirationDateField();
     </script>

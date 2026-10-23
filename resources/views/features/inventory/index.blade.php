@@ -30,10 +30,8 @@
                     @foreach ($lowStockAlerts as $alertItem)
                         <li>
                             {{ $alertItem['name'] ?? 'Unnamed Item' }} has {{ $alertItem['stock'] ?? 0 }}
-                            remaining (minimum {{ $alertItem['minimumStock'] ?? 50 }})
-                            @if (filled($alertItem['batch'] ?? null))
-                                — Batch {{ $alertItem['batch'] }}
-                            @endif
+                            remaining (low-stock threshold: {{ $alertItem['lowStockThreshold'] }}, 25% of
+                            {{ $alertItem['startingStock'] }} starting stock)
                         </li>
                     @endforeach
                 </ul>
@@ -174,9 +172,8 @@
                                                     <th class="px-3 py-2">Expiration Date</th>
                                                     <th class="px-3 py-2">Status</th>
                                                     <th class="px-3 py-2">Stock</th>
-                                                    <th class="px-3 py-2">Minimum Stock</th>
+                                                    <th class="px-3 py-2">Starting Stock</th>
                                                     <th class="px-3 py-2">Batch</th>
-                                                    <th class="px-3 py-2">Configure Alert</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -198,37 +195,8 @@
                                                         </td>
                                                         <td class="px-3 py-2">{{ $status }}</td>
                                                         <td class="px-3 py-2">{{ $record['stock'] ?? 0 }}</td>
-                                                        <td class="px-3 py-2">{{ $record['minimumStock'] ?? 50 }}</td>
+                                                        <td class="px-3 py-2">{{ $record['startingStock'] ?? $record['stock'] ?? 0 }}</td>
                                                         <td class="px-3 py-2">{{ $record['batch'] ?? '—' }}</td>
-                                                        <td class="px-3 py-2">
-                                                            <form method="POST"
-                                                                action="{{ route('inventory.update', $record['id']) }}"
-                                                                class="flex items-center gap-2">
-                                                                @csrf
-                                                                @method('PUT')
-                                                                <input type="hidden" name="name"
-                                                                    value="{{ $record['name'] ?? '' }}">
-                                                                <input type="hidden" name="category"
-                                                                    value="{{ $record['category'] ?? '' }}">
-                                                                <input type="hidden" name="unit"
-                                                                    value="{{ $record['unit'] ?? '' }}">
-                                                                <input type="hidden" name="stock"
-                                                                    value="{{ $record['stock'] ?? 0 }}">
-                                                                <input type="hidden" name="received"
-                                                                    value="{{ $record['received'] ?? '' }}">
-                                                                <input type="hidden" name="expirationDate"
-                                                                    value="{{ $record['expirationDate'] ?? '' }}">
-                                                                <label class="sr-only"
-                                                                    for="minimum-stock-{{ $record['id'] }}">Minimum stock for
-                                                                    {{ $record['name'] ?? 'item' }}</label>
-                                                                <input id="minimum-stock-{{ $record['id'] }}" name="minimumStock"
-                                                                    type="number" min="0"
-                                                                    value="{{ $record['minimumStock'] ?? 50 }}" required
-                                                                    class="w-20 rounded border border-red-300 px-2 py-1">
-                                                                <button type="submit"
-                                                                    class="rounded bg-red-700 px-2 py-1 text-white hover:bg-red-800">Save</button>
-                                                            </form>
-                                                        </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -238,7 +206,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-6 text-center text-gray-500">No inventory items found.</td>
+                                <td colspan="5" class="py-6 text-center text-gray-500">No inventory items found.</td>
                             </tr>
                         @endforelse
                     </tbody>

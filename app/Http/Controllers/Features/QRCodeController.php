@@ -22,8 +22,9 @@ class QRCodeController extends Controller
     public function index(FirebaseService $firebase, ReliefPackCalculator $reliefPackCalculator)
     {
         $availableReliefPacks = $reliefPackCalculator->count($firebase->getInventory());
+        $reliefPackRequirements = $reliefPackCalculator->requiredItemDetails();
 
-        return view('features.qrcode.index', compact('availableReliefPacks'));
+        return view('features.qrcode.index', compact('availableReliefPacks', 'reliefPackRequirements'));
     }
 
     /** Return the next available relief-pack number without reserving it. */
