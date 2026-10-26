@@ -8,8 +8,12 @@ it('renders a qr generator with tent and food pack options', function () {
     $calculator = new ReliefPackCalculator();
     $firebase = Mockery::mock(FirebaseService::class);
     $firebase->shouldReceive('getInventory')->once()->andReturn(
-        collect($calculator->requiredItems())
-            ->map(fn ($stock, $name) => ['name' => $name, 'stock' => $stock])
+        collect($calculator->requiredItemDetails())
+            ->map(fn ($item) => [
+                'name' => $item['name'],
+                'stock' => $item['quantity'],
+                'unit' => $item['unit'],
+            ])
             ->all()
     );
     $html = (new QRCodeController())->index($firebase, $calculator)->render();
@@ -25,7 +29,7 @@ it('renders a qr generator with tent and food pack options', function () {
         ->toContain('max="1"')
         ->toContain('1 relief pack(s) available.')
         ->toContain('Requirements for each relief pack')
-        ->toContain('Laundry Bar Soap: 2000 gram')
+        ->toContain('Laundry Bar Soap: 2 piece')
         ->toContain('Rice: 6 kg')
         ->toContain('Coffee or Energy Drinks: 5 sachet');
 });

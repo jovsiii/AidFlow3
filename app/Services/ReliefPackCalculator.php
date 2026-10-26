@@ -11,7 +11,7 @@ class ReliefPackCalculator
         ['name' => 'Toothpaste', 'quantity' => 2, 'unit' => 'piece'],
         ['name' => 'Shampoo', 'quantity' => 1, 'unit' => 'bottle'],
         ['name' => 'Bath Bar Soap', 'quantity' => 4, 'unit' => 'piece'],
-        ['name' => 'Laundry Bar Soap', 'quantity' => 2000, 'unit' => 'gram'],
+        ['name' => 'Laundry Bar Soap', 'quantity' => 2, 'unit' => 'piece'],
         ['name' => 'Sanitary Napkin', 'quantity' => 4, 'unit' => 'pack'],
         ['name' => 'Comb', 'quantity' => 1, 'unit' => 'piece'],
         ['name' => 'Disposable Shaving Razor', 'quantity' => 1, 'unit' => 'piece'],
@@ -47,18 +47,25 @@ class ReliefPackCalculator
     {
         $inventory = collect($inventory);
         $standardPacks = $inventory->filter(fn ($item) => is_array($item) && ($item['type'] ?? '') === 'standard')->count();
-        $stockByName = $inventory
-            ->filter(fn ($item) => is_array($item) && filled($item['name'] ?? null))
-            ->groupBy(fn ($item) => mb_strtolower(trim($item['name'])))
+        $stockByNameAndUnit = $inventory
+            ->filter(fn ($item) => is_array($item)
+                && filled($item['name'] ?? null)
+                && filled($item['unit'] ?? null))
+            ->groupBy(fn ($item) => $this->inventoryKey($item['name'], $item['unit']))
             ->map(fn (Collection $items) => $items->sum(fn ($item) => (int) ($item['stock'] ?? 0)));
 
-        $completePacks = collect($this->requiredItems())
-            ->map(fn ($requiredQuantity, $itemName) => intdiv(
-                (int) ($stockByName->get(mb_strtolower($itemName), 0)),
-                $requiredQuantity
+        $completePacks = collect(self::REQUIRED_ITEMS)
+            ->map(fn ($item) => intdiv(
+                (int) $stockByNameAndUnit->get($this->inventoryKey($item['name'], $item['unit']), 0),
+                $item['quantity']
             ))
             ->min() ?? 0;
 
         return $standardPacks + $completePacks;
+    }
+
+    private function inventoryKey(string $name, string $unit): string
+    {
+        return mb_strtolower(trim($name)).'|'.mb_strtolower(trim($unit));
     }
 }
