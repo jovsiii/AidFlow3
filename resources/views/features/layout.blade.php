@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'AidFlow')</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/CSWD.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -45,7 +45,7 @@
             class="hidden absolute bg-[#960505] rounded-br rounded-tr shadow-2xl p-5 max-w-76 h-full z-50 flex flex-col">
 
             <div class="flex flex-row gap-2 items-center mb-4">
-                <img accesskey="" src="{{ asset('assets/CSWD.png') }}" alt="Logo" class="w-12 h-12 rounded-full">
+                <img accesskey="" src="{{ asset('assets/favicon.png') }}" alt="Logo" class="w-12 h-12 rounded-full">
                 <div>
                     <h1 class="text-3xl font-bold text-white">AidFlow</h1>
                     <p class="text-sm text-gray-100">

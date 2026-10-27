@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>AidFlow | Relief Goods Scanner</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/CSWD.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
@@ -62,7 +62,7 @@
 
 <body class="min-h-screen bg-[#EFF2F3] text-[#1F1F1F]">
     <div class="flex w-full items-center gap-3 bg-red-500 px-4 py-3 sm:px-6">
-        <img src="{{ asset('assets/CSWD.png') }}" alt="Logo"
+        <img src="{{ asset('assets/favicon.png') }}" alt="Logo"
             class="h-14 w-14 shrink-0 rounded-full object-cover sm:h-20 sm:w-20">
         <div>
             <h1 class="text-2xl font-bold leading-none text-white sm:text-4xl">AidFlow</h1>

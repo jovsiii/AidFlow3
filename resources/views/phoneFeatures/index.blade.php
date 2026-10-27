@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AidFlow | QR Code Scanner</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/CSWD.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="flex flex-col gap-4 min-h-screen bg-[#EFF2F3] text-[#1F1F1F] items-center">
     <div class="flex flex-row gap-2 w-full h-50 bg-red-500 items-center">
-        <img accesskey="" src="{{ asset('assets/CSWD.png') }}" alt="Logo" class="w-30 h-30 rounded-full">
+        <img accesskey="" src="{{ asset('assets/favicon.png') }}" alt="Logo" class="w-30 h-30 rounded-full">
         <div>
             <h1 class="text-5xl font-bold text-white">AidFlow</h1>
             <p class="text-lg text-gray-100">
