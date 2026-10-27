@@ -18,7 +18,7 @@ class AddInventoryController extends Controller
         'Toothpaste' => ['quantity' => 600, 'unit' => 'Piece', 'category' => 'Hygiene'],
         'Shampoo' => ['quantity' => 300, 'unit' => 'Bottle', 'category' => 'Hygiene'],
         'Bath Bar Soap' => ['quantity' => 1200, 'unit' => 'Piece', 'category' => 'Hygiene'],
-        'Laundry Bar Soap' => ['quantity' => 300, 'unit' => 'Piece', 'category' => 'Equipment'],
+        'Laundry Bar Soap' => ['quantity' => 600, 'unit' => 'Piece', 'category' => 'Equipment'],
         'Sanitary Napkin' => ['quantity' => 1200, 'unit' => 'Pack', 'category' => 'Hygiene'],
         'Comb' => ['quantity' => 300, 'unit' => 'Piece', 'category' => 'Hygiene'],
         'Disposable Shaving Razor' => ['quantity' => 300, 'unit' => 'Piece', 'category' => 'Hygiene'],
