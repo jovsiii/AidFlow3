@@ -4,6 +4,8 @@ use App\Http\Controllers\Features\DashboardController;
 use App\Services\FirebaseService;
 
 it('passes occupancy counts and barangay summary from occupied tents', function () {
+    config(['app.timezone' => 'Asia/Manila']);
+
     $firebase = Mockery::mock(FirebaseService::class);
     $firebase->shouldReceive('getInventory')->andReturn([]);
     $firebase->shouldReceive('getScans')->andReturn([
@@ -36,5 +38,7 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
         ->and($response->getData()['forecastAnnualFfpHigh'])->toBe(1416)
         ->and($response->getData()['forecastAnnualFamilyHeads'])->toBe(318)
         ->and($response->getData()['forecastYear'])->toBe(2026)
-        ->and($response->getData()['auditLogs']->first()['accountName'])->toBe('Test Account');
+        ->and($response->getData()['auditLogs']->first()['accountName'])->toBe('Test Account')
+        ->and($response->getData()['auditLogs']->first()['timestamp']->format('M d h:i A'))->toBe('Jun 15 08:00 PM')
+        ->and($response->getData()['auditLogs']->first()['timestamp']->timezoneName)->toBe('Asia/Manila');
 });

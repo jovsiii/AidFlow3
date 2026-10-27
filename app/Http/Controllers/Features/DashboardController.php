@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Features;
 use App\Http\Controllers\Controller;
 use App\Services\FirebaseService;
 use App\Services\ReliefPackCalculator;
+use Carbon\Carbon;
 
 /** Collects inventory, evacuation, audit, and forecast data for the operations dashboard. */
 class DashboardController extends Controller
@@ -117,7 +118,9 @@ class DashboardController extends Controller
         $scanEvents = collect($firebase->getScans() ?? [])
             ->map(function ($event, $key) {
                 $action = strtolower((string) ($event['action'] ?? ''));
-                $timestamp = $event['scannedAt'] ?? $event['scanned_at'] ?? $event['created_at'] ?? now()->toIso8601String();
+                $timestamp = Carbon::parse(
+                    $event['scannedAt'] ?? $event['scanned_at'] ?? $event['created_at'] ?? now()
+                )->setTimezone(config('app.timezone'));
 
                 return [
                     'type' => 'scanEvent',
@@ -134,7 +137,9 @@ class DashboardController extends Controller
 
         $reliefPackScans = collect($firebase->getReliefPackScans() ?? [])
             ->map(function ($event, $key) {
-                $timestamp = $event['scanned_at'] ?? $event['scannedAt'] ?? $event['created_at'] ?? now()->toIso8601String();
+                $timestamp = Carbon::parse(
+                    $event['scanned_at'] ?? $event['scannedAt'] ?? $event['created_at'] ?? now()
+                )->setTimezone(config('app.timezone'));
                 $packNumber = $event['pack_number'] ?? $event['packNumber'] ?? $key;
 
                 return [
