@@ -44,14 +44,16 @@
                 </button>
             </form>
 
-            <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center min-h-[320px]">
-                <div id="qrCode" class="bg-white p-4 rounded-lg shadow-sm min-h-[220px] min-w-[220px] flex items-center justify-center"></div>
-                <p id="qrPreviewLabel" class="mt-4 text-lg font-semibold text-gray-900">Evacuation / Tent Code</p>
-                <p id="qrOutput" class="mt-2 text-sm text-gray-600 break-all text-center" aria-live="polite">No QR generated yet</p>
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 flex flex-col items-center min-h-[320px] max-h-[80vh]">
                 <button id="downloadQrPdf" type="button"
-                    class="mt-4 hidden rounded-lg bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800">
+                    class="mb-4 hidden rounded-lg bg-green-700 px-4 py-2 font-medium text-white hover:bg-green-800">
                     <i class="fas fa-file-pdf mr-2"></i>Download PDF
                 </button>
+                <div class="w-full flex-1 min-h-0 overflow-y-auto flex flex-col items-center">
+                    <div id="qrCode" class="bg-white p-4 rounded-lg shadow-sm min-h-[220px] min-w-[220px] flex items-center justify-center"></div>
+                    <p id="qrPreviewLabel" class="mt-4 text-lg font-semibold text-gray-900">Evacuation / Tent Code</p>
+                    <p id="qrOutput" class="mt-2 text-sm text-gray-600 break-all text-center" aria-live="polite">No QR generated yet</p>
+                </div>
             </div>
         </div>
     </div>
