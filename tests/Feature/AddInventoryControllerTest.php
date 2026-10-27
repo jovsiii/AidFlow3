@@ -93,18 +93,9 @@ it('stores inventory items without an expiration date when their category does n
     expect($response->getSession()->get('success'))->toBe('Item added successfully');
 });
 
-it('stores rice without an expiration date even when its category normally requires one', function () {
+it('requires an expiration date for rice', function () {
     $firebase = Mockery::mock(FirebaseService::class);
-    $firebase->shouldReceive('createInventory')->once()->with([
-        'name' => 'Rice',
-        'category' => 'Food',
-        'unit' => 'Pack',
-        'stock' => 50,
-        'startingStock' => 50,
-        'received' => '2026-07-26',
-        'expirationDate' => null,
-        'batch' => 'Batch 1',
-    ])->andReturn(['id' => 'abc123']);
+    $firebase->shouldNotReceive('createInventory');
 
     $request = new Request([
         'item_name' => 'Rice',
@@ -116,8 +107,27 @@ it('stores rice without an expiration date even when its category normally requi
         'batch' => 'Batch 1',
     ]);
 
-    $controller = new AddInventoryController();
-    $response = $controller->store($request, $firebase);
+    (new AddInventoryController())->store($request, $firebase);
+})->throws(Illuminate\Validation\ValidationException::class);
+
+it('stores non-expiring hygiene items without an expiration date', function (string $item) {
+    $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('createInventory')->once()
+        ->with(Mockery::on(fn ($payload) => $payload['name'] === $item && $payload['expirationDate'] === null))
+        ->andReturn(['id' => 'abc123']);
+
+    $request = new Request([
+        'item_name' => $item,
+        'category' => 'Hygiene',
+        'unit' => 'Piece',
+        'quantity' => 50,
+        'date_received' => '2026-07-26',
+        'expiration_date' => '2026-12-31',
+        'batch_option' => 'existing',
+        'batch' => 'Batch 1',
+    ]);
+
+    $response = (new AddInventoryController())->store($request, $firebase);
 
     expect($response->getSession()->get('success'))->toBe('Item added successfully');
-});
+})->with(['Comb', 'Disposable Shaving Razor', 'Nail Cutter', 'Toothbrush']);
