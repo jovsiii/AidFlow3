@@ -277,38 +277,39 @@
                     </div>
                 </div>
             </div>
-            <div
-                class="bg-white rounded-[18px] border-[3px] border-[#ef4444] p-4 flex-1 min-h-0 overflow-auto">
-                <div class="mb-2 text-[18px] font-bold text-[#8a1c1c] sticky top-0 bg-white py-2">Inventory Ledger</div>
-                <div class="flex flex-col divide-y divide-[#f0b5b5]">
-                    @forelse ($inventoryItems as $item)
-                        @php
-                            $distributed = $item['distributed'] ?? false;
-                            $removed = $item['removed'] ?? false;
+            <div class="bg-white rounded-[18px] border-[3px] border-[#ef4444] p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
+                <div class="mb-2 shrink-0 text-[18px] font-bold text-[#8a1c1c]">Inventory Ledger</div>
+                <div class="min-h-0 flex-1 overflow-y-auto">
+                    <div class="flex flex-col divide-y divide-[#f0b5b5]">
+                        @forelse ($inventoryItems as $item)
+                            @php
+                                $distributed = $item['distributed'] ?? false;
+                                $removed = $item['removed'] ?? false;
 
-                            $statusLabel = $distributed ? 'Distributed' : ($removed ? 'Removed' : 'Added');
-                            $statusDate = $distributed ? $item['distributed'] : ($removed ? $item['removed'] : $item['added']);
-                            $statusClass = $distributed
-                                ? 'text-blue-600'
-                                : ($removed ? 'text-gray-600' : 'text-green-600');
-                        @endphp
+                                $statusLabel = $distributed ? 'Distributed' : ($removed ? 'Removed' : 'Added');
+                                $statusDate = $distributed ? $item['distributed'] : ($removed ? $item['removed'] : $item['added']);
+                                $statusClass = $distributed
+                                    ? 'text-blue-600'
+                                    : ($removed ? 'text-gray-600' : 'text-green-600');
+                            @endphp
 
-                        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2.5">
-                            <div class="min-w-0 overflow-hidden">
-                                <div class="truncate text-[18px] font-semibold text-[#111827]"
-                                    title="{{ $item['name'] ?? 'Unnamed Item' }}">
-                                    {{ $item['name'] ?? 'Unnamed Item' }}
+                            <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2.5">
+                                <div class="min-w-0 overflow-hidden">
+                                    <div class="truncate text-[18px] font-semibold text-[#111827]"
+                                        title="{{ $item['name'] ?? 'Unnamed Item' }}">
+                                        {{ $item['name'] ?? 'Unnamed Item' }}
+                                    </div>
+                                    <div class="text-[12px] text-gray-600">{{ $item['category'] ?? 'Uncategorized' }}</div>
                                 </div>
-                                <div class="text-[12px] text-gray-600">{{ $item['category'] ?? 'Uncategorized' }}</div>
+                                <div class="shrink-0 whitespace-nowrap text-right text-[12px] font-semibold {{ $statusClass }}">
+                                    {{ $statusLabel }} on
+                                    {{ $statusDate ? \Carbon\Carbon::parse($statusDate)->format('m/d/y') : '—' }}
+                                </div>
                             </div>
-                            <div class="shrink-0 whitespace-nowrap text-right text-[12px] font-semibold {{ $statusClass }}">
-                                {{ $statusLabel }} on
-                                {{ $statusDate ? \Carbon\Carbon::parse($statusDate)->format('m/d/y') : '—' }}
-                            </div>
-                        </div>
-                    @empty
-                        <div class="py-4 text-center text-gray-500">No inventory items found.</div>
-                    @endforelse
+                        @empty
+                            <div class="py-4 text-center text-gray-500">No inventory items found.</div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
