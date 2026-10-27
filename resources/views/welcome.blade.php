@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AidFlow</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/CSWD.png') }}">
     <script>
         // Redirect to login
         window.location.href = '{{ route("login") }}';
@@ -18,6 +19,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="icon" type="image/png" href="{{ asset('assets/CSWD.png') }}">
 
         @fonts
 
