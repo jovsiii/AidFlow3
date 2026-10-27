@@ -124,7 +124,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($inventory->take(8) as $item)
+                                @forelse(collect($inventory)->sortBy(fn($i) => !empty($i['received']) ? \Carbon\Carbon::parse($i['received'])->timestamp : PHP_INT_MAX)->values() as $item)
                                     @php
                                         $dateStr = !empty($item['received']) ?
                                             \Carbon\Carbon::parse($item['received'])->format('m/d/y') : date('m/d/y');
