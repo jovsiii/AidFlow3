@@ -160,6 +160,7 @@
         const expirationDateInput = document.getElementById('expiration_date');
         const categoriesWithExpiration = @json($expirationCategories);
         const itemDefaults = @json($itemDefaults);
+        const noExpirationItems = @json($noExpirationItems);
 
         function updateItemFields() {
             const isOtherItem = itemSelect.value === 'Other';
@@ -195,7 +196,7 @@
         }
 
         function updateExpirationDateField() {
-            const isRice = itemSelect.value === 'Rice';
+            const isRice = noExpirationItems.includes(itemSelect.value);
             const requiresExpirationDate = !isRice && categoriesWithExpiration.includes(categorySelect.value);
             expirationDateField.classList.toggle('hidden', !requiresExpirationDate);
             expirationDateInput.required = requiresExpirationDate;

@@ -11,6 +11,8 @@ class AddInventoryController extends Controller
 {
     private const EXPIRATION_CATEGORIES = ['Food', 'Medicine', 'Drink', 'Hygiene'];
 
+    private const NO_EXPIRATION_ITEMS = ['Comb', 'Disposable Shaving Razor', 'Nail Cutter', 'Toothbrush'];
+
     private const ITEM_DEFAULTS = [
         'Toothbrush' => ['quantity' => 1500, 'unit' => 'Piece', 'category' => 'Hygiene'],
         'Toothpaste' => ['quantity' => 600, 'unit' => 'Piece', 'category' => 'Hygiene'],
@@ -52,6 +54,7 @@ class AddInventoryController extends Controller
         return view('phoneFeatures.addInventory', [
             'batches' => $batches,
             'expirationCategories' => self::EXPIRATION_CATEGORIES,
+            'noExpirationItems' => self::NO_EXPIRATION_ITEMS,
             'itemDefaults' => self::ITEM_DEFAULTS,
         ]);
     }
@@ -59,7 +62,7 @@ class AddInventoryController extends Controller
     /** Normalize supported form field names and save the validated inventory item. */
     public function store(Request $request, FirebaseService $firebase)
     {
-        $isRice = $request->input('item_name', $request->input('name')) === 'Rice';
+        $isRice = in_array($request->input('item_name', $request->input('name')), self::NO_EXPIRATION_ITEMS, true);
         $expirationRequired = !$isRice
             && in_array($request->input('category'), self::EXPIRATION_CATEGORIES, true);
         $expirationDateRules = $expirationRequired
