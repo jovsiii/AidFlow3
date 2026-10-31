@@ -255,6 +255,12 @@
                                     <option value="{{ $year }}">{{ $year }}</option>
                                 @endforeach
                             </select>
+                            <select id="auditMonthFilter" class="text-xs border border-gray-300 rounded px-1 py-0.5">
+                                <option value="">All months</option>
+                                @foreach(['January','February','March','April','May','June','July','August','September','October','November','December'] as $i => $monthName)
+                                    <option value="{{ $i + 1 }}">{{ $monthName }}</option>
+                                @endforeach
+                            </select>
                             <select id="auditTypeFilter" class="text-xs border border-gray-300 rounded px-1 py-0.5">
                                 <option value="">All types</option>
                                 <option value="scanEvent">Tent</option>
@@ -272,7 +278,7 @@
                                     : ($log['tentCode'] ?? 'N/A') . ($log['barangayName'] ? ' • ' . $log['barangayName'] : '');
                             @endphp
 
-                            <div data-audit-log data-type="{{ $log['type'] }}" data-year="{{ $timestamp ? \Carbon\Carbon::parse($timestamp)->format('Y') : '' }}" class="flex items-start gap-2 pb-2 border-b border-gray-200 last:border-b-0 last:pb-0">
+                            <div data-audit-log data-type="{{ $log['type'] }}" data-year="{{ $timestamp ? \Carbon\Carbon::parse($timestamp)->format('Y') : '' }}" data-month="{{ $timestamp ? \Carbon\Carbon::parse($timestamp)->format('n') : '' }}" class="flex items-start gap-2 pb-2 border-b border-gray-200 last:border-b-0 last:pb-0">
                                 <span class="mt-1 h-2.5 w-2.5 rounded-full {{ $log['color'] ?? 'bg-blue-500' }}"></span>
                                 <div class="flex-1">
                                     <p class="font-semibold text-gray-800">{{ $log['label'] ?? 'System event' }}</p>
@@ -298,11 +304,13 @@
             import { barangayList } from '/js/barangayList.js';
 
             const auditYear = document.getElementById('auditYearFilter');
+            const auditMonth = document.getElementById('auditMonthFilter');
             const auditType = document.getElementById('auditTypeFilter');
             const applyAuditFilters = () => {
                 let visible = 0;
                 document.querySelectorAll('[data-audit-log]').forEach((row) => {
                     const show = (!auditYear.value || row.dataset.year === auditYear.value)
+                        && (!auditMonth.value || row.dataset.month === auditMonth.value)
                         && (!auditType.value || row.dataset.type === auditType.value);
                     row.classList.toggle('hidden', !show);
                     if (show) visible++;
@@ -311,6 +319,7 @@
                 document.getElementById('auditNoMatch').classList.toggle('hidden', visible > 0 || !hasRows);
             };
             auditYear.addEventListener('change', applyAuditFilters);
+            auditMonth.addEventListener('change', applyAuditFilters);
             auditType.addEventListener('change', applyAuditFilters);
 
             const totalTents = barangayList.reduce(
