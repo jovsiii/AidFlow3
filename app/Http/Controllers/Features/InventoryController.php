@@ -185,6 +185,10 @@ class InventoryController extends Controller
         ]);
 
         $validated['startingStock'] = (int) $validated['stock'];
+        $validated['added'] = now()->toDateString();
+        $validated['receivedBy'] = $request->session()->get('user.fullName')
+            ?: $request->session()->get('user.username')
+            ?: $request->session()->get('username');
 
         $firebase->createInventory($validated);
 

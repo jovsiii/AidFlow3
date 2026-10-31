@@ -109,6 +109,9 @@ class AddInventoryController extends Controller
                 ? null
                 : ($validated['expiration_date'] ?? $validated['expirationDate'] ?? null),
             'batch' => $batch,
+            'receivedBy' => $request->session()->get('user.fullName')
+                ?: $request->session()->get('user.username')
+                ?: $request->session()->get('username'),
         ];
 
         $firebase->createInventory($payload);

@@ -69,6 +69,10 @@
                         <i class="fas fa-box mr-2"></i> Inventory
                     </a>
 
+                    <a href="{{ route('ledger.index') }}" @class(['block px-4 py-3 rounded-lg font-medium', 'bg-white text-[#960505] shadow' => request()->routeIs('ledger.*'), 'text-white hover:bg-white hover:text-[#960505] transition' => !request()->routeIs('ledger.*')])>
+                        <i class="fas fa-book mr-2"></i> Inventory Ledger
+                    </a>
+
                     <a href="{{ route('qrcode.index') }}" @class([
                         'block px-4 py-3 rounded-lg font-medium',
                         'bg-white text-[#960505] shadow' => request()->routeIs('qrcode.*'),
