@@ -145,4 +145,32 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (() => {
+            const versionUrl = @json(route('ledger.version'));
+            const intervalMs = 10000;
+            const currentVersion = @json($version);
+
+            const check = async () => {
+                if (document.hidden) return;
+
+                try {
+                    const response = await fetch(versionUrl, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+                    if (!response.ok) return;
+
+                    const { version } = await response.json();
+                    if (version !== currentVersion) {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    // Ignore transient network errors; the next poll retries.
+                }
+            };
+
+            check();
+            setInterval(check, intervalMs);
+            document.addEventListener('visibilitychange', check);
+        })();
+    </script>
 @endsection

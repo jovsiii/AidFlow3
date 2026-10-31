@@ -33,6 +33,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/features/inventory/batch/{batchId}', [InventoryController::class, 'batch'])->name('inventory.batch');
 
     Route::get('/features/ledger', [InventoryLedgerController::class, 'index'])->name('ledger.index');
+    Route::get('/features/ledger/version', [InventoryLedgerController::class, 'version'])->name('ledger.version');
 
     Route::get('/features/users', [UsersController::class, 'index'])->name('users.index');
     Route::post('/features/users', [UsersController::class, 'store'])->name('users.store');

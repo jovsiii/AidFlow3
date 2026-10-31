@@ -48,6 +48,23 @@ class InventoryLedgerController extends Controller
             ->sortByDesc('timestamp')
             ->values();
 
-        return view('features.ledger.index', compact('tab', 'inbound', 'outbound'));
+        $version = $this->fingerprint($firebase);
+
+        return view('features.ledger.index', compact('tab', 'inbound', 'outbound', 'version'));
+    }
+
+    /** Return a fingerprint of the ledger data so open pages can detect new records. */
+    public function version(FirebaseService $firebase)
+    {
+        return response()->json(['version' => $this->fingerprint($firebase)])
+            ->header('Cache-Control', 'no-store');
+    }
+
+    private function fingerprint(FirebaseService $firebase): string
+    {
+        return md5(json_encode([
+            $firebase->getInventory(),
+            $firebase->getReliefPackScans(),
+        ]));
     }
 }
