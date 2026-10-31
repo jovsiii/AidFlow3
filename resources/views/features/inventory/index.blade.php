@@ -277,7 +277,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-[18px] border-[3px] border-[#ef4444] p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div id="inventory-ledger" class="bg-white rounded-[18px] border-[3px] border-[#ef4444] p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div class="mb-2 shrink-0 text-[18px] font-bold text-[#8a1c1c]">Inventory Ledger</div>
                 <div class="min-h-0 flex-1 overflow-y-auto">
                     <div class="flex flex-col divide-y divide-[#f0b5b5]">
