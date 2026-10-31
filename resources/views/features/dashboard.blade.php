@@ -245,8 +245,8 @@
                     </div>
                 </div>
 
-                <div class="border-t border-gray-200 flex-1 flex flex-col max-h-20vh overflow-auto">
-                    <div class="sticky top-0 bg-white pb-2">
+                <div class="border-t border-gray-200 pt-2 flex-1 flex flex-col min-h-0 h-64">
+                    <div class="bg-white pb-2 shrink-0">
                         <p class="text-gray-900 text-sm">Audit Logs</p>
                         <div class="flex gap-2 mt-1">
                             <select id="auditYearFilter" class="text-xs border border-gray-300 rounded px-1 py-0.5">
@@ -262,7 +262,7 @@
                             </select>
                         </div>
                     </div>
-                    <div id="auditLogList" class="space-y-3 text-xs text-gray-700 flex-1">
+                    <div id="auditLogList" class="space-y-3 text-xs text-gray-700 flex-1 min-h-0 overflow-y-auto">
                         @forelse($auditLogs as $log)
                             @php
                                 $timestamp = $log['timestamp'] ?? null;
