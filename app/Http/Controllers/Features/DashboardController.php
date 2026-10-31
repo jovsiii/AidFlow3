@@ -53,53 +53,47 @@ class DashboardController extends Controller
             throw new \UnexpectedValueException('The FFP forecast model is missing valid household-size or per-person rates.');
         }
 
+        // Ratio model: expected evacuees (mean per year on record) x FFP-per-person rate.
         $annualForecastTotals = $forecastDataset
             ->groupBy('Year')
-            ->map(function ($records) {
-                return [
-                    'fam' => $records->sum('fam'),
-                ];
-            })
+            ->map(fn ($records) => [
+                'fam' => $records->sum('fam'),
+                'ind' => $records->sum('ind'),
+            ])
             ->sortKeys();
 
-        $predictNextYear = function (string $metric) use ($annualForecastTotals): int {
-            $years = array_map('intval', array_keys($annualForecastTotals->all()));
-            $values = $annualForecastTotals->pluck($metric)->map('intval')->values()->all();
-            $count = count($years);
-
-            if ($count < 2) {
-                return max(0, (int) round($values[0] ?? 0));
-            }
-
-            // Fit a least-squares line to annual totals, then evaluate it for the next year.
-            $sumYears = array_sum($years);
-            $sumValues = array_sum($values);
-            $sumYearValues = 0;
-            $sumYearsSquared = 0;
-
-            foreach ($years as $index => $year) {
-                $sumYearValues += $year * $values[$index];
-                $sumYearsSquared += $year * $year;
-            }
-
-            $denominator = ($count * $sumYearsSquared) - ($sumYears * $sumYears);
-            $slope = $denominator === 0
-                ? 0
-                : (($count * $sumYearValues) - ($sumYears * $sumValues)) / $denominator;
-            $intercept = ($sumValues - ($slope * $sumYears)) / $count;
-            $nextYear = max($years) + 1;
-
-            return max(0, (int) round($intercept + ($slope * $nextYear)));
-        };
-
         $forecastYear = (int) $annualForecastTotals->keys()->max() + 1;
-        $forecastAnnualFamilyHeads = $predictNextYear('fam');
-        $forecastPeople = $forecastAnnualFamilyHeads * (float) $averageHouseholdSize;
+        $forecastAnnualFamilyHeads = (int) round($annualForecastTotals->avg('fam') ?? 0);
+        $forecastPeople = (float) ($annualForecastTotals->avg('ind') ?? 0);
         $forecastAnnualFfpLean = (int) round($forecastPeople * (float) $ffpPerPerson['lean']);
         $forecastAnnualFfp = (int) round($forecastPeople * (float) $ffpPerPerson['expected']);
         $forecastAnnualFfpHigh = (int) round($forecastPeople * (float) $ffpPerPerson['high']);
         $forecastFfp = (int) round($forecastAnnualFfp / 12);
         $forecastFamilyHeads = (int) round($forecastAnnualFamilyHeads / 12);
+        $highRiskMonths = array_slice($ffpModel['monthly_risk_rank'] ?? [], 0, 3);
+
+        // Spread the annual forecast across months in proportion to each month's risk score.
+        $monthlyTable = collect($ffpModel['monthly_table'] ?? []);
+        $riskTotal = (float) $monthlyTable->sum('risk_score');
+        $monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+            'August', 'September', 'October', 'November', 'December'];
+        $monthlyForecast = $monthlyTable
+            ->map(function ($row) use ($riskTotal, $forecastPeople, $forecastAnnualFamilyHeads, $ffpPerPerson) {
+                $share = $riskTotal > 0 ? ((float) $row['risk_score']) / $riskTotal : 0;
+                $score = (float) $row['risk_score'];
+
+                return [
+                    'month' => $row['month'],
+                    'riskScore' => $score,
+                    'riskLevel' => $score >= 0.6 ? 'High' : ($score >= 0.3 ? 'Moderate' : 'Low'),
+                    'families' => (int) round($forecastAnnualFamilyHeads * $share),
+                    'ffpLean' => (int) round($forecastPeople * $share * (float) $ffpPerPerson['lean']),
+                    'ffp' => (int) round($forecastPeople * $share * (float) $ffpPerPerson['expected']),
+                    'ffpHigh' => (int) round($forecastPeople * $share * (float) $ffpPerPerson['high']),
+                ];
+            })
+            ->sortBy(fn ($row) => array_search($row['month'], $monthOrder, true))
+            ->values();
 
         $reliefPacks = collect($firebase->getReliefPacks());
 
@@ -190,6 +184,10 @@ class DashboardController extends Controller
             'forecastAnnualFamilyHeads' => $forecastAnnualFamilyHeads,
 
             'forecastYear' => $forecastYear,
+
+            'highRiskMonths' => $highRiskMonths,
+
+            'monthlyForecast' => $monthlyForecast,
 
             'auditLogs' => $auditLogs,
         ]);

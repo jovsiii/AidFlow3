@@ -1,389 +1,432 @@
 [
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":185,
-    "ind":705,
-    "ffp":720
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":160,
-    "ind":610,
-    "ffp":630
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Progreso",
-    "risk":3,
-    "fam":110,
-    "ind":420,
-    "ffp":450
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":95,
-    "ind":360,
-    "ffp":380
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Ermitaño",
-    "risk":2,
-    "fam":75,
-    "ind":285,
-    "ffp":300
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Balong Bato",
-    "risk":3,
-    "fam":50,
-    "ind":190,
-    "ffp":200
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Kabayanan",
-    "risk":1,
-    "fam":40,
-    "ind":150,
-    "ffp":160
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Addition Hills",
-    "risk":1,
-    "fam":30,
-    "ind":115,
-    "ffp":120
-  },
-  {
-    "event":"Carina",
-    "Year":2024,
-    "barangay":"Corazon de Jesus",
-    "risk":1,
-    "fam":26,
-    "ind":105,
-    "ffp":110
-  },
-  {
-    "event":"Egay",
-    "Year":2023,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":52,
-    "ind":205,
-    "ffp":110
-  },
-  {
-    "event":"Egay",
-    "Year":2023,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":45,
-    "ind":178,
-    "ffp":95
-  },
-  {
-    "event":"Egay",
-    "Year":2023,
-    "barangay":"Progreso",
-    "risk":3,
-    "fam":34,
-    "ind":132,
-    "ffp":70
-  },
-  {
-    "event":"Egay",
-    "Year":2023,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":28,
-    "ind":110,
-    "ffp":60
-  },
-  {
-    "event":"Egay",
-    "Year":2023,
-    "barangay":"Ermitaño",
-    "risk":2,
-    "fam":20,
-    "ind":78,
-    "ffp":40
-  },
-  {
-    "event":"Fabian",
-    "Year":2021,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":8,
-    "ind":32,
-    "ffp":35
-  },
-  {
-    "event":"Fabian",
-    "Year":2021,
-    "barangay":"Ermitaño",
-    "risk":2,
-    "fam":6,
-    "ind":24,
-    "ffp":25
-  },
-  {
-    "event":"Fabian",
-    "Year":2021,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":5,
-    "ind":18,
-    "ffp":20
-  },
-  {
-    "event":"Fabian",
-    "Year":2021,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":4,
-    "ind":14,
-    "ffp":20
-  },
-  {
-    "event":"Karding",
-    "Year":2022,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":42,
-    "ind":168,
-    "ffp":85
-  },
-  {
-    "event":"Karding",
-    "Year":2022,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":38,
-    "ind":152,
-    "ffp":75
-  },
-  {
-    "event":"Karding",
-    "Year":2022,
-    "barangay":"Progreso",
-    "risk":3,
-    "fam":28,
-    "ind":112,
-    "ffp":55
-  },
-  {
-    "event":"Karding",
-    "Year":2022,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":22,
-    "ind":88,
-    "ffp":45
-  },
-  {
-    "event":"Karding",
-    "Year":2022,
-    "barangay":"Ermitaño",
-    "risk":2,
-    "fam":15,
-    "ind":60,
-    "ffp":30
-  },
-  {
-    "event":"Karding",
-    "Year":2022,
-    "barangay":"Balong Bato",
-    "risk":3,
-    "fam":10,
-    "ind":40,
-    "ffp":20
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":82,
-    "ind":320,
-    "ffp":170
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":70,
-    "ind":275,
-    "ffp":150
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Progreso",
-    "risk":3,
-    "fam":58,
-    "ind":225,
-    "ffp":120
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":45,
-    "ind":175,
-    "ffp":95
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Ermitaño",
-    "risk":2,
-    "fam":32,
-    "ind":125,
-    "ffp":65
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Balong Bato",
-    "risk":3,
-    "fam":24,
-    "ind":92,
-    "ffp":50
-  },
-  {
-    "event":"Kristine",
-    "Year":2024,
-    "barangay":"Pedro Cruz",
-    "risk":2,
-    "fam":18,
-    "ind":68,
-    "ffp":40
-  },
-  {
-    "event":"Ulysses",
-    "Year":2020,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":310,
-    "ind":1240,
-    "ffp":420
-  },
-  {
-    "event":"Ulysses",
-    "Year":2020,
-    "barangay":"Progreso",
-    "risk":3,
-    "fam":240,
-    "ind":960,
-    "ffp":330
-  },
-  {
-    "event":"Ulysses",
-    "Year":2020,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":210,
-    "ind":840,
-    "ffp":290
-  },
-  {
-    "event":"Ulysses",
-    "Year":2020,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":160,
-    "ind":640,
-    "ffp":220
-  },
-  {
-    "event":"Ulysses",
-    "Year":2020,
-    "barangay":"Pedro Cruz",
-    "risk":2,
-    "fam":110,
-    "ind":440,
-    "ffp":150
-  },
-  {
-    "event":"Ulysses",
-    "Year":2020,
-    "barangay":"Balong Bato",
-    "risk":3,
-    "fam":70,
-    "ind":280,
-    "ffp":90
-  },
-  {
-    "event":"Uwan",
-    "Year":2025,
-    "barangay":"Salapan",
-    "risk":3,
-    "fam":48,
-    "ind":185,
-    "ffp":100
-  },
-  {
-    "event":"Uwan",
-    "Year":2025,
-    "barangay":"Batis",
-    "risk":3,
-    "fam":40,
-    "ind":155,
-    "ffp":85
-  },
-  {
-    "event":"Uwan",
-    "Year":2025,
-    "barangay":"Progreso",
-    "risk":3,
-    "fam":32,
-    "ind":125,
-    "ffp":65
-  },
-  {
-    "event":"Uwan",
-    "Year":2025,
-    "barangay":"Rivera",
-    "risk":3,
-    "fam":25,
-    "ind":98,
-    "ffp":50
-  },
-  {
-    "event":"Uwan",
-    "Year":2025,
-    "barangay":"Ermitaño",
-    "risk":2,
-    "fam":18,
-    "ind":70,
-    "ffp":35
-  },
-  {
-    "event":"Uwan",
-    "Year":2025,
-    "barangay":"Balong Bato",
-    "risk":3,
-    "fam":12,
-    "ind":45,
-    "ffp":25
-  }
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  185,
+        "ind":  705,
+        "ffp":  720
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  160,
+        "ind":  610,
+        "ffp":  630
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Progreso",
+        "risk":  3,
+        "fam":  110,
+        "ind":  420,
+        "ffp":  450
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  95,
+        "ind":  360,
+        "ffp":  380
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Ermitaño",
+        "risk":  2,
+        "fam":  75,
+        "ind":  285,
+        "ffp":  300
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Balong Bato",
+        "risk":  3,
+        "fam":  50,
+        "ind":  190,
+        "ffp":  200
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Kabayanan",
+        "risk":  1,
+        "fam":  40,
+        "ind":  150,
+        "ffp":  160
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Addition Hills",
+        "risk":  1,
+        "fam":  30,
+        "ind":  115,
+        "ffp":  120
+    },
+    {
+        "event":  "Carina",
+        "Year":  2024,
+        "month":  "July",
+        "barangay":  "Corazon de Jesus",
+        "risk":  1,
+        "fam":  26,
+        "ind":  105,
+        "ffp":  110
+    },
+    {
+        "event":  "Egay",
+        "Year":  2023,
+        "month":  "July",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  52,
+        "ind":  205,
+        "ffp":  110
+    },
+    {
+        "event":  "Egay",
+        "Year":  2023,
+        "month":  "July",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  45,
+        "ind":  178,
+        "ffp":  95
+    },
+    {
+        "event":  "Egay",
+        "Year":  2023,
+        "month":  "July",
+        "barangay":  "Progreso",
+        "risk":  3,
+        "fam":  34,
+        "ind":  132,
+        "ffp":  70
+    },
+    {
+        "event":  "Egay",
+        "Year":  2023,
+        "month":  "July",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  28,
+        "ind":  110,
+        "ffp":  60
+    },
+    {
+        "event":  "Egay",
+        "Year":  2023,
+        "month":  "July",
+        "barangay":  "Ermitaño",
+        "risk":  2,
+        "fam":  20,
+        "ind":  78,
+        "ffp":  40
+    },
+    {
+        "event":  "Fabian",
+        "Year":  2021,
+        "month":  "July",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  8,
+        "ind":  32,
+        "ffp":  35
+    },
+    {
+        "event":  "Fabian",
+        "Year":  2021,
+        "month":  "July",
+        "barangay":  "Ermitaño",
+        "risk":  2,
+        "fam":  6,
+        "ind":  24,
+        "ffp":  25
+    },
+    {
+        "event":  "Fabian",
+        "Year":  2021,
+        "month":  "July",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  5,
+        "ind":  18,
+        "ffp":  20
+    },
+    {
+        "event":  "Fabian",
+        "Year":  2021,
+        "month":  "July",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  4,
+        "ind":  14,
+        "ffp":  20
+    },
+    {
+        "event":  "Karding",
+        "Year":  2022,
+        "month":  "September",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  42,
+        "ind":  168,
+        "ffp":  85
+    },
+    {
+        "event":  "Karding",
+        "Year":  2022,
+        "month":  "September",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  38,
+        "ind":  152,
+        "ffp":  75
+    },
+    {
+        "event":  "Karding",
+        "Year":  2022,
+        "month":  "September",
+        "barangay":  "Progreso",
+        "risk":  3,
+        "fam":  28,
+        "ind":  112,
+        "ffp":  55
+    },
+    {
+        "event":  "Karding",
+        "Year":  2022,
+        "month":  "September",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  22,
+        "ind":  88,
+        "ffp":  45
+    },
+    {
+        "event":  "Karding",
+        "Year":  2022,
+        "month":  "September",
+        "barangay":  "Ermitaño",
+        "risk":  2,
+        "fam":  15,
+        "ind":  60,
+        "ffp":  30
+    },
+    {
+        "event":  "Karding",
+        "Year":  2022,
+        "month":  "September",
+        "barangay":  "Balong Bato",
+        "risk":  3,
+        "fam":  10,
+        "ind":  40,
+        "ffp":  20
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  82,
+        "ind":  320,
+        "ffp":  170
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  70,
+        "ind":  275,
+        "ffp":  150
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Progreso",
+        "risk":  3,
+        "fam":  58,
+        "ind":  225,
+        "ffp":  120
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  45,
+        "ind":  175,
+        "ffp":  95
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Ermitaño",
+        "risk":  2,
+        "fam":  32,
+        "ind":  125,
+        "ffp":  65
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Balong Bato",
+        "risk":  3,
+        "fam":  24,
+        "ind":  92,
+        "ffp":  50
+    },
+    {
+        "event":  "Kristine",
+        "Year":  2024,
+        "month":  "October",
+        "barangay":  "Pedro Cruz",
+        "risk":  2,
+        "fam":  18,
+        "ind":  68,
+        "ffp":  40
+    },
+    {
+        "event":  "Ulysses",
+        "Year":  2020,
+        "month":  "November",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  310,
+        "ind":  1240,
+        "ffp":  420
+    },
+    {
+        "event":  "Ulysses",
+        "Year":  2020,
+        "month":  "November",
+        "barangay":  "Progreso",
+        "risk":  3,
+        "fam":  240,
+        "ind":  960,
+        "ffp":  330
+    },
+    {
+        "event":  "Ulysses",
+        "Year":  2020,
+        "month":  "November",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  210,
+        "ind":  840,
+        "ffp":  290
+    },
+    {
+        "event":  "Ulysses",
+        "Year":  2020,
+        "month":  "November",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  160,
+        "ind":  640,
+        "ffp":  220
+    },
+    {
+        "event":  "Ulysses",
+        "Year":  2020,
+        "month":  "November",
+        "barangay":  "Pedro Cruz",
+        "risk":  2,
+        "fam":  110,
+        "ind":  440,
+        "ffp":  150
+    },
+    {
+        "event":  "Ulysses",
+        "Year":  2020,
+        "month":  "November",
+        "barangay":  "Balong Bato",
+        "risk":  3,
+        "fam":  70,
+        "ind":  280,
+        "ffp":  90
+    },
+    {
+        "event":  "Uwan",
+        "Year":  2025,
+        "month":  "November",
+        "barangay":  "Salapan",
+        "risk":  3,
+        "fam":  48,
+        "ind":  185,
+        "ffp":  100
+    },
+    {
+        "event":  "Uwan",
+        "Year":  2025,
+        "month":  "November",
+        "barangay":  "Batis",
+        "risk":  3,
+        "fam":  40,
+        "ind":  155,
+        "ffp":  85
+    },
+    {
+        "event":  "Uwan",
+        "Year":  2025,
+        "month":  "November",
+        "barangay":  "Progreso",
+        "risk":  3,
+        "fam":  32,
+        "ind":  125,
+        "ffp":  65
+    },
+    {
+        "event":  "Uwan",
+        "Year":  2025,
+        "month":  "November",
+        "barangay":  "Rivera",
+        "risk":  3,
+        "fam":  25,
+        "ind":  98,
+        "ffp":  50
+    },
+    {
+        "event":  "Uwan",
+        "Year":  2025,
+        "month":  "November",
+        "barangay":  "Ermitaño",
+        "risk":  2,
+        "fam":  18,
+        "ind":  70,
+        "ffp":  35
+    },
+    {
+        "event":  "Uwan",
+        "Year":  2025,
+        "month":  "November",
+        "barangay":  "Balong Bato",
+        "risk":  3,
+        "fam":  12,
+        "ind":  45,
+        "ffp":  25
+    }
 ]

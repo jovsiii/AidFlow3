@@ -227,7 +227,7 @@
                 <h2 class="text-lg text-[#be3d3d] mb-5 flex items-center gap-2">
                     <i class="fas fa-chart-line"></i> Forecast
                 </h2>
-                <p class="text-gray-600 text-sm mb-4">Forecast for {{ $forecastYear }}</p>
+                <p class="text-gray-600 text-sm mb-4">Forecast for {{ $forecastYear }}@if(!empty($highRiskMonths)) • Highest-risk months: {{ implode(', ', $highRiskMonths) }}@endif</p>
 
                 <div class="mb-5">
                     <p class="text-gray-900 text-sm mb-2">Predicted Family Head Count</p>
@@ -244,6 +244,10 @@
                         <span class="text-sm text-gray-600">{{ number_format($forecastFfp) }} average per month</span>
                     </div>
                 </div>
+
+                <button type="button" id="openMonthlyForecast" class="mb-4 w-full rounded-lg bg-[#cc2929] text-white text-sm py-2 hover:bg-[#8a1c1c] transition">
+                    <i class="fas fa-calendar-alt mr-1"></i> View Monthly Forecast &amp; Flood Risk
+                </button>
 
                 <div class="border-t border-gray-200 pt-2 flex-1 flex flex-col min-h-0 h-64">
                     <div class="bg-white pb-2 shrink-0">
@@ -299,9 +303,77 @@
 
         </div>
     </div>
+    <div id="monthlyForecastModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="bg-white rounded-[20px] border-[3px] border-[#8a1c1c] w-full max-w-3xl max-h-[90vh] overflow-auto p-5">
+            <div class="flex items-center justify-between mb-1">
+                <h3 class="text-lg text-[#be3d3d]"><i class="fas fa-cloud-showers-heavy mr-1"></i> Monthly Forecast for {{ $forecastYear }}</h3>
+                <button type="button" id="closeMonthlyForecast" class="text-gray-500 hover:text-gray-800 text-xl leading-none" aria-label="Close">&times;</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">The annual forecast is split across months by flood/rainstorm risk score. Months marked High are the most prone to heavy rain and flooding.</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <p class="text-xs text-gray-600">Predicted Family Head Count ({{ $forecastYear }})</p>
+                    <p class="text-2xl font-bold text-[#cc2929]">{{ number_format($forecastAnnualFamilyHeads) }}</p>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <p class="text-xs text-gray-600">Predicted Relief Packs ({{ $forecastYear }})</p>
+                    <p class="text-2xl font-bold text-[#cc2929]">{{ number_format($forecastAnnualFfp) }}</p>
+                    <p class="text-[11px] text-gray-500">Range {{ number_format($forecastAnnualFfpLean) }}–{{ number_format($forecastAnnualFfpHigh) }}</p>
+                </div>
+            </div>
+            <table class="w-full text-xs text-left">
+                <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                        <th class="px-3 py-2">Month</th>
+                        <th class="px-3 py-2">Flood/rain risk</th>
+                        <th class="px-3 py-2 text-right">Families</th>
+                        <th class="px-3 py-2 text-right">Food packs (lean–high)</th>
+                        <th class="px-3 py-2 text-right">Expected packs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($monthlyForecast as $row)
+                        @php
+                            $badge = match ($row['riskLevel']) {
+                                'High' => 'bg-red-100 text-red-700',
+                                'Moderate' => 'bg-amber-100 text-amber-700',
+                                default => 'bg-gray-100 text-gray-600',
+                            };
+                        @endphp
+                        <tr class="border-b border-gray-200 {{ $row['riskLevel'] === 'High' ? 'bg-red-50' : '' }}">
+                            <td class="px-3 py-2 font-semibold text-gray-800">{{ $row['month'] }}</td>
+                            <td class="px-3 py-2">
+                                <span class="px-2 py-0.5 rounded-full {{ $badge }}">{{ $row['riskLevel'] }}</span>
+                                <span class="text-gray-500 ml-1">{{ number_format($row['riskScore'], 2) }}</span>
+                            </td>
+                            <td class="px-3 py-2 text-right">{{ number_format($row['families']) }}</td>
+                            <td class="px-3 py-2 text-right">{{ number_format($row['ffpLean']) }}–{{ number_format($row['ffpHigh']) }}</td>
+                            <td class="px-3 py-2 text-right font-semibold text-[#cc2929]">{{ number_format($row['ffp']) }}</td>
+                        </tr>
+                    @endforeach
+                    <tr class="bg-gray-100 font-semibold text-gray-800">
+                        <td class="px-3 py-2" colspan="2">Total</td>
+                        <td class="px-3 py-2 text-right">{{ number_format($monthlyForecast->sum('families')) }}</td>
+                        <td class="px-3 py-2 text-right">{{ number_format($monthlyForecast->sum('ffpLean')) }}–{{ number_format($monthlyForecast->sum('ffpHigh')) }}</td>
+                        <td class="px-3 py-2 text-right text-[#cc2929]">{{ number_format($monthlyForecast->sum('ffp')) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     @push('scripts')
         <script type="module">
             import { barangayList } from '/js/barangayList.js';
+
+            const monthlyModal = document.getElementById('monthlyForecastModal');
+            const toggleMonthlyModal = (open) => {
+                monthlyModal.classList.toggle('hidden', !open);
+                monthlyModal.classList.toggle('flex', open);
+            };
+            document.getElementById('openMonthlyForecast').addEventListener('click', () => toggleMonthlyModal(true));
+            document.getElementById('closeMonthlyForecast').addEventListener('click', () => toggleMonthlyModal(false));
+            monthlyModal.addEventListener('click', (e) => { if (e.target === monthlyModal) toggleMonthlyModal(false); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleMonthlyModal(false); });
 
             const auditYear = document.getElementById('auditYearFilter');
             const auditMonth = document.getElementById('auditMonthFilter');

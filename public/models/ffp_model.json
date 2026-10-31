@@ -8,6 +8,43 @@
     "Ulysses",
     "Uwan"
   ],
+  "typhoon_month": {
+    "Ulysses": {
+      "month": "November",
+      "year": 2020,
+      "note": "confirmed (Vamco, landfall 11 Nov 2020)"
+    },
+    "Fabian": {
+      "month": "July",
+      "year": 2021,
+      "note": "confirmed (In-fa, affected PH late Jul 2021)"
+    },
+    "Karding": {
+      "month": "September",
+      "year": 2022,
+      "note": "confirmed (Noru, landfall 25 Sep 2022)"
+    },
+    "Egay": {
+      "month": "July",
+      "year": 2023,
+      "note": "confirmed (Doksuri, landfall 26 Jul 2023)"
+    },
+    "Carina": {
+      "month": "July",
+      "year": 2024,
+      "note": "confirmed (Gaemi/Habagat, late Jul 2024)"
+    },
+    "Kristine": {
+      "month": "October",
+      "year": 2024,
+      "note": "confirmed (Trami, late Oct 2024)"
+    },
+    "Uwan": {
+      "month": "November",
+      "year": 2025,
+      "note": "confirmed (Fung-wong, landfall 9 Nov 2025)"
+    }
+  },
   "avg_household_size": 3.92,
   "ffp_per_person": {
     "lean": 0.341,
@@ -23,11 +60,7 @@
     "Ulysses": 0.341,
     "Uwan": 0.531
   },
-  "tier_basis": {
-    "lean": "Ulysses",
-    "expected": "median of typhoons",
-    "high": "Fabian"
-  },
+  "headcount_model_mape_%": 23.5,
   "barangay_share": {
     "Addition Hills": 0.0391,
     "Balong Bato": 0.0662,
@@ -61,6 +94,118 @@
     "Salapan"
   ],
   "add_secondary_barangays_above_city_individuals": 1280,
+  "monthly_risk_rank": [
+    "July",
+    "November",
+    "September",
+    "October",
+    "August",
+    "June",
+    "May",
+    "December",
+    "April",
+    "March",
+    "January",
+    "February"
+  ],
+  "monthly_table": [
+    {
+      "month": "July",
+      "typhoons": 3.0,
+      "total_evacuees": 3731.0,
+      "total_ffp": 3545.0,
+      "climatology_weight": 8,
+      "risk_score": 0.83
+    },
+    {
+      "month": "November",
+      "typhoons": 2.0,
+      "total_evacuees": 5078.0,
+      "total_ffp": 1860.0,
+      "climatology_weight": 6,
+      "risk_score": 0.8
+    },
+    {
+      "month": "September",
+      "typhoons": 1.0,
+      "total_evacuees": 620.0,
+      "total_ffp": 310.0,
+      "climatology_weight": 9,
+      "risk_score": 0.65
+    },
+    {
+      "month": "October",
+      "typhoons": 1.0,
+      "total_evacuees": 1280.0,
+      "total_ffp": 690.0,
+      "climatology_weight": 8,
+      "risk_score": 0.63
+    },
+    {
+      "month": "August",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 9,
+      "risk_score": 0.6
+    },
+    {
+      "month": "June",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 5,
+      "risk_score": 0.33
+    },
+    {
+      "month": "May",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 3,
+      "risk_score": 0.2
+    },
+    {
+      "month": "December",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 3,
+      "risk_score": 0.2
+    },
+    {
+      "month": "April",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 2,
+      "risk_score": 0.13
+    },
+    {
+      "month": "March",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 1,
+      "risk_score": 0.07
+    },
+    {
+      "month": "January",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 1,
+      "risk_score": 0.07
+    },
+    {
+      "month": "February",
+      "typhoons": 0.0,
+      "total_evacuees": 0.0,
+      "total_ffp": 0.0,
+      "climatology_weight": 1,
+      "risk_score": 0.07
+    }
+  ],
   "cv": [
     {
       "model": "Ratio model (median ratio x evacuees)",
