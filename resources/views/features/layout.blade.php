@@ -69,14 +69,6 @@
                         <i class="fas fa-box mr-2"></i> Inventory
                     </a>
 
-                    <a href="{{ route('inbound.index') }}" @class(['block px-4 py-3 rounded-lg font-medium', 'bg-white text-[#960505] shadow' => request()->routeIs('inbound.*'), 'text-white hover:bg-white hover:text-[#960505] transition' => !request()->routeIs('inbound.*')])>
-                        <i class="fas fa-arrow-down mr-2"></i> Inbound
-                    </a>
-
-                    <a href="{{ route('outbound.index') }}" @class(['block px-4 py-3 rounded-lg font-medium', 'bg-white text-[#960505] shadow' => request()->routeIs('outbound.*'), 'text-white hover:bg-white hover:text-[#960505] transition' => !request()->routeIs('outbound.*')])>
-                        <i class="fas fa-arrow-up mr-2"></i> Outbound
-                    </a>
-
                     <a href="{{ route('qrcode.index') }}" @class([
                         'block px-4 py-3 rounded-lg font-medium',
                         'bg-white text-[#960505] shadow' => request()->routeIs('qrcode.*'),
