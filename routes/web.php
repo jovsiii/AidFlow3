@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Features\FeaturesController;
 use App\Http\Controllers\Features\DashboardController;
 use App\Http\Controllers\Features\InventoryController;
+use App\Http\Controllers\Features\InventoryMovementController;
 use App\Http\Controllers\Features\UsersController;
 use App\Http\Controllers\Features\QRCodeController;
 use App\Http\Controllers\Features\EvacuationController as FeaturesEvacuationController;
@@ -30,6 +31,9 @@ Route::middleware('firebase.auth')->group(function () {
     Route::put('/features/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
     Route::delete('/features/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
     Route::get('/features/inventory/batch/{batchId}', [InventoryController::class, 'batch'])->name('inventory.batch');
+
+    Route::get('/features/inbound', [InventoryMovementController::class, 'inbound'])->name('inbound.index');
+    Route::get('/features/outbound', [InventoryMovementController::class, 'outbound'])->name('outbound.index');
 
     Route::get('/features/users', [UsersController::class, 'index'])->name('users.index');
     Route::post('/features/users', [UsersController::class, 'store'])->name('users.store');
