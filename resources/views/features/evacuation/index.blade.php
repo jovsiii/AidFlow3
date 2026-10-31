@@ -243,7 +243,7 @@
             <div class="grid grid-cols-3 gap-5">
 
                 <div class="border-2 border-red-700 rounded-2xl p-4 flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-xl bg-red-400"></div>
+                    <div class="w-16 h-16 rounded-xl bg-red-400 flex items-center justify-center"><i class="fas fa-campground text-3xl text-[#1f0000]"></i></div>
 
                     <div>
                         <p class="text-gray-600">Total Tents</p>
@@ -252,7 +252,7 @@
                 </div>
 
                 <div class="border-2 border-red-700 rounded-2xl p-4 flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-xl bg-red-400"></div>
+                    <div class="w-16 h-16 rounded-xl bg-red-400 flex items-center justify-center"><i class="fas fa-users text-3xl text-[#1f0000]"></i></div>
 
                     <div>
                         <p class="text-gray-600">Occupied</p>
@@ -261,7 +261,7 @@
                 </div>
 
                 <div class="border-2 border-red-700 rounded-2xl p-4 flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-xl bg-red-400"></div>
+                    <div class="w-16 h-16 rounded-xl bg-red-400 flex items-center justify-center"><i class="fas fa-door-open text-3xl text-[#1f0000]"></i></div>
 
                     <div>
                         <p class="text-gray-600">Available</p>

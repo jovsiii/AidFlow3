@@ -179,7 +179,7 @@ class InventoryController extends Controller
             'name' => 'required|string',
             'category' => 'required|string',
             'unit' => 'required|string',
-            'stock' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:1',
             'received' => 'nullable|date',
             'expirationDate' => 'nullable|date',
         ]);

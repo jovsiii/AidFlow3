@@ -59,7 +59,7 @@
 
             <div>
                 <label for="quantity" class="ml-4 font-bold">Quantity</label>
-                <input id="quantity" name="quantity" type="number" min="0" placeholder="Quantity"
+                <input id="quantity" name="quantity" type="number" min="1" placeholder="Quantity"
                     value="{{ old('quantity') }}" required
                     class="w-full rounded-[28px] border border-gray-300 bg-gray-100 px-5 py-4 text-lg text-[#1F1F1F] placeholder:text-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" />
             </div>
