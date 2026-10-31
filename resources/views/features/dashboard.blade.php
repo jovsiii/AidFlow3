@@ -303,7 +303,7 @@
 
         </div>
     </div>
-    <div id="monthlyForecastModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div id="monthlyForecastModal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/50 p-4">
         <div class="bg-white rounded-[20px] border-[3px] border-[#8a1c1c] w-full max-w-3xl max-h-[90vh] overflow-auto p-5">
             <div class="flex items-center justify-between mb-1">
                 <h3 class="text-lg text-[#be3d3d]"><i class="fas fa-cloud-showers-heavy mr-1"></i> Monthly Forecast for {{ $forecastYear }}</h3>
