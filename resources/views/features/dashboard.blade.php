@@ -246,8 +246,23 @@
                 </div>
 
                 <div class="border-t border-gray-200 flex-1 flex flex-col max-h-20vh overflow-auto">
-                    <p class="text-gray-900 text-sm sticky top-0 bg-white">Audit Logs</p>
-                    <div class="space-y-3 text-xs text-gray-700 flex-1">
+                    <div class="sticky top-0 bg-white pb-2">
+                        <p class="text-gray-900 text-sm">Audit Logs</p>
+                        <div class="flex gap-2 mt-1">
+                            <select id="auditYearFilter" class="text-xs border border-gray-300 rounded px-1 py-0.5">
+                                <option value="">All years</option>
+                                @foreach($auditLogs->map(fn ($l) => $l['timestamp']?->format('Y'))->filter()->unique()->sortDesc() as $year)
+                                    <option value="{{ $year }}">{{ $year }}</option>
+                                @endforeach
+                            </select>
+                            <select id="auditTypeFilter" class="text-xs border border-gray-300 rounded px-1 py-0.5">
+                                <option value="">All types</option>
+                                <option value="scanEvent">Tent</option>
+                                <option value="reliefPackScan">Relief packs scanned</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="auditLogList" class="space-y-3 text-xs text-gray-700 flex-1">
                         @forelse($auditLogs as $log)
                             @php
                                 $timestamp = $log['timestamp'] ?? null;
@@ -257,7 +272,7 @@
                                     : ($log['tentCode'] ?? 'N/A') . ($log['barangayName'] ? ' • ' . $log['barangayName'] : '');
                             @endphp
 
-                            <div class="flex items-start gap-2 pb-2 border-b border-gray-200 last:border-b-0 last:pb-0">
+                            <div data-audit-log data-type="{{ $log['type'] }}" data-year="{{ $timestamp ? \Carbon\Carbon::parse($timestamp)->format('Y') : '' }}" class="flex items-start gap-2 pb-2 border-b border-gray-200 last:border-b-0 last:pb-0">
                                 <span class="mt-1 h-2.5 w-2.5 rounded-full {{ $log['color'] ?? 'bg-blue-500' }}"></span>
                                 <div class="flex-1">
                                     <p class="font-semibold text-gray-800">{{ $log['label'] ?? 'System event' }}</p>
@@ -271,6 +286,7 @@
                         @empty
                             <p class="text-xs text-gray-500">No audit logs available.</p>
                         @endforelse
+                        <p id="auditNoMatch" class="text-xs text-gray-500 hidden">No logs match the selected filters.</p>
                     </div>
                 </div>
             </div>
@@ -280,6 +296,22 @@
     @push('scripts')
         <script type="module">
             import { barangayList } from '/js/barangayList.js';
+
+            const auditYear = document.getElementById('auditYearFilter');
+            const auditType = document.getElementById('auditTypeFilter');
+            const applyAuditFilters = () => {
+                let visible = 0;
+                document.querySelectorAll('[data-audit-log]').forEach((row) => {
+                    const show = (!auditYear.value || row.dataset.year === auditYear.value)
+                        && (!auditType.value || row.dataset.type === auditType.value);
+                    row.classList.toggle('hidden', !show);
+                    if (show) visible++;
+                });
+                const hasRows = document.querySelector('[data-audit-log]') !== null;
+                document.getElementById('auditNoMatch').classList.toggle('hidden', visible > 0 || !hasRows);
+            };
+            auditYear.addEventListener('change', applyAuditFilters);
+            auditType.addEventListener('change', applyAuditFilters);
 
             const totalTents = barangayList.reduce(
                 (total, barangay) => total + Object.keys(barangay.tents).length,

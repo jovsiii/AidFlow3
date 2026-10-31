@@ -154,7 +154,7 @@ class DashboardController extends Controller
         $auditLogs = $scanEvents
             ->merge($reliefPackScans)
             ->sortByDesc('timestamp')
-            ->take(6)
+            ->take(500)
             ->values();
 
         return view('features.dashboard', [
