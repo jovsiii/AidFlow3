@@ -7,6 +7,12 @@
     @php
         $search = mb_strtolower(trim(request('search', '')));
         $rows = $tab === 'inbound' ? $inbound : $outbound;
+        $batches = $inbound->pluck('batch')->filter()->unique()->sort(SORT_NATURAL | SORT_FLAG_CASE)->values();
+        $selectedBatch = (string) request('batch', '');
+
+        if ($tab === 'inbound' && $selectedBatch !== '') {
+            $rows = $rows->filter(fn ($row) => (string) ($row['batch'] ?? '') === $selectedBatch)->values();
+        }
 
         if ($search !== '') {
             $rows = $rows->filter(function ($row) use ($tab, $search) {
@@ -47,6 +53,14 @@
         <input type="text" name="search" value="{{ request('search') }}"
             placeholder="{{ $tab === 'inbound' ? 'Search item, batch or account' : 'Search pack, item or account' }}"
             class="flex-1 min-w-[220px] rounded-full pl-4 py-2 border-2 border-pink-200" />
+        @if ($tab === 'inbound')
+            <select name="batch" class="px-3 py-2 rounded-md border-2 border-pink-200" onchange="this.form.submit()">
+                <option value="">All Batches</option>
+                @foreach ($batches as $batch)
+                    <option value="{{ $batch }}" @selected($selectedBatch === (string) $batch)>{{ $batch }}</option>
+                @endforeach
+            </select>
+        @endif
         <button type="submit"
             class="px-4 py-2 rounded-md bg-pink-200 border-2 border-red-600 text-red-800 font-semibold">Search</button>
         <a href="{{ route('ledger.index', ['tab' => $tab]) }}"
