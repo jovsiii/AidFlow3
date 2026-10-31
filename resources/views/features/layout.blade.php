@@ -69,10 +69,6 @@
                         <i class="fas fa-box mr-2"></i> Inventory
                     </a>
 
-                    <a href="{{ route('inventory.index') }}#inventory-ledger" class="block px-4 py-3 rounded-lg font-medium text-white hover:bg-white hover:text-[#960505] transition">
-                        <i class="fas fa-book mr-2"></i> Inventory Ledger
-                    </a>
-
                     <a href="{{ route('inbound.index') }}" @class(['block px-4 py-3 rounded-lg font-medium', 'bg-white text-[#960505] shadow' => request()->routeIs('inbound.*'), 'text-white hover:bg-white hover:text-[#960505] transition' => !request()->routeIs('inbound.*')])>
                         <i class="fas fa-arrow-down mr-2"></i> Inbound
                     </a>
