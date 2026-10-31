@@ -149,7 +149,7 @@
     <script>
         (() => {
             const versionUrl = @json(route('ledger.version'));
-            const intervalMs = 10000;
+            const intervalMs = 3000;
             const currentVersion = @json($version);
 
             const check = async () => {

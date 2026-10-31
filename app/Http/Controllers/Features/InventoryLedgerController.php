@@ -63,8 +63,8 @@ class InventoryLedgerController extends Controller
     private function fingerprint(FirebaseService $firebase): string
     {
         return md5(json_encode([
-            $firebase->getInventory(),
-            $firebase->getReliefPackScans(),
+            $firebase->getKeys('inventory'),
+            $firebase->getKeys('reliefPackScans'),
         ]));
     }
 }

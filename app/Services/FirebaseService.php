@@ -53,6 +53,19 @@ class FirebaseService
         return $this->get('inventory');
     }
 
+    /** Fetch only the record keys of a node, which is far cheaper than downloading its contents. */
+    public function getKeys(string $path): array
+    {
+        $response = Http::withoutVerifying()->get(
+            "{$this->databaseUrl}/{$path}.json",
+            ['shallow' => 'true']
+        );
+
+        $keys = $response->successful() ? $response->json() : [];
+
+        return is_array($keys) ? array_keys($keys) : [];
+    }
+
     public function createInventory(array $data)
     {
         return $this->write('inventory', $data, 'post');
