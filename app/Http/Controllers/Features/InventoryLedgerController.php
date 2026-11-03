@@ -45,8 +45,17 @@ class InventoryLedgerController extends Controller
                 'items' => $packItems,
                 'distributedBy' => $scan['accountName'] ?? null,
             ])
-            ->sortByDesc('timestamp')
+            ->sortBy('timestamp')
             ->values();
+
+        // Running balance: total units received minus units distributed up to each scan.
+        $balance = (int) $inbound->sum('quantity');
+        $outbound = $outbound->map(function ($row) use (&$balance) {
+            $balance -= (int) collect($row['items'])->sum();
+            $row['remaining'] = $balance;
+
+            return $row;
+        })->sortByDesc('timestamp')->values();
 
         $version = $this->fingerprint($firebase);
 

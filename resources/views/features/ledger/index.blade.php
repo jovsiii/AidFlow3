@@ -28,6 +28,8 @@
             ['icon' => 'fa-arrow-down', 'label' => 'Inbound Records', 'value' => $inbound->count()],
             ['icon' => 'fa-boxes-stacked', 'label' => 'Total Units Received', 'value' => $inbound->sum('quantity')],
             ['icon' => 'fa-arrow-up', 'label' => 'Relief Packs Distributed', 'value' => $outbound->count()],
+            ['icon' => 'fa-truck-ramp-box', 'label' => 'Total Units Distributed', 'value' => $outbound->sum(fn ($row) => collect($row['items'])->sum())],
+            ['icon' => 'fa-warehouse', 'label' => 'Units Still Available', 'value' => $inbound->sum('quantity') - $outbound->sum(fn ($row) => collect($row['items'])->sum())],
             ['icon' => 'fa-user-check', 'label' => 'Accounts Involved', 'value' => $inbound->pluck('receivedBy')->merge($outbound->pluck('distributedBy'))->filter()->unique()->count()],
         ];
     @endphp
@@ -128,6 +130,8 @@
                             <th class="px-3 py-2 text-left">Date</th>
                             <th class="px-3 py-2 text-left">Relief Pack</th>
                             <th class="px-3 py-2 text-left">Items Distributed</th>
+                            <th class="px-3 py-2 text-left">Total Units</th>
+                            <th class="px-3 py-2 text-left">Still Available</th>
                             <th class="px-3 py-2 text-left">Distributed By</th>
                         </tr>
                     </thead>
@@ -144,6 +148,12 @@
                                     </div>
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
+                                    <span class="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">−{{ number_format(collect($row['items'])->sum()) }}</span> units
+                                </td>
+                                                                   <td class="px-3 py-2 whitespace-nowrap">
+                                                                       <span class="rounded-full bg-green-100 px-2 py-0.5 font-semibold text-green-700">{{ number_format($row['remaining']) }}</span> units left
+                                                                   </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     @if ($row['distributedBy'])
                                         <i class="fas fa-user-circle mr-1 text-red-400"></i>{{ $row['distributedBy'] }}
                                     @else
@@ -152,7 +162,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="py-10 text-center text-gray-500">No outbound records found.</td></tr>
+                            <tr><td colspan="6" class="py-10 text-center text-gray-500">No outbound records found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
