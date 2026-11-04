@@ -19,8 +19,11 @@
                 </div>
 
                 <div id="tentField" class="space-y-2">
-                    <label for="tentCodeSelect" class="block text-sm font-medium text-gray-700 mb-1">Tent Code</label>
-                    <select id="tentCodeSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                    <label for="tentBarangaySelect" class="block text-sm font-medium text-gray-700 mb-1">Barangay</label>
+                    <select id="tentBarangaySelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                    <label for="tentQuantity" class="block text-sm font-medium text-gray-700 mb-1">How many tents?</label>
+                    <input id="tentQuantity" type="number" min="1" max="500" step="1" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p id="tentCountHint" class="text-sm text-gray-600"></p>
                 </div>
 
                 <div id="foodField" class="space-y-2 hidden">
@@ -62,12 +65,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
-    import { barangayList } from '/js/barangayList.js';
+    import { barangayList, applyTentCounts } from '/js/barangayList.js';
 
     const qrType = document.getElementById('qrType');
     const tentField = document.getElementById('tentField');
     const foodField = document.getElementById('foodField');
-    const tentCodeSelect = document.getElementById('tentCodeSelect');
+    const tentBarangaySelect = document.getElementById('tentBarangaySelect');
+    const tentQuantity = document.getElementById('tentQuantity');
+    const tentCountHint = document.getElementById('tentCountHint');
     const foodPackQuantity = document.getElementById('foodPackQuantity');
     const qrPreviewLabel = document.getElementById('qrPreviewLabel');
     const qrOutput = document.getElementById('qrOutput');
@@ -77,22 +82,49 @@
     const PACK_COUNTER_KEY = 'aidflow_relief_pack_counter';
     let generatedQrCodes = [];
 
-    function buildTentOptions() {
-        const tentCodes = [];
+    function tentCountFor(barangay) {
+        return Object.keys(barangay.tents).length;
+    }
 
-        barangayList.forEach((barangay) => {
-            Object.keys(barangay.tents).forEach((tentCode) => {
-                tentCodes.push(tentCode);
-            });
+    function selectedBarangay() {
+        return barangayList.find((barangay) => barangay.code === tentBarangaySelect.value);
+    }
+
+    async function saveTentCount(barangay, count) {
+        const response = await fetch('{{ route("qrcode.tent-counts.save", absolute: false) }}', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            },
+            body: JSON.stringify({ barangay_code: barangay.code, count }),
         });
-
-        tentCodeSelect.innerHTML = tentCodes.map((tentCode) => `
-            <option value="${tentCode}">${tentCode}</option>
-        `).join('');
-
-        if (tentCodes.length) {
-            tentCodeSelect.value = tentCodes[0];
+        if (!response.ok) {
+            throw new Error('The tent count could not be saved.');
         }
+        applyTentCounts({ [barangay.code]: count });
+    }
+
+    function tentCodesFor(barangay, count) {
+        return Array.from({ length: count }, (_, index) => `${barangay.code}-${String(index + 1).padStart(3, '0')}`);
+    }
+
+    function showSelectedBarangayCount() {
+        const barangay = selectedBarangay();
+        if (!barangay) {
+            return;
+        }
+        tentQuantity.value = tentCountFor(barangay);
+        tentCountHint.textContent = `${barangay.name} currently has ${tentQuantity.value} tent(s).`;
+    }
+
+    function buildTentOptions() {
+        tentBarangaySelect.innerHTML = barangayList.map((barangay) => `
+            <option value="${barangay.code}">${barangay.name} (${barangay.code})</option>
+        `).join('');
+        showSelectedBarangayCount();
     }
 
     function getNextFoodPackNumber() {
@@ -110,27 +142,60 @@
         foodPackQuantity.required = isFoodPack;
     }
 
-    function generateQrCode() {
+    async function generateQrCode() {
         const isFoodPack = qrType.value === 'food';
         generatedQrCodes = [];
         downloadQrPdf.classList.add('hidden');
 
         if (!isFoodPack) {
-            const qrText = tentCodeSelect.value;
-            if (!qrText) {
+            const barangay = selectedBarangay();
+            const count = Number(tentQuantity.value);
+            if (!barangay) {
                 qrCode.replaceChildren();
-                qrOutput.textContent = 'No evacuation tent codes are available.';
+                qrOutput.textContent = 'No barangays are available.';
                 return;
             }
-            const qr = qrcode(0, 'M');
-            qr.addData(qrText);
-            qr.make();
+            if (!Number.isSafeInteger(count) || count < 1 || count > 500) {
+                tentQuantity.setCustomValidity('Enter a whole number between 1 and 500.');
+                tentQuantity.reportValidity();
+                return;
+            }
+            tentQuantity.setCustomValidity('');
 
-            qrCode.innerHTML = qr.createImgTag(10, 10);
-            qrCode.className = 'bg-white p-4 rounded-lg shadow-sm min-h-[220px] min-w-[220px] flex items-center justify-center';
-            qrPreviewLabel.textContent = 'Evacuation / Tent Code';
-            qrOutput.textContent = qrText;
-            generatedQrCodes.push({ qr, label: `Evacuation Tent: ${qrText}`, cellSize: 10 });
+            if (count !== tentCountFor(barangay)) {
+                try {
+                    await saveTentCount(barangay, count);
+                } catch (error) {
+                    qrOutput.textContent = error.message;
+                    return;
+                }
+            }
+            tentCountHint.textContent = `${barangay.name} currently has ${count} tent(s).`;
+
+            const tentCodes = tentCodesFor(barangay, count);
+            const qrGrid = document.createElement('div');
+            qrGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 w-full';
+
+            tentCodes.forEach((tentCode) => {
+                const qr = qrcode(0, 'M');
+                qr.addData(tentCode);
+                qr.make();
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow-sm flex flex-col items-center';
+                card.innerHTML = qr.createImgTag(6, 6);
+                const label = document.createElement('p');
+                label.className = 'mt-2 text-sm font-semibold text-gray-900';
+                label.textContent = tentCode;
+                card.appendChild(label);
+                qrGrid.appendChild(card);
+                generatedQrCodes.push({ qr, label: `Evacuation Tent: ${tentCode}`, cellSize: 6 });
+            });
+
+            qrCode.className = 'w-full';
+            qrCode.replaceChildren(qrGrid);
+            qrPreviewLabel.textContent = `${barangay.name}: ${count} Tent QR Code${count === 1 ? '' : 's'}`;
+            qrOutput.textContent = count === 1 ? tentCodes[0] : `${tentCodes[0]} - ${tentCodes[count - 1]}`;
             downloadQrPdf.classList.remove('hidden');
             return;
         }
@@ -240,7 +305,8 @@
         }
     });
 
-    tentCodeSelect.addEventListener('change', () => {
+    tentBarangaySelect.addEventListener('change', () => {
+        showSelectedBarangayCount();
         if (qrType.value !== 'food') {
             generateQrCode();
         }

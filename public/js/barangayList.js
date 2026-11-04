@@ -336,3 +336,31 @@ export const barangayList = [
         },
     },
 ];
+
+// Apply admin-configured tent counts (stored in Firebase) so every page agrees.
+export function applyTentCounts(counts) {
+    barangayList.forEach((barangay) => {
+        const count = Number(counts?.[barangay.code]);
+        if (!Number.isSafeInteger(count) || count < 1) {
+            return;
+        }
+        barangay.tents = Object.fromEntries(
+            Array.from({ length: count }, (_, index) => {
+                const number = index + 1;
+                return [`${barangay.code}-${String(number).padStart(3, '0')}`, `${barangay.name} ${number}`];
+            })
+        );
+    });
+}
+
+try {
+    const response = await fetch('/features/qr/tent-counts', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+    });
+    if (response.ok) {
+        applyTentCounts(await response.json());
+    }
+} catch (error) {
+    console.warn('Using default tent counts.', error);
+}

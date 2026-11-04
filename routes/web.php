@@ -43,6 +43,8 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/features/qr', [QRCodeController::class, 'index'])->name('qrcode.index');
     Route::get('/features/qr/next-relief-pack', [QRCodeController::class, 'nextReliefPack'])->name('qrcode.relief-pack.next');
     Route::post('/features/qr/reserve-relief-pack', [QRCodeController::class, 'reserveReliefPack'])->name('qrcode.relief-pack.reserve');
+    Route::get('/features/qr/tent-counts', [QRCodeController::class, 'tentCounts'])->name('qrcode.tent-counts');
+    Route::post('/features/qr/tent-counts', [QRCodeController::class, 'saveTentCount'])->name('qrcode.tent-counts.save');
     Route::post('/features/qr/scan', [QRCodeController::class, 'scan'])->name('qrcode.scan');
 
     Route::get('/features/evacuation', [FeaturesEvacuationController::class, 'index'])->name('evacuation.index');

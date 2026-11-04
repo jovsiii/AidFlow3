@@ -191,6 +191,19 @@ class FirebaseService
         return $nextNumber;
     }
 
+    /** Admin-configured number of tents per barangay code. */
+    public function getTentCounts(): array
+    {
+        $counts = $this->get('tentCounts');
+
+        return is_array($counts) ? $counts : [];
+    }
+
+    public function setTentCount(string $barangayCode, int $count): bool
+    {
+        return $this->write('tentCounts/' . rawurlencode($barangayCode), $count) !== null;
+    }
+
     public function getTents()
     {
         return $this->get('tents');

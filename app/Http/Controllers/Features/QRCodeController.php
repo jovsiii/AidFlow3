@@ -27,6 +27,27 @@ class QRCodeController extends Controller
         return view('features.qrcode.index', compact('availableReliefPacks', 'reliefPackRequirements'));
     }
 
+    /** Return the saved tent count for every configured barangay. */
+    public function tentCounts(FirebaseService $firebase)
+    {
+        return response()->json($firebase->getTentCounts());
+    }
+
+    /** Save how many tents a barangay has. */
+    public function saveTentCount(Request $request, FirebaseService $firebase)
+    {
+        $validated = $request->validate([
+            'barangay_code' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9-]+$/'],
+            'count' => 'required|integer|min:1|max:500',
+        ]);
+
+        if (! $firebase->setTentCount($validated['barangay_code'], (int) $validated['count'])) {
+            return response()->json(['success' => false, 'message' => 'Unable to save the tent count.'], 502);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     /** Return the next available relief-pack number without reserving it. */
     public function nextReliefPack(FirebaseService $firebase)
     {
