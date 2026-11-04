@@ -28,8 +28,7 @@
             ['icon' => 'fa-arrow-down', 'label' => 'Inbound Records', 'value' => $inbound->count()],
             ['icon' => 'fa-boxes-stacked', 'label' => 'Total Units Received', 'value' => $inbound->sum('quantity')],
             ['icon' => 'fa-arrow-up', 'label' => 'Relief Packs Distributed', 'value' => $outbound->count()],
-            ['icon' => 'fa-truck-ramp-box', 'label' => 'Total Units Distributed', 'value' => $outbound->sum(fn ($row) => collect($row['items'])->sum())],
-            ['icon' => 'fa-warehouse', 'label' => 'Units Still Available', 'value' => $inbound->sum('quantity') - $outbound->sum(fn ($row) => collect($row['items'])->sum())],
+            ['icon' => 'fa-warehouse', 'label' => 'Units Still Available', 'value' => number_format($inbound->sum('quantity') - $outbound->sum(fn ($row) => collect($row['items'])->sum())) . '/' . number_format($inbound->sum('quantity'))],
             ['icon' => 'fa-user-check', 'label' => 'Accounts Involved', 'value' => $inbound->pluck('receivedBy')->merge($outbound->pluck('distributedBy'))->filter()->unique()->count()],
         ];
     @endphp
@@ -44,7 +43,7 @@
                 </div>
                 <div>
                     <p class="text-xs text-gray-700 mb-0.5 whitespace-nowrap">{{ $card['label'] }}</p>
-                    <p class="text-[28px] leading-none font-medium">{{ number_format($card['value']) }}</p>
+                    <p class="text-[28px] leading-none font-medium">{{ is_numeric($card['value']) ? number_format($card['value']) : $card['value'] }}</p>
                 </div>
             </div>
         @endforeach
