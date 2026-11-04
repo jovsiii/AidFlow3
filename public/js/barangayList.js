@@ -353,14 +353,17 @@ export function applyTentCounts(counts) {
     });
 }
 
-try {
-    const response = await fetch('/features/qr/tent-counts', {
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' },
-    });
-    if (response.ok) {
-        applyTentCounts(await response.json());
+// Pages that render tent data should `await tentCountsReady` before using barangayList.
+export const tentCountsReady = (async () => {
+    try {
+        const response = await fetch('/features/qr/tent-counts', {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        });
+        if (response.ok) {
+            applyTentCounts(await response.json());
+        }
+    } catch (error) {
+        console.warn('Using default tent counts.', error);
     }
-} catch (error) {
-    console.warn('Using default tent counts.', error);
-}
+})();

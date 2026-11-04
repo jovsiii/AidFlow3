@@ -120,7 +120,8 @@
     </div>
 
     <script type="module">
-        import { barangayList } from '/js/barangayList.js';
+        import { barangayList, tentCountsReady } from '/js/barangayList.js';
+        await tentCountsReady;
         const scanStatus = document.getElementById('scanner-status');
         const scanResultModal = document.getElementById('scan-result-modal');
         const scanResultTitle = document.getElementById('scan-result-title');

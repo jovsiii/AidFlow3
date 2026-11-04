@@ -356,7 +356,11 @@
                 ]);
         @endphp
         <script type="module">
-            import { barangayList } from '/js/barangayList.js';
+            import { barangayList, tentCountsReady } from '/js/barangayList.js';
+            await tentCountsReady;
+            const whenReady = (fn) => document.readyState === 'loading'
+                ? document.addEventListener('DOMContentLoaded', fn)
+                : fn();
 
             const tableRows = @json($tableRows);
 
@@ -465,7 +469,7 @@
                 });
             };
 
-            document.addEventListener('DOMContentLoaded', () => {
+            whenReady(() => {
                 const map = L.map('evacuation-map', {
                     zoomControl: false,
                     dragging: false,

@@ -65,7 +65,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
-    import { barangayList, applyTentCounts } from '/js/barangayList.js';
+    import { barangayList, applyTentCounts, tentCountsReady } from '/js/barangayList.js';
+    await tentCountsReady;
 
     const qrType = document.getElementById('qrType');
     const tentField = document.getElementById('tentField');
