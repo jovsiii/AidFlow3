@@ -55,6 +55,20 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Type of vulnerability');
 });
 
+it('shows staff a back-to-menu link instead of the desktop sidebar on family profiles', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([]);
+    });
+
+    $this->withSession(['user' => ['role' => 'user']])
+        ->get(route('family-profiles.index'))
+        ->assertOk()
+        ->assertSee('Back to menu')
+        ->assertSee(route('phoneFeatures'), false)
+        ->assertDontSee('id="sidebar"', false)
+        ->assertDontSee('id="menu-toggle"', false);
+});
+
 it('filters family profiles by barangay', function () {
     $this->mock(FirebaseService::class, function ($mock) {
         $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([

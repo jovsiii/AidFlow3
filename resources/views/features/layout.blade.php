@@ -13,11 +13,23 @@
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen">
+    @php
+        $staffFamilyProfilesPage = request()->routeIs('family-profiles.*')
+            && in_array(session('user.role') ?? '', ['user', 'staff'], true);
+    @endphp
     <header class="flex items-center gap-4 px-4 py-3 bg-gray-200 border-b shadow-sm">
-        <button id="menu-toggle" aria-expanded="true"
-            class="flex cursor-pointer h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-2xl text-gray-700 shadow-sm transition hover:bg-gray-50">
-            <i class="fas fa-bars"></i>
-        </button>
+        @if ($staffFamilyProfilesPage)
+            <a href="{{ route('phoneFeatures') }}"
+                class="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#960505]">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                <span>Back to menu</span>
+            </a>
+        @else
+            <button id="menu-toggle" aria-expanded="true"
+                class="flex cursor-pointer h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-2xl text-gray-700 shadow-sm transition hover:bg-gray-50">
+                <i class="fas fa-bars"></i>
+            </button>
+        @endif
 
         <div class="text-lg font-semibold text-slate-900">
             @yield('page-title', 'Dashboard')
@@ -41,8 +53,9 @@
         <!-- Sidebar -->
 
 
-        <div id="sidebar"
-            class="hidden absolute bg-[#960505] rounded-br rounded-tr shadow-2xl p-5 max-w-76 h-full z-50 flex flex-col">
+        @unless ($staffFamilyProfilesPage)
+            <div id="sidebar"
+                class="hidden absolute bg-[#960505] rounded-br rounded-tr shadow-2xl p-5 max-w-76 h-full z-50 flex flex-col">
 
             <div class="flex flex-row gap-2 items-center mb-4">
                 <img accesskey="" src="{{ asset('assets/favicon.png') }}" alt="Logo" class="w-12 h-12 rounded-full">
@@ -51,7 +64,8 @@
                     <p class="text-sm text-gray-100">
                         City Social Welfare and Development of San Juan City
                     </p>
-                </div>
+                    </div>
+                @endunless
             </div>
 
             <nav class="flex flex-1 flex-col justify-between">
@@ -108,24 +122,21 @@
         </main>
     </div>
 
-    <script>
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.getElementById('sidebar');
-        const toggleIcon = menuToggle.querySelector('i');
+    @unless ($staffFamilyProfilesPage)
+        <script>
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const toggleIcon = menuToggle.querySelector('i');
 
-        menuToggle.addEventListener('click', function () {
-            sidebar.classList.toggle('hidden');
-            const isOpen = !sidebar.classList.contains('hidden');
-            toggleIcon.classList.toggle('fa-bars', !isOpen);
-            toggleIcon.classList.toggle('fa-times', isOpen);
-            menuToggle.setAttribute('aria-expanded', String(isOpen));
-        });
-
-        // // Close sidebar on medium screens and up
-        // if (window.innerWidth >= 768) {
-        //     sidebar.classList.remove('hidden');
-        // }
-    </script>
+            menuToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('hidden');
+                const isOpen = !sidebar.classList.contains('hidden');
+                toggleIcon.classList.toggle('fa-bars', !isOpen);
+                toggleIcon.classList.toggle('fa-times', isOpen);
+                menuToggle.setAttribute('aria-expanded', String(isOpen));
+            });
+        </script>
+    @endunless
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     @stack('scripts')
