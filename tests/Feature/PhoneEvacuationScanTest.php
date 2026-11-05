@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\PhoneFeatures\EvacuationController;
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Mockery;
 use Tests\TestCase;
 
@@ -46,6 +47,29 @@ class PhoneEvacuationScanTest extends TestCase
 
         $this->assertTrue($response->getData()->success);
         $this->assertSame('occupied', $response->getData()->action);
+    }
+
+    public function test_scan_rejects_numbers_and_symbols_in_full_name(): void
+    {
+        $controller = new EvacuationController();
+        $firebase = Mockery::mock(FirebaseService::class);
+
+        foreach (['Maria2 Santos', 'Maria@ Santos', 'Maria-Santos'] as $fullName) {
+            $request = Request::create('/phoneFeatures/evacuation/scan', 'POST', [
+                'tent_code' => 'BB-001',
+                'barangay_code' => 'BB',
+                'barangay_name' => 'Balong-Bato',
+                'full_name' => $fullName,
+                'household_size' => 4,
+            ], [], [], ['HTTP_ACCEPT' => 'application/json']);
+
+            try {
+                $controller->scan($request, $firebase);
+                $this->fail("The full name [{$fullName}] should be rejected.");
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('full_name', $exception->errors());
+            }
+        }
     }
 
     public function test_second_scan_requires_confirmation_then_marks_tent_unoccupied(): void

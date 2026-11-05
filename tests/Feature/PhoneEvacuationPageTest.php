@@ -9,5 +9,7 @@ it('renders a mobile-friendly evacuation scanner with staff menu navigation', fu
         ->assertSee(route('phoneFeatures'), false)
         ->assertSee('Evacuation Tent Scanner')
         ->assertSee('scan-details-modal')
+        ->assertSee('scan-full-name-error')
+        ->assertSee('Use letters and spaces only.')
         ->assertSee('scan-result-modal');
 });

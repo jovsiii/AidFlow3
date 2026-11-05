@@ -20,7 +20,7 @@ class EvacuationController extends Controller
             'tent_code' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/'],
             'barangay_code' => 'required|string|max:10',
             'barangay_name' => 'required|string|max:100',
-            'full_name' => 'required|string|max:255',
+            'full_name' => ['required', 'string', 'max:255', 'regex:/^[\p{L} ]+$/u'],
             'household_size' => 'required|integer|min:1|max:100',
             'confirm_unoccupy' => 'sometimes|boolean',
         ]);

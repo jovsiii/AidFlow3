@@ -116,7 +116,11 @@
                     class="font-semibold"></span>.</p>
             <label for="scan-full-name" class="mt-5 block text-sm font-semibold text-gray-700">Full name</label>
             <input id="scan-full-name" name="full_name" type="text" maxlength="255" required autocomplete="name"
+                aria-describedby="scan-full-name-error"
                 class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+            <p id="scan-full-name-error" class="mt-1 hidden text-sm text-red-700" role="alert" aria-live="polite">
+                Use letters and spaces only.
+            </p>
             <label for="scan-household-size" class="mt-4 block text-sm font-semibold text-gray-700">Household size</label>
             <input id="scan-household-size" name="household_size" type="number" min="1" max="100" step="1"
                 value="1" required
@@ -156,10 +160,12 @@
         const scanResultMessage = document.getElementById('scan-result-message');
         const continueScanningButton = document.getElementById('continue-scanning');
         const scanDetailsModal = document.getElementById('scan-details-modal');
+        const scanFullName = document.getElementById('scan-full-name');
+        const scanFullNameError = document.getElementById('scan-full-name-error');
+        const scanHouseholdSize = document.getElementById('scan-household-size');
         const scanDetailsForm = document.getElementById('scan-details-form');
         const scanDetailsTent = document.getElementById('scan-details-tent');
-        const scanFullName = document.getElementById('scan-full-name');
-        const scanHouseholdSize = document.getElementById('scan-household-size');
+        const validFullNamePattern = /^[\p{L} ]+$/u;
         let scanInProgress = false;
         let scanPaused = false;
         let scanner = null;
@@ -214,6 +220,7 @@
 
             currentTentCode = tentCode;
             scanDetailsForm.reset();
+            setFullNameError(false);
             scanHouseholdSize.value = '1';
             scanDetailsTent.textContent = tentCode;
             scanDetailsModal.classList.remove('hidden');
@@ -226,13 +233,36 @@
             showScanResult('Scan cancelled', 'No occupancy or family profile changes were made.');
         });
 
+        function setFullNameError(hasError) {
+            scanFullNameError.classList.toggle('hidden', !hasError);
+            scanFullName.setAttribute('aria-invalid', String(hasError));
+            scanFullName.classList.toggle('border-red-600', hasError);
+            scanFullName.classList.toggle('border-gray-300', !hasError);
+        }
+
+        function isValidFullName(value) {
+            const name = value.trim();
+            return name.length > 0 && validFullNamePattern.test(name);
+        }
+
+        scanFullName.addEventListener('input', () => {
+            setFullNameError(scanFullName.value.length > 0 && !isValidFullName(scanFullName.value));
+        });
+
         scanDetailsForm.addEventListener('submit', async event => {
             event.preventDefault();
+            const validFullName = isValidFullName(scanFullName.value);
+            setFullNameError(!validFullName);
+            if (!validFullName) {
+                scanFullName.focus();
+                return;
+            }
+
             const familyDetails = {
                 full_name: scanFullName.value.trim(),
                 household_size: Number(scanHouseholdSize.value),
             };
-            if (!familyDetails.full_name || !Number.isInteger(familyDetails.household_size)
+            if (!Number.isInteger(familyDetails.household_size)
                 || familyDetails.household_size < 1 || familyDetails.household_size > 100) {
                 scanDetailsForm.reportValidity();
                 return;
