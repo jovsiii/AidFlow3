@@ -8,6 +8,7 @@
     <title>AidFlow | Relief Goods Scanner</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
         #scanner {
@@ -22,12 +23,12 @@
         }
 
         #scanner__scan_region {
-            min-height: 18rem;
+            min-height: 15rem;
             background: #030712;
         }
 
         #scanner__dashboard {
-            padding: 1rem;
+            padding: .75rem;
             background: #fff;
             color: #374151;
         }
@@ -35,10 +36,10 @@
         #scanner__dashboard select,
         #scanner__dashboard button {
             max-width: 100%;
-            margin: .35rem;
+            margin: .25rem;
             border: 1px solid #d1d5db;
             border-radius: .75rem;
-            padding: .65rem .85rem;
+            padding: .65rem .75rem;
             background: #fff;
             color: #1f2937;
         }
@@ -61,51 +62,54 @@
 </head>
 
 <body class="min-h-screen bg-[#EFF2F3] text-[#1F1F1F]">
-    <div class="flex w-full items-center gap-3 bg-red-500 px-4 py-3 sm:px-6">
-        <img src="{{ asset('assets/favicon.png') }}" alt="Logo"
-            class="h-14 w-14 shrink-0 rounded-full object-cover sm:h-20 sm:w-20">
-        <div>
-            <h1 class="text-2xl font-bold leading-none text-white sm:text-4xl">AidFlow</h1>
-            <p class="mt-1 max-w-xl text-xs leading-snug text-red-50 sm:text-base">City Social Welfare and Development
-                of San Juan City</p>
+    <header class="w-full bg-[#960505] px-4 py-4 text-white shadow-md sm:px-6 sm:py-5">
+        <div class="mx-auto flex w-full max-w-3xl items-center gap-3 sm:gap-4">
+            <img src="{{ asset('assets/favicon.png') }}" alt="AidFlow logo"
+                class="h-12 w-12 shrink-0 rounded-full object-cover sm:h-16 sm:w-16">
+            <div class="min-w-0">
+                <h1 class="text-2xl font-bold leading-tight sm:text-4xl">AidFlow</h1>
+                <p class="mt-1 text-xs leading-snug text-red-50 sm:text-sm">City Social Welfare and Development of San Juan City</p>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <main class="mx-auto flex w-full max-w-4xl flex-col gap-5 p-3 sm:p-6">
-        <div class="rounded-3xl bg-white p-4 shadow-lg sm:p-7">
-            <h1 class="text-3xl font-bold leading-tight text-black sm:text-5xl">Relief Goods Scanner</h1>
-            <p class="mt-2 mb-5 text-base leading-relaxed text-gray-600 sm:text-lg">Scan relief goods packages to track
-                inventory and verify distribution.</p>
+    <main class="mx-auto flex w-full max-w-3xl flex-1 flex-col px-3 py-4 sm:px-6 sm:py-7">
+        <a href="{{ route('phoneFeatures') }}"
+            class="mb-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#960505]">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> Back to menu
+        </a>
+
+        <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-7">
+            <div class="mb-5">
+                <h2 class="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">Relief Goods Scanner</h2>
+                <p class="mt-1 text-sm leading-relaxed text-gray-600 sm:text-base">Scan relief packages to verify distribution and update inventory.</p>
+            </div>
 
             <div class="grid grid-cols-1 gap-6">
-                <div class="rounded-3xl border border-gray-200 bg-gray-50 p-4 sm:p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-3">Package Scanner</h2>
-                    <div class="relative mx-auto w-full max-w-xl overflow-hidden rounded-2xl bg-black shadow-inner">
-                        <div id="scanner" class="w-full bg-white text-gray-600">Scanner placeholder</div>
+                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-3 sm:rounded-3xl sm:p-5">
+                    <h3 class="mb-3 text-base font-semibold text-gray-900 sm:text-lg">Package Scanner</h3>
+                    <div class="relative mx-auto w-full max-w-xl overflow-hidden rounded-xl bg-black shadow-inner sm:rounded-2xl">
+                        <div id="scanner" class="w-full bg-white text-sm text-gray-600">Scanner placeholder</div>
                     </div>
                     <p id="scanner-status" role="status" aria-live="polite"
                         class="mt-3 text-center text-sm text-gray-600">Align the package QR code inside the frame.</p>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <a href="{{ route('phoneFeatures') }}"
-            class="block text-center px-4 py-4 bg-gray-100 rounded-3xl font-semibold text-gray-800 hover:bg-gray-200">
-            <i class="fas fa-arrow-left mr-2"></i> Back to Home Page
-        </a>
-        <form method="POST" action="{{ route('logout') }}" class="w-full p-4 text-center">
+        <form method="POST" action="{{ route('logout') }}" class="mt-auto pt-5">
             @csrf
             <button type="submit"
-                class="w-full px-4 py-3 bg-red-900 rounded-lg hover:bg-red-800 text-white font-bold text-2xl">
-                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                class="min-h-12 w-full rounded-xl bg-red-900 px-4 py-3 text-base font-semibold text-white transition hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2">
+                <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i> Logout
             </button>
         </form>
     </main>
 
-    <div id="scan-result-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4"
+    <div id="scan-result-modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
         role="alertdialog" aria-modal="true" aria-labelledby="scan-result-title"
         aria-describedby="scan-result-message">
-        <div class="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl sm:p-8">
+        <div class="w-full max-w-md rounded-t-2xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] text-center shadow-2xl sm:rounded-3xl sm:p-8">
             <h2 id="scan-result-title" class="text-2xl font-bold text-gray-900"></h2>
             <p id="scan-result-message" class="mt-3 text-base text-gray-700"></p>
             <button id="continue-scanning" type="button"
