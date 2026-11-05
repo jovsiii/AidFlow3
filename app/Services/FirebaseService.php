@@ -224,6 +224,44 @@ class FirebaseService
         return $this->get('occupiedTents');
     }
 
+    public function getFamilyProfiles(): array
+    {
+        $profiles = $this->get('familyProfiles');
+
+        if (!is_array($profiles)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($profiles as $id => $profile) {
+            if (is_array($profile)) {
+                $profile['id'] = (string) $id;
+                $result[] = $profile;
+            }
+        }
+
+        return $result;
+    }
+
+    public function createFamilyProfile(array $data)
+    {
+        return $this->write('familyProfiles', $data, 'post');
+    }
+
+    public function updateFamilyProfile(string $id, array $data): bool
+    {
+        return $this->write('familyProfiles/' . rawurlencode($id), $data) !== null;
+    }
+
+    public function deleteFamilyProfile(string $id): bool
+    {
+        $response = Http::withoutVerifying()->delete(
+            "{$this->databaseUrl}/familyProfiles/" . rawurlencode($id) . '.json'
+        );
+
+        return $response->successful();
+    }
+
     public function getOccupiedTent(string $tentCode): ?array
     {
         $response = Http::get(

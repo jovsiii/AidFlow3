@@ -81,6 +81,10 @@
                         <i class="fas fa-qrcode mr-2"></i> QR Code
                     </a>
 
+                    <a href="{{ route('family-profiles.index') }}" @class(['block px-4 py-3 rounded-lg font-medium', 'bg-white text-[#960505] shadow' => request()->routeIs('family-profiles.*'), 'text-white hover:bg-white hover:text-[#960505] transition' => !request()->routeIs('family-profiles.*')])>
+                        <i class="fas fa-house-user mr-2"></i> Family Profile
+                    </a>
+
                     @if((session('user')['role'] ?? '') === 'admin')
                         <a href="{{ route('users.index') }}" @class(['block px-4 py-3 rounded-lg font-medium', 'bg-white text-[#960505] shadow' => request()->routeIs('users.*'), 'text-white hover:bg-white hover:text-[#960505] transition' => !request()->routeIs('users.*')])>
                             <i class="fas fa-users mr-2"></i> Users

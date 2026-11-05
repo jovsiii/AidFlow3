@@ -9,6 +9,7 @@ use App\Http\Controllers\Features\InventoryController;
 use App\Http\Controllers\Features\InventoryLedgerController;
 use App\Http\Controllers\Features\UsersController;
 use App\Http\Controllers\Features\QRCodeController;
+use App\Http\Controllers\Features\FamilyProfileController;
 use App\Http\Controllers\Features\EvacuationController as FeaturesEvacuationController;
 use App\Http\Controllers\PhoneFeatures\PhoneFeaturesController;
 use App\Http\Controllers\PhoneFeatures\AddInventoryController;
@@ -39,6 +40,15 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('/features/users', [UsersController::class, 'store'])->name('users.store');
     Route::put('/features/users/{user}', [UsersController::class, 'update'])->name('users.update');
     Route::delete('/features/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
+
+    Route::get('/features/family-profiles', [FamilyProfileController::class, 'index'])->name('family-profiles.index');
+    Route::post('/features/family-profiles', [FamilyProfileController::class, 'store'])->name('family-profiles.store');
+    Route::put('/features/family-profiles/{profileId}', [FamilyProfileController::class, 'update'])
+        ->where('profileId', '[A-Za-z0-9_-]+')
+        ->name('family-profiles.update');
+    Route::delete('/features/family-profiles/{profileId}', [FamilyProfileController::class, 'destroy'])
+        ->where('profileId', '[A-Za-z0-9_-]+')
+        ->name('family-profiles.destroy');
 
     Route::get('/features/qr', [QRCodeController::class, 'index'])->name('qrcode.index');
     Route::get('/features/qr/next-relief-pack', [QRCodeController::class, 'nextReliefPack'])->name('qrcode.relief-pack.next');
