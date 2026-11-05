@@ -19,44 +19,6 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h1 class="mb-4 text-2xl font-bold text-[#960505]">Add Family Profile</h1>
-            <form method="POST" action="{{ route('family-profiles.store') }}" class="grid gap-4 md:grid-cols-2">
-                @csrf
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Full name
-                    <input name="fullName" value="{{ old('fullName') }}" required maxlength="255"
-                        class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Barangay
-                    <input name="barangay" value="{{ old('barangay') }}" required maxlength="100"
-                        class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Contact number
-                    <input name="contactNumber" value="{{ old('contactNumber') }}" maxlength="30"
-                        class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700 md:col-span-2">
-                    Address
-                    <input name="address" value="{{ old('address') }}" required maxlength="500"
-                        class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Household size
-                    <input type="number" name="householdSize" value="{{ old('householdSize', 1) }}" required min="1"
-                        max="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <div class="flex items-end">
-                    <button type="submit"
-                        class="rounded-lg bg-[#960505] px-5 py-2 font-semibold text-white transition hover:bg-red-800">
-                        Add family
-                    </button>
-                </div>
-            </form>
-        </section>
-
         <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 class="text-xl font-bold text-gray-900">Family Profiles</h2>
