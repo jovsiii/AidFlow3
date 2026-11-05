@@ -114,64 +114,9 @@
                                 </tr>
                             </thead>
                             <tbody id="evacuationTableBody">
-                                @forelse($occupancyData as $scan)
-                                    @php
-                                        $scanDate = !empty($scan['scannedAt']) ? \Carbon\Carbon::parse($scan['scannedAt'])->format('m/d/Y') : date('m/d/Y');
-                                        $tentCode = $scan['tentCode'] ?? $scan['tent_id'] ?? 'T-001';
-                                        $barangay = $scan['barangay'] ?? $scan['barangayName'] ?? $scan['barangay_name'] ?? 'Balong-Bato';
-                                    @endphp
-                                    <tr class="border-b border-gray-200 last:border-0">
-                                        <td class="px-3 py-3 whitespace-nowrap">{{ $scanDate }}</td>
-                                        <td class="px-3 py-3 whitespace-nowrap">{{ $tentCode }}</td>
-                                        <td class="px-3 py-3 whitespace-nowrap">{{ $barangay }}</td>
-                                    </tr>
-                                @empty
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/15/2026</td>
-                                        <td class="px-3 py-3">BB-001</td>
-                                        <td class="px-3 py-3">Balong-Bato</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/15/2026</td>
-                                        <td class="px-3 py-3">BB-002</td>
-                                        <td class="px-3 py-3">Balong-Bato</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/15/2026</td>
-                                        <td class="px-3 py-3">BB-003</td>
-                                        <td class="px-3 py-3">Balong-Bato</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/15/2026</td>
-                                        <td class="px-3 py-3">BB-004</td>
-                                        <td class="px-3 py-3">Balong-Bato</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/17/2026</td>
-                                        <td class="px-3 py-3">S-001</td>
-                                        <td class="px-3 py-3">Salapan</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/17/2026</td>
-                                        <td class="px-3 py-3">S-002</td>
-                                        <td class="px-3 py-3">Salapan</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/17/2026</td>
-                                        <td class="px-3 py-3">S-003</td>
-                                        <td class="px-3 py-3">Salapan</td>
-                                    </tr>
-                                    <tr class="border-b border-gray-200">
-                                        <td class="px-3 py-3">06/25/2026</td>
-                                        <td class="px-3 py-3">WC-001</td>
-                                        <td class="px-3 py-3">West Crame</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-3 py-3">06/25/2026</td>
-                                        <td class="px-3 py-3">WC-002</td>
-                                        <td class="px-3 py-3">West Crame</td>
-                                    </tr>
-                                @endforelse
+                                <tr>
+                                    <td class="px-3 py-4 text-center text-gray-500" colspan="3">No occupied tents.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -328,32 +273,19 @@
 
     @push('scripts')
         @php
-            $tableRows = $occupiedTents->isNotEmpty()
-                ? $occupiedTents->map(function ($scan) {
-                    return [
-                        'date' => !empty($scan['scannedAt'])
-                            ? \Carbon\Carbon::parse($scan['scannedAt'])->format('m/d/Y')
-                            : date('m/d/Y'),
-
-                        'tentId' => $scan['tentCode'] ?? $scan['tent_id'] ?? 'T-001',
-
-                        'barangay' => $scan['barangay']
-                            ?? $scan['barangayName']
-                            ?? $scan['barangay_name']
-                            ?? 'Balong-Bato',
-
-                        'status' => 'Occupied',
-                    ];
-                })->values()
-                : collect([
-                    [
-                        'date' => '06/15/2026',
-                        'tentId' => 'BB-001',
-                        'barangay' => 'Balong-Bato',
-                        'status' => 'Occupied',
-                    ],
-                    // ...
-                ]);
+            $tableRows = $occupiedTents->map(function ($scan) {
+                return [
+                    'date' => !empty($scan['scannedAt'])
+                        ? \Carbon\Carbon::parse($scan['scannedAt'])->format('m/d/Y')
+                        : '—',
+                    'tentId' => $scan['tentCode'] ?? $scan['tent_id'] ?? '—',
+                    'barangay' => $scan['barangay']
+                        ?? $scan['barangayName']
+                        ?? $scan['barangay_name']
+                        ?? '—',
+                    'status' => 'Occupied',
+                ];
+            })->values();
         @endphp
         <script type="module">
             import { barangayList, tentCountsReady } from '/js/barangayList.js';
@@ -372,7 +304,9 @@
             const tableBody = document.getElementById('evacuationTableBody');
 
             const renderTable = (rows) => {
-                tableBody.innerHTML = rows.map(row => `<tr class="border-b border-gray-200 last:border-0"><td class="px-3 py-3 whitespace-nowrap">${row.date}</td><td class="px-3 py-3 whitespace-nowrap">${row.tentId}</td><td class="px-3 py-3 whitespace-nowrap">${row.barangay}</td></tr>`).join('');
+                tableBody.innerHTML = rows.length
+                    ? rows.map(row => `<tr class="border-b border-gray-200 last:border-0"><td class="px-3 py-3 whitespace-nowrap">${row.date}</td><td class="px-3 py-3 whitespace-nowrap">${row.tentId}</td><td class="px-3 py-3 whitespace-nowrap">${row.barangay}</td></tr>`).join('')
+                    : '<tr><td class="px-3 py-4 text-center text-gray-500" colspan="3">No occupied tents.</td></tr>';
             };
 
             const applyFilters = () => {
