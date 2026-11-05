@@ -205,6 +205,68 @@
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700 md:col-span-2">Type of ethnicity
                     <input name="ipTypeOfEthnicity" maxlength="255" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                 </label>
+
+                <h3 class="mt-2 border-b pb-2 text-lg font-semibold text-gray-900 md:col-span-2">Family Information</h3>
+                <div class="overflow-x-auto md:col-span-2">
+                    <table class="w-full min-w-[1100px] border-collapse text-left text-xs">
+                        <thead class="bg-red-50 uppercase text-red-900">
+                            <tr>
+                                <th class="border border-gray-200 px-2 py-2">#</th>
+                                <th class="border border-gray-200 px-2 py-2">Family member</th>
+                                <th class="border border-gray-200 px-2 py-2">Relation to head</th>
+                                <th class="border border-gray-200 px-2 py-2">Birthdate</th>
+                                <th class="border border-gray-200 px-2 py-2">Age</th>
+                                <th class="border border-gray-200 px-2 py-2">Sex</th>
+                                <th class="border border-gray-200 px-2 py-2">Highest educational attainment</th>
+                                <th class="border border-gray-200 px-2 py-2">Occupation</th>
+                                <th class="border border-gray-200 px-2 py-2">Type of vulnerability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for ($memberIndex = 0; $memberIndex < 5; $memberIndex++)
+                                <tr>
+                                    <td class="border border-gray-200 px-2 py-2 font-semibold">{{ $memberIndex + 1 }}</td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input name="familyMembers[{{ $memberIndex }}][fullName]" maxlength="255" aria-label="Family member {{ $memberIndex + 1 }} full name"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input name="familyMembers[{{ $memberIndex }}][relationshipToHead]" maxlength="100" aria-label="Family member {{ $memberIndex + 1 }} relationship to head"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input type="date" name="familyMembers[{{ $memberIndex }}][birthDate]" aria-label="Family member {{ $memberIndex + 1 }} birthdate"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input type="number" name="familyMembers[{{ $memberIndex }}][age]" min="0" max="120" aria-label="Family member {{ $memberIndex + 1 }} age"
+                                            class="w-20 rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <select name="familyMembers[{{ $memberIndex }}][sex]" aria-label="Family member {{ $memberIndex + 1 }} sex"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                            <option value="">Select</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input name="familyMembers[{{ $memberIndex }}][highestEducationalAttainment]" maxlength="150" aria-label="Family member {{ $memberIndex + 1 }} highest educational attainment"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input name="familyMembers[{{ $memberIndex }}][occupation]" maxlength="150" aria-label="Family member {{ $memberIndex + 1 }} occupation"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                    <td class="border border-gray-200 p-1">
+                                        <input name="familyMembers[{{ $memberIndex }}][typeOfVulnerability]" maxlength="150" aria-label="Family member {{ $memberIndex + 1 }} type of vulnerability"
+                                            class="w-full rounded border border-gray-300 px-2 py-1.5">
+                                    </td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Household size
                     <input type="number" name="householdSize" required min="1" max="100"
                         class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
@@ -257,6 +319,11 @@
                     return;
                 }
                 if (field.type === 'hidden' && field.name.endsWith('Beneficiary')) return;
+                const memberField = field.name.match(/^familyMembers\[(\d+)\]\[([^\]]+)\]$/);
+                if (memberField) {
+                    field.value = profile.familyMembers?.[memberField[1]]?.[memberField[2]] ?? '';
+                    return;
+                }
                 field.value = profile[field.name] ?? (field.name === 'fullName' ? fullName : '');
             });
             editFamilyProfileModal.classList.remove('hidden');

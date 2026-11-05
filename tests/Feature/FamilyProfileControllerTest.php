@@ -38,7 +38,11 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Location of the Affected Family')
         ->assertSee('Monthly family net income')
         ->assertSee('4Ps beneficiary')
-        ->assertSee('Permanent Address');
+        ->assertSee('Permanent Address')
+        ->assertSee('Family Information')
+        ->assertSee('Relation to head')
+        ->assertSee('Highest educational attainment')
+        ->assertSee('Type of vulnerability');
 });
 
 it('creates a family profile', function () {
@@ -64,6 +68,18 @@ it('updates a family profile', function () {
         'dateOfBirth' => '1990-05-10',
         'fourPsBeneficiary' => '1',
         'ipBeneficiary' => '0',
+        'familyMembers' => [
+            [
+                'fullName' => 'Jose Santos',
+                'relationshipToHead' => 'Son',
+                'birthDate' => '2012-08-03',
+                'age' => '13',
+                'sex' => 'Male',
+                'highestEducationalAttainment' => 'Elementary',
+                'occupation' => 'Student',
+                'typeOfVulnerability' => '',
+            ],
+        ],
     ]);
 
     $this->mock(FirebaseService::class, function ($mock) {
@@ -78,6 +94,18 @@ it('updates a family profile', function () {
                 'dateOfBirth' => '1990-05-10',
                 'fourPsBeneficiary' => '1',
                 'ipBeneficiary' => '0',
+                'familyMembers' => [
+                    [
+                        'fullName' => 'Jose Santos',
+                        'relationshipToHead' => 'Son',
+                        'birthDate' => '2012-08-03',
+                        'age' => '13',
+                        'sex' => 'Male',
+                        'highestEducationalAttainment' => 'Elementary',
+                        'occupation' => 'Student',
+                        'typeOfVulnerability' => '',
+                    ],
+                ],
             ])
             ->andReturn(true);
     });
