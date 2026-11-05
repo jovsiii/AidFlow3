@@ -20,14 +20,14 @@
         @endif
 
         <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 class="text-xl font-bold text-gray-900">Family Profiles</h2>
+            <div class="flex flex-col gap-3 border-b border-gray-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <h2 class="text-lg font-bold text-gray-900 sm:text-xl">Family Profiles</h2>
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="text-sm text-gray-500">{{ $profiles->count() }} profiles</span>
-                    <form method="GET" action="{{ route('family-profiles.index') }}" class="flex items-center gap-2">
-                        <label for="familyBarangayFilter" class="text-sm font-medium text-gray-700">Barangay</label>
+                    <form method="GET" action="{{ route('family-profiles.index') }}" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+                        <label for="familyBarangayFilter" class="shrink-0 text-sm font-medium text-gray-700">Barangay</label>
                         <select id="familyBarangayFilter" name="barangay"
-                            class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#960505]"
+                            class="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#960505] sm:flex-none"
                             onchange="this.form.submit()">
                             <option value="">All barangays</option>
                             @foreach ($barangays as $barangay)
@@ -41,11 +41,62 @@
             </div>
 
             @if ($profiles->isEmpty())
-                <p class="px-5 py-10 text-center text-gray-500">
+                <p class="px-4 py-10 text-center text-gray-500 sm:px-5">
                     {{ $selectedBarangay !== '' ? 'No family profiles found for this barangay.' : 'No family profiles have been added yet.' }}
                 </p>
             @else
-                <div class="overflow-x-auto">
+                <div class="divide-y divide-gray-100 md:hidden">
+                    @foreach ($profiles as $profile)
+                        <article class="space-y-3 p-4">
+                            <div class="flex min-w-0 items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <h3 class="break-words font-semibold text-gray-900">
+                                        {{ $profile['fullName'] ?? $profile['headOfFamily'] ?? $profile['familyName'] ?? '' }}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        {{ $profile['barangay'] ?? 'Barangay not specified' }}
+                                    </p>
+                                </div>
+                                <span class="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-800">
+                                    {{ $profile['tentCode'] ?? 'No tent' }}
+                                </span>
+                            </div>
+                            <dl class="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                                <div>
+                                    <dt class="text-xs text-gray-500">Address</dt>
+                                    <dd class="break-words text-gray-800">{{ $profile['address'] ?? '—' }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-gray-500">Contact</dt>
+                                    <dd class="break-words text-gray-800">{{ $profile['contactNumber'] ?? '—' }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-gray-500">Household size</dt>
+                                    <dd class="text-gray-800">{{ $profile['householdSize'] ?? '—' }}</dd>
+                                </div>
+                            </dl>
+                            <div class="flex gap-2 pt-1">
+                                <button type="button"
+                                    class="edit-family-profile min-h-10 flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                                    data-id="{{ $profile['id'] }}"
+                                    data-profile="{{ json_encode($profile, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_HEX_TAG) }}">
+                                    Edit
+                                </button>
+                                <form method="POST" action="{{ route('family-profiles.destroy', $profile['id']) }}"
+                                    class="flex-1" onsubmit="return confirm('Delete this family profile?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="min-h-10 w-full rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                <div class="hidden overflow-x-auto md:block">
                     <table class="w-full min-w-[800px] text-left text-sm">
                         <thead class="bg-red-50 text-xs uppercase text-red-900">
                             <tr>
@@ -97,9 +148,9 @@
         </section>
     </div>
 
-    <div id="editFamilyProfileModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50 p-3 sm:p-6">
-        <div class="max-h-[94vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-7">
-            <div class="mb-5 flex items-center justify-between">
+    <div id="editFamilyProfileModal" class="fixed inset-0 z-[60] hidden items-end justify-center bg-black/50 p-0 sm:items-center sm:p-6">
+        <div class="max-h-[96dvh] w-full max-w-6xl overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl sm:max-h-[94vh] sm:rounded-2xl sm:p-7">
+            <div class="sticky top-0 z-10 -mx-4 -mt-4 mb-5 flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 sm:static sm:mx-0 sm:mt-0 sm:border-0 sm:p-0">
                 <h2 class="text-xl font-bold text-[#960505]">Edit Family Profile</h2>
                 <button type="button" id="closeEditFamilyProfile" aria-label="Close edit form"
                     class="rounded p-2 text-2xl leading-none text-gray-500 hover:bg-gray-100">&times;</button>
