@@ -6,27 +6,57 @@
 @section('content')
     @php
         $today = now()->startOfDay();
+        $inventoryMetrics = [
+            [
+                'label' => 'Total inventory items',
+                'value' => $totalItems ?? 0,
+                'icon' => 'fa-boxes-stacked',
+                'tone' => 'bg-red-50 text-red-700',
+            ],
+            [
+                'label' => 'Standard relief packs',
+                'value' => $standardReliefPacks ?? 0,
+                'icon' => 'fa-kit-medical',
+                'tone' => 'bg-blue-50 text-blue-700',
+            ],
+            [
+                'label' => 'Low stock items',
+                'value' => $lowStockItems ?? 0,
+                'icon' => 'fa-triangle-exclamation',
+                'tone' => 'bg-amber-50 text-amber-700',
+            ],
+            [
+                'label' => 'Near expiry items',
+                'value' => $nearExpiryItems ?? 0,
+                'icon' => 'fa-clock',
+                'tone' => 'bg-orange-50 text-orange-700',
+            ],
+        ];
     @endphp
 
     @if (session('success'))
-        <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div class="mb-5 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
             {{ session('success') }}
         </div>
     @endif
 
     @if ($lowStockAlerts->isNotEmpty() || $nearExpiryAlerts->isNotEmpty() || $standardReliefPackSupply <= $minimumStandardReliefPacks)
         <section id="inventoryAlerts" role="alert"
-            class="fixed right-4 top-4 z-40 max-h-[80vh] w-[calc(100vw-2rem)] max-w-xl overflow-y-auto rounded-lg border-2 border-amber-500 bg-amber-50 p-4 text-amber-950 shadow-xl">
-            <div class="mb-2 flex items-center justify-between gap-4">
-                <h2 class="text-lg font-bold">Inventory Alerts</h2>
+            class="mb-5 max-h-[60vh] overflow-y-auto rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm sm:p-5">
+            <div class="mb-3 flex items-center justify-between gap-4">
+                <h2 class="flex items-center gap-2 text-lg font-bold">
+                    <i class="fas fa-triangle-exclamation text-amber-600" aria-hidden="true"></i>
+                    Inventory Alerts
+                </h2>
                 <button type="button" id="closeInventoryAlerts" aria-label="Close inventory alerts"
-                    class="rounded px-2 py-1 text-xl font-bold leading-none text-amber-950 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-700">
+                    class="flex h-9 w-9 items-center justify-center rounded-full text-xl font-bold leading-none text-amber-800 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-700">
                     &times;
                 </button>
             </div>
             @if ($lowStockAlerts->isNotEmpty())
                 <h3 class="font-semibold">Low stock</h3>
-                <ul class="mb-2 list-disc pl-5">
+                <ul class="mb-3 list-disc space-y-1 pl-5 text-sm">
                     @foreach ($lowStockAlerts as $alertItem)
                         <li>
                             {{ $alertItem['name'] ?? 'Unnamed Item' }} has {{ $alertItem['stock'] ?? 0 }}
@@ -38,7 +68,7 @@
             @endif
             @if ($nearExpiryAlerts->isNotEmpty())
                 <h3 class="font-semibold">Near expiry (within 3 months)</h3>
-                <ul class="mb-2 list-disc pl-5">
+                <ul class="mb-3 list-disc space-y-1 pl-5 text-sm">
                     @foreach ($nearExpiryAlerts as $alertItem)
                         <li>
                             {{ $alertItem['name'] ?? 'Unnamed Item' }} expires
@@ -51,129 +81,131 @@
                 </ul>
             @endif
             @if ($standardReliefPackSupply <= $minimumStandardReliefPacks)
-                <p>
-                    Only {{ $standardReliefPackSupply }} standard relief
-                    {{ \Illuminate\Support\Str::plural('pack', $standardReliefPackSupply) }} can be assembled (minimum
-                    {{ $minimumStandardReliefPacks }}).
-                </p>
+                <p>Only {{ $standardReliefPackSupply }} standard relief {{ \Illuminate\Support\Str::plural('pack', $standardReliefPackSupply) }} can be assembled (minimum {{ $minimumStandardReliefPacks }}).</p>
             @endif
         </section>
     @endif
 
-    <div class="flex flex-row flex-wrap lg:flex-nowrap gap-2">
-        <div class="bg-white rounded-[20px] border-[3px] border-[#8a1c1c] p-4 flex items-center shadow-sm w-full">
-            <div class="shrink-0 mr-4">
-                <div
-                    class="w-15 h-15 rounded-[18px] border-[3px] border-[#8a1c1c] bg-[#ff6b6b] flex items-center justify-center">
-                    <i class="fas fa-warehouse text-2xl text-[#1f0000]"></i>
-                </div>
-            </div>
+    <div class="space-y-6">
+        <section class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <p class="text-xs text-gray-700 mb-0.5 whitespace-nowrap">Total Inventory Items</p>
-                <p class="text-[28px] leading-none font-medium">{{ number_format($totalItems ?? 0) }}</p>
+                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-red-700">Supply management</p>
+                <h2 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Inventory</h2>
+                <p class="mt-1 text-sm text-slate-500">Monitor available supplies, stock levels, and expiration dates.</p>
             </div>
-        </div>
+            <span class="text-sm text-slate-500">{{ number_format($inventoryListItems->count()) }} item groups shown</span>
+        </section>
 
-        <div class="bg-white rounded-[20px] border-[3px] border-[#8a1c1c] p-4 flex items-center shadow-sm w-full">
-            <div class="shrink-0 mr-4">
-                <div
-                    class="w-15 h-15 rounded-[18px] border-[3px] border-[#8a1c1c] bg-[#ff6b6b] flex items-center justify-center">
-                    <i class="fas fa-shopping-bag text-2xl text-[#1f0000]"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-xs text-gray-700 mb-0.5 whitespace-nowrap">Standard relief packs</p>
-                <p class="text-[28px] leading-none font-medium">{{ number_format($standardReliefPacks ?? 0) }}</p>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-[20px] border-[3px] border-[#8a1c1c] p-4 flex items-center shadow-sm w-full">
-            <div class="shrink-0 mr-4">
-                <div
-                    class="w-15 h-15 rounded-[18px] border-[3px] border-[#8a1c1c] bg-[#ff6b6b] flex items-center justify-center">
-                    <i class="fas fa-campground text-2xl text-[#1f0000]"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-xs text-gray-700 mb-0.5 whitespace-nowrap">Low Stock Items</p>
-                <p class="text-[28px] leading-none font-medium">{{ number_format($lowStockItems ?? 0) }}</p>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-[20px] border-[3px] border-[#8a1c1c] p-4 flex items-center shadow-sm w-full">
-            <div class="shrink-0 mr-4">
-                <div
-                    class="w-15 h-15 rounded-[18px] border-[3px] border-[#8a1c1c] bg-[#ff6b6b] flex items-center justify-center">
-                    <i class="fas fa-university text-2xl text-[#1f0000]"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-xs text-gray-700 mb-0.5 whitespace-nowrap">Near Expiry Items</p>
-                <p class="text-[28px] leading-none font-medium">{{ number_format($nearExpiryItems ?? 0) }}</p>
-            </div>
-        </div>
-    </div>
-
-    <form method="GET" action="{{ route('inventory.index') }}" class="flex flex-wrap gap-3 items-center mb-4 mt-4">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Item"
-            class="flex-1 min-w-[220px] rounded-full pl-4 py-2 border-2 border-pink-200" />
-        <select name="category" class="px-3 py-2 rounded-md border-2 border-pink-200">
-            <option value="">Category</option>
-            @foreach (collect($inventoryItems)->pluck('category')->filter()->unique()->sort() as $category)
-                <option value="{{ $category }}" @selected(request('category') === $category)>{{ $category }}</option>
+        <section id="inventory-overview" aria-label="Inventory overview"
+            class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            @foreach ($inventoryMetrics as $metric)
+                <article class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{ $metric['tone'] }}">
+                        <i class="fas {{ $metric['icon'] }} text-lg" aria-hidden="true"></i>
+                    </span>
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-medium text-slate-500">{{ $metric['label'] }}</p>
+                        <p class="mt-1 text-2xl font-bold tracking-tight text-slate-900">{{ number_format($metric['value']) }}</p>
+                    </div>
+                </article>
             @endforeach
-        </select>
-        <select name="status" class="px-3 py-2 rounded-md border-2 border-pink-200">
-            <option value="">Status</option>
-            <option value="good" @selected(request('status') === 'good')>Good</option>
-            <option value="near_expiry" @selected(request('status') === 'near_expiry')>Near Expiry</option>
-            <option value="expired" @selected(request('status') === 'expired')>Expired</option>
-        </select>
-        <button type="submit"
-            class="px-4 py-2 rounded-md bg-pink-200 border-2 border-red-600 text-red-800 font-semibold">Filter</button>
-        <a href="{{ route('inventory.index') }}"
-            class="px-4 py-2 rounded-md bg-gray-200 border-2 border-gray-400 text-gray-700">Reset</a>
-    </form>
+        </section>
 
-    <div class="flex flex-row gap-4">
-        <div
-            class="flex-1 flex flex-col bg-white rounded-lg border-2 border-red-600 p-4 min-h-[calc(82vh-120px)] max-h-[calc(82vh-120px)]">
-            <h3 class="text-red-700 text-xl font-semibold mb-2">Inventory List</h3>
-            <div class="overflow-auto h-full max-h-full border border-red-200 rounded-md p-2">
-                <table class="w-full text-sm divide-y divide-gray-100">
-                    <thead class="text-red-800 font-semibold">
+        <form id="inventory-filters" method="GET" action="{{ route('inventory.index') }}"
+            class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-[minmax(14rem,1fr)_minmax(10rem,0.65fr)_minmax(10rem,0.65fr)_auto] xl:items-end">
+            <label class="block">
+                <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Search inventory</span>
+                <span class="flex h-11 items-center gap-2 rounded-xl border border-slate-300 px-3 transition focus-within:border-red-700 focus-within:ring-2 focus-within:ring-red-100">
+                    <i class="fas fa-search text-slate-400" aria-hidden="true"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Item name or category"
+                        class="w-full border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0" />
+                </span>
+            </label>
+            <label class="block">
+                <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Category</span>
+                <select name="category"
+                    class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-100">
+                    <option value="">All categories</option>
+                    @foreach (collect($inventoryItems)->pluck('category')->filter()->unique()->sort() as $category)
+                        <option value="{{ $category }}" @selected(request('category') === $category)>{{ $category }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="block">
+                <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Stock status</span>
+                <select name="status"
+                    class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-100">
+                    <option value="">All statuses</option>
+                    <option value="good" @selected(request('status') === 'good')>Good</option>
+                    <option value="near_expiry" @selected(request('status') === 'near_expiry')>Near Expiry</option>
+                    <option value="expired" @selected(request('status') === 'expired')>Expired</option>
+                </select>
+            </label>
+            <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-1">
+                <button type="submit"
+                    class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-red-800 px-5 text-sm font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 sm:flex-none">
+                    <i class="fas fa-filter" aria-hidden="true"></i> Apply filters
+                </button>
+                <a href="{{ route('inventory.index') }}"
+                    class="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:flex-none">Reset</a>
+            </div>
+        </form>
+
+        <div class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
+            <section id="inventory-table" aria-labelledby="inventory-list-heading"
+                class="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                    <div>
+                        <h3 id="inventory-list-heading" class="text-lg font-bold text-slate-900">Inventory list</h3>
+                        <p class="mt-0.5 text-sm text-slate-500">Select an item to see batch and expiration details.</p>
+                    </div>
+                    @if ($inventoryItems->isNotEmpty())
+                        <button type="button" id="openExpiredModal"
+                            class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-200">
+                            <i class="fas fa-calendar-xmark" aria-hidden="true"></i> View expired items
+                        </button>
+                    @endif
+                </div>
+                <div class="max-h-[68vh] overflow-auto">
+                    <table class="w-full min-w-[38rem] text-left text-sm">
+                        <thead class="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                         <tr>
-                            <th class="py-2 text-left">Item Name</th>
-                            <th class="py-2 text-left">Category</th>
-                            <th class="py-2 text-left">Unit</th>
-                            <th class="py-2 text-left">Stock</th>
+                            <th class="px-5 py-3 font-semibold">Item name</th>
+                            <th class="px-5 py-3 font-semibold">Category</th>
+                            <th class="px-5 py-3 font-semibold">Unit</th>
+                            <th class="px-5 py-3 text-right font-semibold">Available stock</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-700">
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
                         @forelse ($inventoryListItems as $item)
-                            <tr class="border-b">
-                                <td class="py-2">
+                            <tr class="transition hover:bg-slate-50">
+                                <td class="px-5 py-3.5 font-semibold">
                                     <button type="button"
-                                        class="inventory-details-toggle cursor-pointer text-left text-red-700 underline decoration-dotted underline-offset-2 hover:text-red-900"
+                                        class="inventory-details-toggle inline-flex items-center gap-2 text-left text-slate-900 transition hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-200"
                                         aria-expanded="false" aria-controls="inventory-details-{{ $loop->index }}">
                                         {{ $item['name'] ?? 'Unnamed Item' }}
+                                        <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform" aria-hidden="true"></i>
                                     </button>
                                 </td>
-                                <td>{{ $item['category'] ?? 'Uncategorized' }}</td>
-                                <td>{{ $item['unit'] ?? '-' }}</td>
-                                <td>{{ $item['stock'] ?? 0 }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">{{ $item['category'] ?? 'Uncategorized' }}</span>
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-500">{{ $item['unit'] ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-right font-semibold tabular-nums text-slate-900">
+                                    {{ number_format($item['stock'] ?? 0) }}
+                                </td>
                             </tr>
-                            <tr id="inventory-details-{{ $loop->index }}" class="hidden bg-red-200">
-                                <td colspan="4" class="p-3">
+                            <tr id="inventory-details-{{ $loop->index }}" class="hidden bg-slate-50">
+                                <td colspan="4" class="px-5 py-4">
                                     <div class="overflow-x-auto">
-                                        <table class="w-full text-sm text-left">
-                                            <thead class="text-red-800">
+                                        <table class="w-full min-w-[34rem] overflow-hidden rounded-xl border border-slate-200 bg-white text-left text-xs">
+                                            <thead class="bg-slate-100 text-slate-600">
                                                 <tr>
-                                                    <th class="px-3 py-2">Expiration Date</th>
-                                                    <th class="px-3 py-2">Status</th>
-                                                    <th class="px-3 py-2">Stock</th>
-                                                    <th class="px-3 py-2">Starting Stock</th>
-                                                    <th class="px-3 py-2">Batch</th>
+                                                    <th class="px-3 py-2.5 font-semibold">Expiration Date</th>
+                                                    <th class="px-3 py-2.5 font-semibold">Status</th>
+                                                    <th class="px-3 py-2.5 font-semibold">Stock</th>
+                                                    <th class="px-3 py-2.5 font-semibold">Starting stock</th>
+                                                    <th class="px-3 py-2.5 font-semibold">Batch</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -189,14 +221,21 @@
                                                                 ? 'Expired'
                                                                 : 'Near Expiry');
                                                     @endphp
-                                                    <tr class="border-t border-red-200">
-                                                        <td class="px-3 py-2">
+                                                    <tr class="border-t border-slate-100">
+                                                        <td class="px-3 py-2.5">
                                                             {{ $parsedExpirationDate ? $parsedExpirationDate->format('m/d/Y') : '—' }}
                                                         </td>
-                                                        <td class="px-3 py-2">{{ $status }}</td>
-                                                        <td class="px-3 py-2">{{ $record['stock'] ?? 0 }}</td>
-                                                        <td class="px-3 py-2">{{ $record['startingStock'] ?? $record['stock'] ?? 0 }}</td>
-                                                        <td class="px-3 py-2">{{ $record['batch'] ?? '—' }}</td>
+                                                        <td class="px-3 py-2.5">
+                                                            <span @class([
+                                                                'inline-flex rounded-full px-2 py-0.5 font-semibold',
+                                                                'bg-emerald-50 text-emerald-700' => $status === 'Good',
+                                                                'bg-amber-50 text-amber-700' => $status === 'Near Expiry',
+                                                                'bg-red-50 text-red-700' => $status === 'Expired',
+                                                            ])>{{ $status }}</span>
+                                                        </td>
+                                                        <td class="px-3 py-2.5 tabular-nums">{{ number_format($record['stock'] ?? 0) }}</td>
+                                                        <td class="px-3 py-2.5 tabular-nums">{{ number_format($record['startingStock'] ?? $record['stock'] ?? 0) }}</td>
+                                                        <td class="px-3 py-2.5">{{ $record['batch'] ?? '—' }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -206,30 +245,29 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-6 text-center text-gray-500">No inventory items found.</td>
+                                <td colspan="4" class="px-5 py-12 text-center">
+                                    <span class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                        <i class="fas fa-box-open" aria-hidden="true"></i>
+                                    </span>
+                                    <span class="block font-semibold text-slate-700">No inventory items found</span>
+                                    <span class="mt-1 block text-sm text-slate-500">Try changing or clearing your filters.</span>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="flex gap-3 justify-center mt-3">
+            </section>
 
-                @if ($inventoryItems->isNotEmpty())
-                    <button type="button" id="openExpiredModal"
-                        class="cursor-pointer px-4 py-2 rounded-full bg-pink-100 border-2 border-red-600 text-red-800 font-bold">View
-                        Expired Items</button>
-                    {{-- <button type="button" id="openBatchModal"
-                        class="cursor-pointer px-4 py-2 rounded-full bg-pink-100 border-2 border-red-600 text-red-800 font-bold">View
-                        Batch</button> --}}
-                @endif
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-4 w-80 h-[calc(82vh-120px)] min-h-0">
-            <div class="bg-white rounded-lg border-2 border-red-600 p-4">
-                <div class="text-red-800 text-lg font-semibold mb-2">Stock Status Overview</div>
-                <div class="flex gap-3 items-center">
-                    <svg class="w-40 h-40" viewBox="0 0 42 42" width="160" height="160">
+            <aside class="flex flex-col gap-5">
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="mb-4">
+                        <h3 class="text-base font-bold text-slate-900">Stock status overview</h3>
+                        <p class="mt-1 text-sm text-slate-500">Expiration status across tracked items.</p>
+                    </div>
+                    <div class="flex flex-col items-center gap-4 sm:flex-row xl:flex-col 2xl:flex-row">
+                    <svg class="h-36 w-36 shrink-0" viewBox="0 0 42 42" width="144" height="144" role="img"
+                        aria-label="{{ number_format($totalItems ?? 0) }} items: {{ number_format($goodItems ?? 0) }} good, {{ number_format($nearExpiryItems ?? 0) }} near expiry, {{ number_format($expiredItems ?? 0) }} expired">
                         <circle r="15.9" cx="21" cy="21" fill="transparent" stroke="#e9caca" stroke-width="8" />
                         <circle r="15.9" cx="21" cy="21" fill="transparent" stroke="#2fa84f" stroke-width="8"
                             stroke-dasharray="{{ $goodPercent }} {{ 100 - $goodPercent }}" stroke-dashoffset="25"
@@ -241,68 +279,86 @@
                             stroke-dasharray="{{ $expiredPercent }} {{ 100 - $expiredPercent }}"
                             stroke-dashoffset="{{ 25 - $goodPercent - $nearExpiryPercent }}"
                             transform="rotate(-90 21 21)" />
-                        <text x="21" y="22" font-size="6" text-anchor="middle"
-                            fill="#7a0b0b">{{ number_format($totalItems ?? 0) }}</text>
+                        <text x="21" y="22" font-size="6" font-weight="700" text-anchor="middle"
+                            fill="#0f172a">{{ number_format($totalItems ?? 0) }}</text>
                     </svg>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2"><span
-                                class="w-3 h-3 bg-green-500 inline-block rounded-sm"></span> Good <strong
-                                class="ml-2">{{ number_format($goodItems ?? 0) }}</strong></div>
-                        <div class="flex items-center gap-2"><span
-                                class="w-3 h-3 bg-yellow-400 inline-block rounded-sm"></span> Near Expiry <strong
-                                class="ml-2">{{ number_format($nearExpiryItems ?? 0) }}</strong></div>
-                        <div class="flex items-center gap-2"><span
-                                class="w-3 h-3 bg-red-500 inline-block rounded-sm"></span> Expired <strong
-                                class="ml-2">{{ number_format($expiredItems ?? 0) }}</strong></div>
+                    <div class="w-full space-y-3">
+                        <div class="flex items-center justify-between gap-3 text-sm">
+                            <span class="flex items-center gap-2 text-slate-600"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Good</span>
+                            <strong class="tabular-nums text-slate-900">{{ number_format($goodItems ?? 0) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 text-sm">
+                            <span class="flex items-center gap-2 text-slate-600"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Near expiry</span>
+                            <strong class="tabular-nums text-slate-900">{{ number_format($nearExpiryItems ?? 0) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 text-sm">
+                            <span class="flex items-center gap-2 text-slate-600"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>Expired</span>
+                            <strong class="tabular-nums text-slate-900">{{ number_format($expiredItems ?? 0) }}</strong>
+                        </div>
                     </div>
-                </div>
-            </div>
+                    </div>
+                </section>
 
-            <div class="bg-white rounded-lg border-2 border-red-600 p-4">
-                <div class="text-red-800 text-lg font-semibold mb-2">Category Breakdown</div>
-                <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="text-lg">Food</div>
-                        <div class="font-bold">{{ number_format($foodCount ?? 0) }}</div>
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="mb-4">
+                        <h3 class="text-base font-bold text-slate-900">Category breakdown</h3>
+                        <p class="mt-1 text-sm text-slate-500">Items grouped by supply type.</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="text-lg">Non-Food</div>
-                        <div class="font-bold">{{ number_format($nonFoodCount ?? 0) }}</div>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="mb-1.5 flex items-center justify-between text-sm">
+                                <span class="font-medium text-slate-600">Food</span>
+                                <strong class="tabular-nums text-slate-900">{{ number_format($foodCount ?? 0) }}</strong>
+                            </div>
+                            <div class="h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div class="h-full rounded-full bg-red-700"
+                                    style="width: {{ ($totalItems ?? 0) > 0 ? min(100, ($foodCount / $totalItems) * 100) : 0 }}%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="mb-1.5 flex items-center justify-between text-sm">
+                                <span class="font-medium text-slate-600">Non-food</span>
+                                <strong class="tabular-nums text-slate-900">{{ number_format($nonFoodCount ?? 0) }}</strong>
+                            </div>
+                            <div class="h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div class="h-full rounded-full bg-slate-500"
+                                    style="width: {{ ($totalItems ?? 0) > 0 ? min(100, ($nonFoodCount / $totalItems) * 100) : 0 }}%"></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="border-t border-pink-100 pt-3 flex justify-between items-center">
-                    <div>Total</div>
-                    <div class="bg-pink-100 px-3 py-1 rounded-md border-2 border-red-600">
-                        {{ number_format($totalItems ?? 0) }}
+                    <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
+                        <span class="font-medium text-slate-500">Total</span>
+                        <span class="font-bold tabular-nums text-slate-900">{{ number_format($totalItems ?? 0) }}</span>
                     </div>
-                </div>
-            </div>
+                </section>
+            </aside>
         </div>
+    </div>
 
         <div id="expiredModal"
-            class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="w-full max-w-5xl rounded-2xl border-4 border-red-600 bg-white shadow-2xl overflow-hidden">
-                <div class="px-6 py-5 text-white">
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+            <div class="w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                <div class="border-b border-slate-100 px-6 py-5">
                     <div class="flex items-center justify-between gap-4">
                         <div>
-                            <div class="text-xs uppercase tracking-[0.35em] text-red-400">Expired Items</div>
-                            <h3 class="text-3xl font-bold text-red-600">Expired Inventory</h3>
+                            <div class="text-xs font-semibold uppercase tracking-[0.16em] text-red-700">Inventory review</div>
+                            <h3 class="mt-1 text-2xl font-bold text-slate-900">Expired Inventory</h3>
                         </div>
                     </div>
                 </div>
                 <div class="p-6">
-                    <div class="overflow-hidden rounded border border-red-600 bg-[#ffdfe1] shadow-sm">
+                    <div class="max-h-[60vh] overflow-auto rounded-xl border border-slate-200">
                         <div class="overflow-x-auto">
-                            <table class="min-w-full text-sm text-left">
-                                <thead class="text-red-700">
+                            <table class="min-w-full text-left text-sm">
+                                <thead class="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                                     <tr>
-                                        <th class="px-5 py-4">Item</th>
-                                        <th class="px-5 py-4">Category</th>
-                                        <th class="px-5 py-4">Quantity</th>
-                                        <th class="px-5 py-4">Exp Date</th>
+                                        <th class="px-5 py-3 font-semibold">Item</th>
+                                        <th class="px-5 py-3 font-semibold">Category</th>
+                                        <th class="px-5 py-3 font-semibold">Quantity</th>
+                                        <th class="px-5 py-3 font-semibold">Exp Date</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="divide-y divide-slate-100">
                                     @php
                                         $expiredItemsForModal = $inventoryItems->filter(function ($item) use ($today) {
                                             $expirationDate = $item['expirationDate'] ?? null;
@@ -311,17 +367,17 @@
                                         })->values();
                                     @endphp
                                     @forelse($expiredItemsForModal as $item)
-                                        <tr class="border-t border-red-100">
-                                            <td class="px-5 py-4 text-gray-900">{{ $item['name'] ?? 'Unnamed Item' }}</td>
-                                            <td class="px-5 py-4 text-gray-900">{{ $item['category'] ?? 'Uncategorized' }}</td>
-                                            <td class="px-5 py-4 text-gray-900">{{ $item['stock'] ?? 0 }}</td>
-                                            <td class="px-5 py-4 text-gray-900">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-5 py-3.5 font-semibold text-slate-900">{{ $item['name'] ?? 'Unnamed Item' }}</td>
+                                            <td class="px-5 py-3.5 text-slate-600">{{ $item['category'] ?? 'Uncategorized' }}</td>
+                                            <td class="px-5 py-3.5 font-medium tabular-nums text-slate-900">{{ number_format($item['stock'] ?? 0) }}</td>
+                                            <td class="px-5 py-3.5 text-red-700">
                                                 {{ $item['expirationDate'] ? \Carbon\Carbon::parse($item['expirationDate'])->format('m/d/y') : '—' }}
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="px-5 py-8 text-center text-gray-500">No expired items found.
+                                            <td colspan="4" class="px-5 py-10 text-center text-slate-500">No expired items found.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -332,7 +388,7 @@
 
                     <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
                         <button type="button" id="expiredCloseBtn"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-full border border-red-700 bg-white px-6 py-3 text-red-700 font-semibold transition hover:bg-red-50">Back
+                            class="inline-flex min-h-11 items-center justify-center rounded-xl bg-red-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-300">Back
                             to Inventory</button>
                     </div>
                 </div>
@@ -340,13 +396,13 @@
         </div>
 
         <div id="batchModal"
-            class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="w-full max-w-5xl rounded-2xl border-4 border-red-600 bg-white shadow-2xl overflow-hidden">
-                <div class="px-6 py-5 text-white">
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+            <div class="w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                <div class="border-b border-slate-100 px-6 py-5">
                     <div class="flex items-center justify-between gap-4">
                         <div>
-                            <div class="text-xs uppercase tracking-[0.35em] text-red-400">Table of Item Batch</div>
-                            <h3 class="text-3xl font-bold text-red-600">Batch Details</h3>
+                            <div class="text-xs font-semibold uppercase tracking-[0.16em] text-red-700">Inventory review</div>
+                            <h3 class="mt-1 text-2xl font-bold text-slate-900">Batch Details</h3>
                         </div>
                     </div>
                 </div>
@@ -355,7 +411,7 @@
                         <div class="mb-4 flex flex-wrap gap-3" role="tablist" aria-label="Inventory batches">
                             @foreach ($batchGroups as $batchName => $batchItems)
                                 <button type="button" role="tab" data-batch-target="batch-panel-{{ $loop->index }}"
-                                    class="batch-tab rounded-full px-4 py-2 {{ $loop->first ? 'bg-red-700 text-white font-semibold' : 'bg-red-50 text-red-700' }}">
+                                    class="batch-tab rounded-xl px-4 py-2 text-sm {{ $loop->first ? 'bg-red-800 text-white font-semibold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                                     Batch {{ $batchName }} ({{ $batchItems->count() }})
                                 </button>
                             @endforeach
@@ -363,10 +419,10 @@
 
                         @foreach ($batchGroups as $batchName => $batchItems)
                             <div id="batch-panel-{{ $loop->index }}"
-                                class="batch-panel {{ $loop->first ? '' : 'hidden' }} overflow-hidden rounded border border-red-600 bg-[#ffdfe1] shadow-sm">
+                                class="batch-panel {{ $loop->first ? '' : 'hidden' }} overflow-hidden rounded-xl border border-slate-200 bg-white">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full text-sm text-left">
-                                        <thead class="text-red-700">
+                                        <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                                             <tr>
                                                 <th class="px-5 py-4">Item</th>
                                                 <th class="px-5 py-4">Category</th>
@@ -376,12 +432,12 @@
                                         </thead>
                                         <tbody>
                                             @foreach ($batchItems as $item)
-                                                <tr class="border-t border-red-100">
-                                                    <td class="px-5 py-4 text-gray-900">{{ $item['name'] ?? 'Unnamed Item' }}</td>
-                                                    <td class="px-5 py-4 text-gray-900">{{ $item['category'] ?? 'Uncategorized' }}</td>
-                                                    <td class="px-5 py-4 text-gray-900">{{ $item['stock'] ?? 0 }}</td>
-                                                    <td class="px-5 py-4 text-gray-900">
-                                                        {{ !empty($item['expirationDate']) ? \Carbon\Carbon::parse($item['expirationDate'])->format('m/d/y') : '�' }}
+                                                <tr class="border-t border-slate-100">
+                                                    <td class="px-5 py-4 font-semibold text-slate-900">{{ $item['name'] ?? 'Unnamed Item' }}</td>
+                                                    <td class="px-5 py-4 text-slate-600">{{ $item['category'] ?? 'Uncategorized' }}</td>
+                                                    <td class="px-5 py-4 text-slate-900">{{ $item['stock'] ?? 0 }}</td>
+                                                    <td class="px-5 py-4 text-slate-600">
+                                                        {{ !empty($item['expirationDate']) ? \Carbon\Carbon::parse($item['expirationDate'])->format('m/d/y') : '—' }}
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -391,15 +447,15 @@
                             </div>
                         @endforeach
                     @else
-                        <div class="rounded border border-red-200 bg-red-50 px-5 py-8 text-center text-gray-600">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-8 text-center text-slate-600">
                             No batched inventory items yet. Add an item and choose or create a batch.
                         </div>
                     @endif
                     <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
                         <button type="button" id="batchSaveBtn"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-full bg-red-700 px-6 py-3 text-white font-semibold transition hover:bg-red-800">Save</button>
+                            class="inline-flex min-h-11 items-center justify-center rounded-xl bg-red-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-300">Save</button>
                         <button type="button" id="batchCloseBtn"
-                            class="cursor-pointer inline-flex items-center justify-center rounded-full border border-red-700 bg-white px-6 py-3 text-red-700 font-semibold transition hover:bg-red-50">Back
+                            class="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Back
                             to Inventory</button>
                     </div>
                 </div>
@@ -433,6 +489,7 @@
                         const isExpanded = button.getAttribute('aria-expanded') === 'true';
 
                         details?.classList.toggle('hidden', isExpanded);
+                        button.querySelector('i')?.classList.toggle('rotate-180', !isExpanded);
                         button.setAttribute('aria-expanded', String(!isExpanded));
                     });
                 });
@@ -480,13 +537,13 @@
                 batchTabButtons.forEach((button) => {
                     button.addEventListener('click', () => {
                         batchTabButtons.forEach((tab) => {
-                            tab.classList.remove('bg-red-700', 'text-white', 'font-semibold');
-                            tab.classList.add('bg-red-50', 'text-red-700');
+                            tab.classList.remove('bg-red-800', 'text-white', 'font-semibold');
+                            tab.classList.add('bg-slate-100', 'text-slate-700');
                         });
                         batchPanels.forEach((panel) => panel.classList.add('hidden'));
 
-                        button.classList.remove('bg-red-50', 'text-red-700');
-                        button.classList.add('bg-red-700', 'text-white', 'font-semibold');
+                        button.classList.remove('bg-slate-100', 'text-slate-700');
+                        button.classList.add('bg-red-800', 'text-white', 'font-semibold');
                         document.getElementById(button.dataset.batchTarget)?.classList.remove('hidden');
                     });
                 });
