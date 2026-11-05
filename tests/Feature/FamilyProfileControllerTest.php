@@ -34,7 +34,11 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Family Profile')
         ->assertSee('Maria Santos')
         ->assertSee('BB-001')
-        ->assertSee('12 Mabini Street');
+        ->assertSee('12 Mabini Street')
+        ->assertSee('Location of the Affected Family')
+        ->assertSee('Monthly family net income')
+        ->assertSee('4Ps beneficiary')
+        ->assertSee('Permanent Address');
 });
 
 it('creates a family profile', function () {
@@ -52,15 +56,34 @@ it('creates a family profile', function () {
 });
 
 it('updates a family profile', function () {
+    $profileData = familyProfileData([
+        'region' => 'NCR',
+        'district' => 'District 1',
+        'lastName' => 'Santos',
+        'firstName' => 'Maria',
+        'dateOfBirth' => '1990-05-10',
+        'fourPsBeneficiary' => '1',
+        'ipBeneficiary' => '0',
+    ]);
+
     $this->mock(FirebaseService::class, function ($mock) {
         $mock->shouldReceive('updateFamilyProfile')
             ->once()
-            ->with('-profile1', familyProfileData())
+            ->with('-profile1', [
+                ...familyProfileData(),
+                'region' => 'NCR',
+                'district' => 'District 1',
+                'lastName' => 'Santos',
+                'firstName' => 'Maria',
+                'dateOfBirth' => '1990-05-10',
+                'fourPsBeneficiary' => '1',
+                'ipBeneficiary' => '0',
+            ])
             ->andReturn(true);
     });
 
     $this->withSession(['user' => ['role' => 'admin']])
-        ->put(route('family-profiles.update', '-profile1'), familyProfileData())
+        ->put(route('family-profiles.update', '-profile1'), $profileData)
         ->assertRedirect(route('family-profiles.index'))
         ->assertSessionHas('success', 'Family profile updated successfully.');
 });
