@@ -171,9 +171,9 @@
         </div>
     </div>
     <!-- Barangay Details Modal -->
-    <div id="barangayModal" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-[9999]">
+    <div id="barangayModal" class="fixed inset-0 z-[9999] hidden items-center justify-center overflow-y-auto bg-black/50 p-3 sm:p-5">
 
-        <div class="relative bg-white rounded-2xl w-[900px] max-w-[95vw] p-6">
+        <div class="relative my-auto max-h-[calc(100dvh-1.5rem)] w-[900px] max-w-[95vw] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:max-h-[calc(100dvh-2.5rem)] sm:p-6">
 
             <!-- Close -->
             <button id="closeBarangayModal" class="absolute top-4 right-5 text-5xl leading-none">
@@ -185,7 +185,7 @@
             </h2>
 
             <!-- Stats -->
-            <div class="grid grid-cols-3 gap-5">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
 
                 <div class="border-2 border-red-700 rounded-2xl p-4 flex items-center gap-4">
                     <div class="w-16 h-16 rounded-xl bg-red-400 flex items-center justify-center"><i class="fas fa-campground text-3xl text-[#1f0000]"></i></div>
@@ -216,12 +216,12 @@
 
             </div>
 
-            <div class="grid grid-cols-3 gap-4 mt-6">
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:mt-6 sm:grid-cols-3">
 
-                <div class="col-span-2 border rounded-xl overflow-hidden">
+                <div id="barangay-tent-scroll" class="max-h-[45vh] overflow-auto rounded-xl border border-gray-200 sm:col-span-2">
 
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-100">
+                    <table class="w-full min-w-[28rem] text-left">
+                        <thead class="sticky top-0 z-10 bg-gray-100 shadow-sm">
                             <tr>
                                 <th class="p-2">Date</th>
                                 <th class="p-2">Tent</th>
@@ -235,7 +235,7 @@
 
                 </div>
 
-                <div class="border rounded-xl flex flex-col justify-center items-center">
+                <div class="flex flex-col items-center justify-center rounded-xl border p-4">
 
                     <h3 class="text-red-700 text-xl font-semibold">
                         Occupancy Level

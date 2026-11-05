@@ -12,6 +12,8 @@ it('shows an empty state instead of sample tent rows when there are no occupied 
         ->get(route('evacuation.index'))
         ->assertOk()
         ->assertSee('No occupied tents.')
+        ->assertSee('id="barangay-tent-scroll"', false)
+        ->assertSee('max-h-[45vh]', false)
         ->assertDontSee('BB-001')
         ->assertDontSee('06/15/2026');
 });
