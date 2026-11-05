@@ -8,13 +8,26 @@ use Illuminate\Http\Request;
 
 class FamilyProfileController extends Controller
 {
-    public function index(FirebaseService $firebase)
+    public function index(Request $request, FirebaseService $firebase)
     {
-        $profiles = collect($firebase->getFamilyProfiles())
+        $allProfiles = collect($firebase->getFamilyProfiles());
+        $barangays = $allProfiles
+            ->pluck('barangay')
+            ->filter(fn ($barangay) => is_string($barangay) && trim($barangay) !== '')
+            ->map(fn ($barangay) => trim($barangay))
+            ->unique(fn ($barangay) => mb_strtolower($barangay))
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+        $selectedBarangay = trim((string) $request->query('barangay', ''));
+
+        $profiles = $allProfiles
+            ->when($selectedBarangay !== '', fn ($profiles) => $profiles->filter(
+                fn ($profile) => mb_strtolower(trim((string) ($profile['barangay'] ?? ''))) === mb_strtolower($selectedBarangay)
+            ))
             ->sortBy('fullName', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
-        return view('features.family-profiles.index', compact('profiles'));
+        return view('features.family-profiles.index', compact('profiles', 'barangays', 'selectedBarangay'));
     }
 
     public function store(Request $request, FirebaseService $firebase)

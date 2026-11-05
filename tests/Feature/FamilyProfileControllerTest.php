@@ -25,6 +25,15 @@ it('shows family profiles on the family profile page', function () {
                 'contactNumber' => '09171234567',
                 'householdSize' => 4,
             ],
+            [
+                'id' => '-profile2',
+                'fullName' => 'Juan Dela Cruz',
+                'tentCode' => 'BB-002',
+                'address' => '13 Mabini Street',
+                'barangay' => 'Balong-Bato',
+                'contactNumber' => '09170000000',
+                'householdSize' => 3,
+            ],
         ]);
     });
 
@@ -34,6 +43,7 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Family Profile')
         ->assertSee('Maria Santos')
         ->assertSee('BB-001')
+        ->assertSee('Balong-Bato')
         ->assertSee('12 Mabini Street')
         ->assertSee('Location of the Affected Family')
         ->assertSee('Monthly family net income')
@@ -43,6 +53,38 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Relation to head')
         ->assertSee('Highest educational attainment')
         ->assertSee('Type of vulnerability');
+});
+
+it('filters family profiles by barangay', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([
+            [
+                'id' => '-profile1',
+                'fullName' => 'Maria Santos',
+                'tentCode' => 'BB-001',
+                'address' => '12 Mabini Street',
+                'barangay' => 'Batis',
+                'householdSize' => 4,
+            ],
+            [
+                'id' => '-profile2',
+                'fullName' => 'Juan Dela Cruz',
+                'tentCode' => 'BB-002',
+                'address' => '13 Mabini Street',
+                'barangay' => 'Balong-Bato',
+                'householdSize' => 3,
+            ],
+        ]);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('family-profiles.index', ['barangay' => 'balong-bato']))
+        ->assertOk()
+        ->assertSee('Juan Dela Cruz')
+        ->assertSee('Balong-Bato')
+        ->assertDontSee('Maria Santos')
+        ->assertDontSee('12 Mabini Street')
+        ->assertSee('value="Balong-Bato" selected', false);
 });
 
 it('creates a family profile', function () {

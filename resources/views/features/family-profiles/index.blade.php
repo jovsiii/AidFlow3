@@ -20,13 +20,30 @@
         @endif
 
         <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+            <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-bold text-gray-900">Family Profiles</h2>
-                <span class="text-sm text-gray-500">{{ $profiles->count() }} profiles</span>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-sm text-gray-500">{{ $profiles->count() }} profiles</span>
+                    <form method="GET" action="{{ route('family-profiles.index') }}" class="flex items-center gap-2">
+                        <label for="familyBarangayFilter" class="text-sm font-medium text-gray-700">Barangay</label>
+                        <select id="familyBarangayFilter" name="barangay"
+                            class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#960505]"
+                            onchange="this.form.submit()">
+                            <option value="">All barangays</option>
+                            @foreach ($barangays as $barangay)
+                                <option value="{{ $barangay }}" @selected(mb_strtolower($selectedBarangay) === mb_strtolower($barangay))>
+                                    {{ $barangay }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
             </div>
 
             @if ($profiles->isEmpty())
-                <p class="px-5 py-10 text-center text-gray-500">No family profiles have been added yet.</p>
+                <p class="px-5 py-10 text-center text-gray-500">
+                    {{ $selectedBarangay !== '' ? 'No family profiles found for this barangay.' : 'No family profiles have been added yet.' }}
+                </p>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[800px] text-left text-sm">
