@@ -15,7 +15,7 @@
 <body class="bg-gray-50 flex flex-col min-h-screen">
     @php
         $staffFamilyProfilesPage = request()->routeIs('family-profiles.*')
-            && in_array(session('user.role') ?? '', ['user', 'staff'], true);
+            && strtolower((string) session('user.role', '')) !== 'admin';
     @endphp
     <header class="flex items-center gap-4 px-4 py-3 bg-gray-200 border-b shadow-sm">
         @if ($staffFamilyProfilesPage)
@@ -65,7 +65,6 @@
                         City Social Welfare and Development of San Juan City
                     </p>
                     </div>
-                @endunless
             </div>
 
             <nav class="flex flex-1 flex-col justify-between">
@@ -114,7 +113,8 @@
                     </button>
                 </form>
             </nav>
-        </div>
+            </div>
+        @endunless
 
         <!-- Main Content -->
         <main class="flex-1 p-4">

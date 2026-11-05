@@ -66,7 +66,24 @@ it('shows staff a back-to-menu link instead of the desktop sidebar on family pro
         ->assertSee('Back to menu')
         ->assertSee(route('phoneFeatures'), false)
         ->assertDontSee('id="sidebar"', false)
-        ->assertDontSee('id="menu-toggle"', false);
+        ->assertDontSee('id="menu-toggle"', false)
+        ->assertDontSee(route('inventory.index'), false)
+        ->assertDontSee(route('ledger.index'), false)
+        ->assertDontSee(route('qrcode.index'), false);
+});
+
+it('keeps the admin sidebar on the family profiles page', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([]);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('family-profiles.index'))
+        ->assertOk()
+        ->assertSee('id="sidebar"', false)
+        ->assertSee(route('inventory.index'), false)
+        ->assertSee(route('ledger.index'), false)
+        ->assertSee(route('qrcode.index'), false);
 });
 
 it('filters family profiles by barangay', function () {
