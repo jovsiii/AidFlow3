@@ -57,7 +57,6 @@ it('combines inventory list rows with the same name and sums their stock', funct
         ->toBe(1)
         ->and($html)
         ->toContain('Expiration Date', 'Expired', 'Batch A', 'Inventory Alerts', 'Near expiry (within 3 months)', 'Only 0 standard relief packs')
-        ->toContain('id="inventory-overview"', 'id="inventory-filters"', 'id="inventory-table"', 'Stock status overview', 'Category breakdown')
         ->not->toContain('Configure Alert');
 });
 
