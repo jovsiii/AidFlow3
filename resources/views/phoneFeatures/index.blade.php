@@ -30,6 +30,10 @@
                 class="bg-red-500 text-white block px-4 py-3 rounded-lg font-bold tracking-widest text-2xl">
                 <i class="fas fa-box mr-2"></i> EVACUATION TENT SCANNER
             </a>
+            <a href="{{ route('family-profiles.index') }}"
+                class="bg-red-500 text-white block px-4 py-3 rounded-lg font-bold tracking-widest text-2xl">
+                <i class="fas fa-house-user mr-2"></i> FAMILY PROFILES
+            </a>
             <a href="{{ route('phoneFeatures.reliefGoods') }}"
                 class="bg-red-500 text-white block px-4 py-3 rounded-lg font-bold tracking-widest text-2xl">
                 <i class="fas fa-box mr-2"></i> RELIEF GOODS SCANNER
