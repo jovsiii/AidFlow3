@@ -17,6 +17,8 @@ class PhoneEvacuationScanTest extends TestCase
             'tent_code' => 'BB-001',
             'barangay_code' => 'BB',
             'barangay_name' => 'Balong-Bato',
+            'full_name' => 'Maria Santos',
+            'household_size' => 4,
         ]);
         $request->setLaravelSession(app('session')->driver());
         $request->session()->put('user', ['fullName' => 'Test Account']);
@@ -31,7 +33,13 @@ class PhoneEvacuationScanTest extends TestCase
                 && $data['accountName'] === 'Test Account'
                 && isset($data['scannedAt'])
             ),
-            true
+            true,
+            Mockery::on(fn ($profile) =>
+                $profile['fullName'] === 'Maria Santos'
+                && $profile['householdSize'] === 4
+                && $profile['tentCode'] === 'BB-001'
+                && $profile['barangay'] === 'Balong-Bato'
+            )
         )->andReturn(true);
 
         $response = $controller->scan($request, $firebase);
@@ -55,6 +63,8 @@ class PhoneEvacuationScanTest extends TestCase
                 'tent_code' => 'WC-002',
                 'barangay_code' => 'WC',
                 'barangay_name' => 'West Crame',
+                'full_name' => 'Juan Dela Cruz',
+                'household_size' => 3,
             ]
         ), $firebase);
         $this->assertTrue($confirmationResponse->getData()->requires_confirmation);
@@ -62,19 +72,25 @@ class PhoneEvacuationScanTest extends TestCase
         $firebase->shouldReceive('recordTentScan')->once()->with(
             'WC-002',
             Mockery::on(fn ($data) => $data['barangayName'] === 'West Crame'),
-            false
+            false,
+            null
         )->andReturn(true);
 
-        $response = $controller->scan(Request::create(
+        $request = Request::create(
             '/phoneFeatures/evacuation/scan',
             'POST',
             [
                 'tent_code' => 'WC-002',
                 'barangay_code' => 'WC',
                 'barangay_name' => 'West Crame',
+                'full_name' => 'Juan Dela Cruz',
+                'household_size' => 3,
                 'confirm_unoccupy' => true,
             ]
-        ), $firebase);
+        );
+        $request->setLaravelSession(app('session')->driver());
+
+        $response = $controller->scan($request, $firebase);
         $this->assertTrue($response->getData()->success);
         $this->assertSame('unoccupied', $response->getData()->action);
     }

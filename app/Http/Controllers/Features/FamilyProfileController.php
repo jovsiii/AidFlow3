@@ -11,7 +11,7 @@ class FamilyProfileController extends Controller
     public function index(FirebaseService $firebase)
     {
         $profiles = collect($firebase->getFamilyProfiles())
-            ->sortBy('familyName', SORT_NATURAL | SORT_FLAG_CASE)
+            ->sortBy('fullName', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
         return view('features.family-profiles.index', compact('profiles'));
@@ -57,8 +57,7 @@ class FamilyProfileController extends Controller
     private function rules(): array
     {
         return [
-            'familyName' => ['required', 'string', 'max:255'],
-            'headOfFamily' => ['required', 'string', 'max:255'],
+            'fullName' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:500'],
             'barangay' => ['required', 'string', 'max:100'],
             'contactNumber' => ['nullable', 'string', 'max:30'],

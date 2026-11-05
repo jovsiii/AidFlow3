@@ -106,6 +106,32 @@
         </form>
     </main>
 
+    <div id="scan-details-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4"
+        role="dialog" aria-modal="true" aria-labelledby="scan-details-title">
+        <form id="scan-details-form" class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+            <h2 id="scan-details-title" class="text-2xl font-bold text-gray-900">Family Details</h2>
+            <p class="mt-2 text-sm text-gray-600">Enter the household details for tent <span id="scan-details-tent"
+                    class="font-semibold"></span>.</p>
+            <label for="scan-full-name" class="mt-5 block text-sm font-semibold text-gray-700">Full name</label>
+            <input id="scan-full-name" name="full_name" type="text" maxlength="255" required autocomplete="name"
+                class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+            <label for="scan-household-size" class="mt-4 block text-sm font-semibold text-gray-700">Household size</label>
+            <input id="scan-household-size" name="household_size" type="number" min="1" max="100" step="1"
+                value="1" required
+                class="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-base focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+            <div class="mt-6 flex gap-3">
+                <button id="cancel-scan-details" type="button"
+                    class="flex-1 rounded-xl border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700">
+                    Save and scan
+                </button>
+            </div>
+        </form>
+    </div>
+
     <div id="scan-result-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4"
         role="alertdialog" aria-modal="true" aria-labelledby="scan-result-title"
         aria-describedby="scan-result-message">
@@ -127,10 +153,16 @@
         const scanResultTitle = document.getElementById('scan-result-title');
         const scanResultMessage = document.getElementById('scan-result-message');
         const continueScanningButton = document.getElementById('continue-scanning');
+        const scanDetailsModal = document.getElementById('scan-details-modal');
+        const scanDetailsForm = document.getElementById('scan-details-form');
+        const scanDetailsTent = document.getElementById('scan-details-tent');
+        const scanFullName = document.getElementById('scan-full-name');
+        const scanHouseholdSize = document.getElementById('scan-household-size');
         let scanInProgress = false;
         let scanPaused = false;
         let scanner = null;
         let lastScan = { code: null, time: 0 };
+        let currentTentCode = null;
 
         function startScanner() {
             if (scanner || typeof Html5QrcodeScanner === 'undefined') return;
@@ -167,13 +199,54 @@
             scanStatus.textContent = 'Tap Start Scanning to scan another tent.';
         });
 
+        function closeScanDetails() {
+            scanDetailsModal.classList.add('hidden');
+            scanDetailsModal.classList.remove('flex');
+        }
+
+        function openScanDetails(tentCode) {
+            if (!findBarangay(tentCode)) {
+                showScanResult('Scan failed', `Tent ${tentCode} was not found in any barangay.`);
+                return;
+            }
+
+            currentTentCode = tentCode;
+            scanDetailsForm.reset();
+            scanHouseholdSize.value = '1';
+            scanDetailsTent.textContent = tentCode;
+            scanDetailsModal.classList.remove('hidden');
+            scanDetailsModal.classList.add('flex');
+            scanFullName.focus();
+        }
+
+        document.getElementById('cancel-scan-details').addEventListener('click', () => {
+            closeScanDetails();
+            showScanResult('Scan cancelled', 'No occupancy or family profile changes were made.');
+        });
+
+        scanDetailsForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const familyDetails = {
+                full_name: scanFullName.value.trim(),
+                household_size: Number(scanHouseholdSize.value),
+            };
+            if (!familyDetails.full_name || !Number.isInteger(familyDetails.household_size)
+                || familyDetails.household_size < 1 || familyDetails.household_size > 100) {
+                scanDetailsForm.reportValidity();
+                return;
+            }
+
+            closeScanDetails();
+            await submitScan(currentTentCode, familyDetails);
+        });
+
         function findBarangay(tentCode) {
             return barangayList.find(barangay =>
                 Object.prototype.hasOwnProperty.call(barangay.tents, tentCode)
             );
         }
 
-        async function submitScan(tentCode, confirmUnoccupy = false) {
+        async function submitScan(tentCode, familyDetails, confirmUnoccupy = false) {
             if (scanInProgress) return;
             scanInProgress = true;
 
@@ -195,6 +268,8 @@
                         tent_code: tentCode,
                         barangay_code: barangay.code,
                         barangay_name: barangay.name,
+                        full_name: familyDetails.full_name,
+                        household_size: familyDetails.household_size,
                         confirm_unoccupy: confirmUnoccupy
                     })
                 });
@@ -220,7 +295,7 @@
                 if (data?.requires_confirmation) {
                     if (window.confirm(data.message)) {
                         scanInProgress = false;
-                        await submitScan(tentCode, true);
+                        await submitScan(tentCode, familyDetails, true);
                         return;
                     }
                     showScanResult('Scan cancelled', `Tent ${tentCode} remains occupied. No changes were made.`);
@@ -228,7 +303,7 @@
                 }
 
                 if (data?.success && data.action === 'occupied') {
-                    showScanResult('Tent occupied', `Tent ${tentCode} was successfully marked occupied.`);
+                    showScanResult('Tent occupied', `Tent ${tentCode} was marked occupied. The family profile for ${familyDetails.full_name} (${familyDetails.household_size} people) was saved.`);
                 } else if (data?.success && data.action === 'unoccupied') {
                     showScanResult('Tent marked vacant', `Tent ${tentCode} was successfully marked vacant.`);
                 } else {
@@ -256,7 +331,7 @@
             scanStatus.textContent = `Scanned: ${tentCode}`;
             try {
                 await closeScanner();
-                await submitScan(tentCode);
+                openScanDetails(tentCode);
             } catch (error) {
                 console.error(error);
                 showScanResult('Scanner error', 'The camera could not be stopped. Please reload the page before scanning again.');

@@ -250,7 +250,7 @@ class FirebaseService
 
     public function updateFamilyProfile(string $id, array $data): bool
     {
-        return $this->write('familyProfiles/' . rawurlencode($id), $data) !== null;
+        return $this->write('familyProfiles/' . rawurlencode($id), $data, 'patch') !== null;
     }
 
     public function deleteFamilyProfile(string $id): bool
@@ -272,16 +272,26 @@ class FirebaseService
         return is_array($tent) ? $tent : null;
     }
 
-    public function recordTentScan(string $tentCode, array $data, bool $occupied): bool
+    public function recordTentScan(
+        string $tentCode,
+        array $data,
+        bool $occupied,
+        ?array $familyProfile = null
+    ): bool
     {
         $event = $data;
         $event['action'] = $occupied ? 'occupied' : 'unoccupied';
         $eventKey = (string) Str::uuid();
-
-        $response = Http::patch("{$this->databaseUrl}/.json", [
+        $updates = [
             "scanEvents/{$eventKey}" => $event,
             'occupiedTents/' . $tentCode => $occupied ? $data : null,
-        ]);
+        ];
+
+        if ($occupied && $familyProfile !== null) {
+            $updates['familyProfiles/tent_' . $tentCode] = $familyProfile;
+        }
+
+        $response = Http::patch("{$this->databaseUrl}/.json", $updates);
 
         return $response->successful();
     }

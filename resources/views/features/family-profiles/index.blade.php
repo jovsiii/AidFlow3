@@ -24,13 +24,8 @@
             <form method="POST" action="{{ route('family-profiles.store') }}" class="grid gap-4 md:grid-cols-2">
                 @csrf
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Family name
-                    <input name="familyName" value="{{ old('familyName') }}" required maxlength="255"
-                        class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Head of family
-                    <input name="headOfFamily" value="{{ old('headOfFamily') }}" required maxlength="255"
+                    Full name
+                    <input name="fullName" value="{{ old('fullName') }}" required maxlength="255"
                         class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
@@ -75,8 +70,8 @@
                     <table class="w-full min-w-[800px] text-left text-sm">
                         <thead class="bg-red-50 text-xs uppercase text-red-900">
                             <tr>
-                                <th class="px-4 py-3">Family</th>
-                                <th class="px-4 py-3">Head of family</th>
+                                <th class="px-4 py-3">Full name</th>
+                                <th class="px-4 py-3">Tent code</th>
                                 <th class="px-4 py-3">Barangay / address</th>
                                 <th class="px-4 py-3">Contact</th>
                                 <th class="px-4 py-3">Household size</th>
@@ -86,8 +81,8 @@
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($profiles as $profile)
                                 <tr>
-                                    <td class="px-4 py-3 font-semibold text-gray-900">{{ $profile['familyName'] ?? '' }}</td>
-                                    <td class="px-4 py-3">{{ $profile['headOfFamily'] ?? '' }}</td>
+                                    <td class="px-4 py-3 font-semibold text-gray-900">{{ $profile['fullName'] ?? $profile['headOfFamily'] ?? $profile['familyName'] ?? '' }}</td>
+                                    <td class="px-4 py-3">{{ $profile['tentCode'] ?? '—' }}</td>
                                     <td class="px-4 py-3">
                                         <div>{{ $profile['barangay'] ?? '' }}</div>
                                         <div class="text-xs text-gray-500">{{ $profile['address'] ?? '' }}</div>
@@ -99,8 +94,8 @@
                                             <button type="button"
                                                 class="edit-family-profile rounded-lg border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50"
                                                 data-id="{{ $profile['id'] }}"
-                                                data-family-name="{{ $profile['familyName'] ?? '' }}"
-                                                data-head-of-family="{{ $profile['headOfFamily'] ?? '' }}"
+                                                data-full-name="{{ $profile['fullName'] ?? $profile['headOfFamily'] ?? $profile['familyName'] ?? '' }}"
+                                                data-tent-code="{{ $profile['tentCode'] ?? '' }}"
                                                 data-address="{{ $profile['address'] ?? '' }}"
                                                 data-barangay="{{ $profile['barangay'] ?? '' }}"
                                                 data-contact-number="{{ $profile['contactNumber'] ?? '' }}"
@@ -140,13 +135,8 @@
                 @method('PUT')
                 <input type="hidden" name="profileId">
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Family name
-                    <input name="familyName" required maxlength="255"
-                        class="edit-profile-field rounded-lg border border-gray-300 px-3 py-2 font-normal">
-                </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Head of family
-                    <input name="headOfFamily" required maxlength="255"
+                    Full name
+                    <input name="fullName" required maxlength="255"
                         class="edit-profile-field rounded-lg border border-gray-300 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
@@ -197,8 +187,7 @@
             editFamilyProfileForm.action = editFamilyProfileRoute.replace('__PROFILE__', encodeURIComponent(profile.id));
             editFamilyProfileForm.elements.namedItem('profileId').value = profile.id;
             Object.entries({
-                familyName: profile.familyName,
-                headOfFamily: profile.headOfFamily,
+                fullName: profile.fullName,
                 address: profile.address,
                 barangay: profile.barangay,
                 contactNumber: profile.contactNumber,
@@ -213,8 +202,7 @@
         document.querySelectorAll('.edit-family-profile').forEach(button => {
             button.addEventListener('click', () => openFamilyProfileModal({
                 id: button.dataset.id,
-                familyName: button.dataset.familyName,
-                headOfFamily: button.dataset.headOfFamily,
+                fullName: button.dataset.fullName,
                 address: button.dataset.address,
                 barangay: button.dataset.barangay,
                 contactNumber: button.dataset.contactNumber,
@@ -231,8 +219,7 @@
         @if(old('profileId') && $errors->any())
             openFamilyProfileModal({
                 id: @json(old('profileId')),
-                familyName: @json(old('familyName')),
-                headOfFamily: @json(old('headOfFamily')),
+                fullName: @json(old('fullName')),
                 address: @json(old('address')),
                 barangay: @json(old('barangay')),
                 contactNumber: @json(old('contactNumber')),

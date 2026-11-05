@@ -20,6 +20,8 @@ class EvacuationController extends Controller
             'tent_code' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/'],
             'barangay_code' => 'required|string|max:10',
             'barangay_name' => 'required|string|max:100',
+            'full_name' => 'required|string|max:255',
+            'household_size' => 'required|integer|min:1|max:100',
             'confirm_unoccupy' => 'sometimes|boolean',
         ]);
 
@@ -57,8 +59,22 @@ class EvacuationController extends Controller
                 ?: $request->session()->get('user.username')
                 ?: $request->session()->get('username'),
         ];
+        $familyProfile = [
+            'fullName' => trim($validated['full_name']),
+            'headOfFamily' => trim($validated['full_name']),
+            'householdSize' => (int) $validated['household_size'],
+            'tentCode' => $tentCode,
+            'barangayCode' => $barangayCode,
+            'barangay' => $barangayName,
+            'updatedAt' => $scannedAt->toISOString(),
+        ];
 
-        if (!$firebase->recordTentScan($tentCode, $firebaseData, $willBeOccupied)) {
+        if (!$firebase->recordTentScan(
+            $tentCode,
+            $firebaseData,
+            $willBeOccupied,
+            $willBeOccupied ? $familyProfile : null
+        )) {
             return response()->json([
                 'success' => false,
                 'message' => 'Firebase could not record the scan. Please try again.',
@@ -68,7 +84,9 @@ class EvacuationController extends Controller
         return response()->json([
             'success' => true,
             'action' => $willBeOccupied ? 'occupied' : 'unoccupied',
-            'message' => "Tent {$tentCode} marked " . ($willBeOccupied ? 'occupied.' : 'unoccupied.'),
+            'message' => $willBeOccupied
+                ? "Tent {$tentCode} marked occupied and family profile saved."
+                : "Tent {$tentCode} marked unoccupied.",
         ]);
     }
 

@@ -5,8 +5,7 @@ use App\Services\FirebaseService;
 function familyProfileData(array $overrides = []): array
 {
     return array_merge([
-        'familyName' => 'Santos Household',
-        'headOfFamily' => 'Maria Santos',
+        'fullName' => 'Maria Santos',
         'address' => '12 Mabini Street',
         'barangay' => 'Batis',
         'contactNumber' => '09171234567',
@@ -19,8 +18,8 @@ it('shows family profiles on the family profile page', function () {
         $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([
             [
                 'id' => '-profile1',
-                'familyName' => 'Santos Household',
-                'headOfFamily' => 'Maria Santos',
+                'fullName' => 'Maria Santos',
+                'tentCode' => 'BB-001',
                 'address' => '12 Mabini Street',
                 'barangay' => 'Batis',
                 'contactNumber' => '09171234567',
@@ -33,8 +32,8 @@ it('shows family profiles on the family profile page', function () {
         ->get(route('family-profiles.index'))
         ->assertOk()
         ->assertSee('Family Profile')
-        ->assertSee('Santos Household')
         ->assertSee('Maria Santos')
+        ->assertSee('BB-001')
         ->assertSee('12 Mabini Street');
 });
 
