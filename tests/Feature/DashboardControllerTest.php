@@ -8,13 +8,14 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
 
     $firebase = Mockery::mock(FirebaseService::class);
     $firebase->shouldReceive('getInventory')->andReturn([]);
-    $firebase->shouldReceive('getScans')->andReturn([
+    $firebase->shouldReceive('getScans')->once()->andReturn([
         [
             'action' => 'occupied',
             'accountName' => 'Test Account',
             'scannedAt' => '2026-06-15T12:00:00+00:00',
         ],
     ]);
+    $firebase->shouldReceive('getReliefPacks')->andReturn([]);
     $firebase->shouldReceive('getReliefPackScans')->andReturn([]);
     $firebase->shouldReceive('getOccupiedTents')->andReturn([
         ['tent_code' => 'BB-001', 'barangay_code' => 'BB'],

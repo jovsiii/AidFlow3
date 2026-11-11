@@ -1,6 +1,3 @@
-import { ref, onValue } from "firebase/database";
-import { database } from "./firebase";
-
 const pathname = window.location.pathname;
 const watchedPaths = pathname.startsWith("/features/inventory")
     ? ["inventory", "relief_packs"]
@@ -22,23 +19,31 @@ const watchedPaths = pathname.startsWith("/features/inventory")
 const latestValues = new Map();
 let refreshTimer;
 
-watchedPaths.forEach((path) => {
-    onValue(
-        ref(database, path),
-        (snapshot) => {
-            const value = JSON.stringify(snapshot.val());
-            const previousValue = latestValues.get(path);
-            latestValues.set(path, value);
+if (watchedPaths.length > 0) {
+    Promise.all([import("firebase/database"), import("./firebase")])
+        .then(([{ ref, onValue }, { database }]) => {
+            watchedPaths.forEach((path) => {
+                onValue(
+                    ref(database, path),
+                    (snapshot) => {
+                        const value = JSON.stringify(snapshot.val());
+                        const previousValue = latestValues.get(path);
+                        latestValues.set(path, value);
 
-            if (previousValue !== undefined && previousValue !== value) {
-                window.clearTimeout(refreshTimer);
-                refreshTimer = window.setTimeout(() => {
-                    window.location.reload();
-                }, 250);
-            }
-        },
-        (error) => {
-            console.error(`Unable to watch Firebase updates for "${path}".`, error);
-        },
-    );
-});
+                        if (previousValue !== undefined && previousValue !== value) {
+                            window.clearTimeout(refreshTimer);
+                            refreshTimer = window.setTimeout(() => {
+                                window.location.reload();
+                            }, 250);
+                        }
+                    },
+                    (error) => {
+                        console.error(`Unable to watch Firebase updates for "${path}".`, error);
+                    },
+                );
+            });
+        })
+        .catch((error) => {
+            console.error("Unable to initialize Firebase update watchers.", error);
+        });
+}

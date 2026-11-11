@@ -97,7 +97,8 @@ class DashboardController extends Controller
 
         $reliefPacks = collect($firebase->getReliefPacks());
 
-        $recentScannedTents = collect($firebase->getScans());
+        $scanEvents = $firebase->getScans() ?? [];
+        $recentScannedTents = collect($scanEvents);
 
         $occupiedTents = collect($firebase->getOccupiedTents());
 
@@ -109,7 +110,7 @@ class DashboardController extends Controller
             ->countBy()
             ->all();
 
-        $scanEvents = collect($firebase->getScans() ?? [])
+        $scanEvents = collect($scanEvents)
             ->map(function ($event, $key) {
                 $action = strtolower((string) ($event['action'] ?? ''));
                 $timestamp = Carbon::parse(

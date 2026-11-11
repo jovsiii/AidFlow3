@@ -7,9 +7,10 @@
     <title>@yield('title', 'AidFlow')</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @if (request()->routeIs('dashboard', 'evacuation.index'))
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    @endif
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen">
@@ -137,7 +138,9 @@
             });
         </script>
     @endunless
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    @if (request()->routeIs('dashboard', 'evacuation.index'))
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    @endif
 
     @stack('scripts')
 </body>

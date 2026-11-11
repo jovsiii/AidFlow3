@@ -413,7 +413,7 @@
                 };
             });
 
-            const occupancy = @json($occupiedTents);
+            const occupancy = @json($occupancyData ?? []);
             let geoLayer = null;
 
             const getStyleForFeature = (feature) => {
@@ -423,11 +423,7 @@
                 }
 
 
-                let occupied = 0;
-                for (const [id, data] of Object.entries(occupancy)) {
-
-                    occupied += data.barangayCode === info.code ? 1 : 0;
-                }
+                const occupied = occupancy[info.code] ?? 0;
                 const ratio = info.maxTents > 0 ? occupied / info.maxTents : 0;
 
                 // Highlight any occupied barangay in amber and high utilization (80%+) in red.
@@ -465,10 +461,7 @@
                     const info = barangayMap[feature.properties.name];
                     if (!info) return;
 
-                    let occupied = 0;
-                    for (const [id, data] of Object.entries(occupancy)) {
-                        occupied += data.barangayCode === info.code ? 1 : 0;
-                    }
+                    const occupied = occupancy[info.code] ?? 0;
                     const tooltipText = `${feature.properties.name} — ${occupied}/${info.maxTents} occupied`;
 
                     if (layer.getTooltip()) {
@@ -553,10 +546,7 @@
                                 }
                                 barangayIdLabels.push({ layer, label: idLabel, code: info.code });
 
-                                let occupied = 0;
-                                for (const [id, data] of Object.entries(occupancy)) {
-                                    occupied += data.barangayCode === info.code ? 1 : 0;
-                                }
+                                const occupied = occupancy[info.code] ?? 0;
                                 layer.bindTooltip(`${feature.properties.name} — ${occupied}/${info.maxTents} occupied`);
 
                                 // Add hover handlers to apply a stronger glow and bring feature to front
@@ -585,26 +575,6 @@
                         }, 100);
                     });
 
-                // update layer tooltips when occupancy data changes in real-time via Firebase
-                if (window.firebaseDatabase) {
-                    const occupancyRef = ref(window.firebaseDatabase, 'occupiedTents');
-
-                    onValue(occupancyRef, (snapshot) => {
-                        const data = snapshot.val() ?? {};
-                        const nextOccupancy = {};
-
-                        Object.values(data).forEach((entry) => {
-                            const barangayCode = entry?.barangayCode ?? entry?.barangayCode ?? null;
-                            if (barangayCode) {
-                                nextOccupancy[barangayCode] = (nextOccupancy[barangayCode] ?? 0) + 1;
-                            }
-                        });
-
-                        Object.keys(occupancy).forEach((code) => delete occupancy[code]);
-                        Object.assign(occupancy, nextOccupancy);
-                        updateLayerTooltips();
-                    });
-                }
             });
         </script>
     @endpush
