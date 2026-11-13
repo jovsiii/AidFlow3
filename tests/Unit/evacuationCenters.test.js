@@ -42,7 +42,9 @@ test('CMEC is marked once at an approximate position inside CDJ', async () => {
         assert.equal(calls.length, 4);
         assert.deepEqual(calls[0][1], [position.lat, position.lng]);
         assert.equal(calls[0][2].icon.iconUrl, '/assets/CSWD.png');
-        assert.deepEqual(calls[0][2].icon.iconAnchor, [10, 10]);
+        assert.deepEqual(calls[0][2].icon.iconSize, [26, 26]);
+        assert.deepEqual(calls[0][2].icon.iconAnchor, [13, 13]);
+        assert.deepEqual(calls[0][2].icon.tooltipAnchor, [13, 0]);
         assert.equal(calls[1][1], 'CMEC');
         assert.notEqual(calls[1][2].permanent, true);
         assert.equal(calls[2][1], 'click');

@@ -8,9 +8,9 @@ export function addEvacuationCenterMarker(map, feature, center, openDetails) {
     const marker = L.marker([14.6069, 121.0292], {
         icon: L.icon({
             iconUrl: '/assets/CSWD.png',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            tooltipAnchor: [10, 0],
+            iconSize: [26, 26],
+            iconAnchor: [13, 13],
+            tooltipAnchor: [13, 0],
         }),
         title: description,
         alt: description,
