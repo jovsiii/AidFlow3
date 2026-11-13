@@ -1,4 +1,4 @@
-export function addEvacuationCenterMarker(map, feature, center) {
+export function addEvacuationCenterMarker(map, feature, center, openDetails) {
     if (feature.properties?.name !== 'Corazon de Jesus' || feature.geometry?.type !== 'Polygon') {
         return;
     }
@@ -16,7 +16,7 @@ export function addEvacuationCenterMarker(map, feature, center) {
         alt: description,
     });
 
-    marker.bindTooltip('CMEC', { permanent: true, direction: 'right' });
-    marker.bindPopup(`CMEC evacuation center<br>Capacity: ${capacity} tents<br>Approximate location within CDJ.`);
+    marker.bindTooltip('CMEC', { direction: 'right' });
+    marker.on('click', openDetails);
     marker.addTo(map);
 }

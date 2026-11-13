@@ -28,7 +28,8 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
 
     $html = $response->render();
     expect($html)->toContain("import { addEvacuationCenterMarker } from '/js/evacuationCenters.js'")
-        ->toContain("addEvacuationCenterMarker(map, feature, barangayList.find(b => b.code === 'CMEC'))");
+        ->toContain('addEvacuationCenterMarker(map, feature, cmec, openCmecDetails)')
+        ->toContain('id="cmec-details-modal"');
 
     expect($response->getData()['occupiedTentsCount'])->toBe(3)
         ->and($response->getData()['barangayCount'])->toBe(2)

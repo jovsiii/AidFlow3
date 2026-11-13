@@ -272,6 +272,7 @@
         </div>
     </div>
 
+    @include('features.partials.cmec-details')
     @push('scripts')
         @php
             $tableRows = $occupiedTents->map(function ($scan) {
@@ -291,7 +292,10 @@
         <script type="module">
             import { barangayList, tentCountsReady } from '/js/barangayList.js';
             import { addEvacuationCenterMarker } from '/js/evacuationCenters.js';
+            import { createCmecDetails } from '/js/cmecDetails.js';
             await tentCountsReady;
+            const cmec = barangayList.find(b => b.code === 'CMEC');
+            const openCmecDetails = createCmecDetails(cmec, JSON.parse(document.getElementById('cmec-occupied-data').textContent));
             const whenReady = (fn) => document.readyState === 'loading'
                 ? document.addEventListener('DOMContentLoaded', fn)
                 : fn();
@@ -440,7 +444,7 @@
                             onEachFeature(feature, layer) {
                                 const info = barangayMap[feature.properties.name];
                                 if (!info) return;
-                                addEvacuationCenterMarker(map, feature, barangayList.find(b => b.code === 'CMEC'));
+                                addEvacuationCenterMarker(map, feature, cmec, openCmecDetails);
                                 const idLabel = L.tooltip({
                                     permanent: true,
                                     direction: 'center',

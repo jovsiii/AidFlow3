@@ -22,7 +22,7 @@ test('CMEC is marked once at an approximate position inside CDJ', async () => {
     const calls = [];
     const marker = {
         bindTooltip: (...args) => calls.push(['tooltip', ...args]),
-        bindPopup: (...args) => calls.push(['popup', ...args]),
+        on: (...args) => calls.push(['on', ...args]),
         addTo: (...args) => calls.push(['addTo', ...args]),
     };
     globalThis.L = {
@@ -37,20 +37,24 @@ test('CMEC is marked once at an approximate position inside CDJ', async () => {
         addEvacuationCenterMarker(map, { properties: { name: 'Other' } });
         assert.equal(calls.length, 0);
         const center = { tents: Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`CMEC-${i + 1}`, ''])) };
-        addEvacuationCenterMarker(map, feature, center);
+        const openDetails = () => {};
+        addEvacuationCenterMarker(map, feature, center, openDetails);
         assert.equal(calls.length, 4);
         assert.deepEqual(calls[0][1], [position.lat, position.lng]);
         assert.equal(calls[0][2].icon.iconUrl, '/assets/CSWD.png');
         assert.deepEqual(calls[0][2].icon.iconAnchor, [10, 10]);
         assert.equal(calls[1][1], 'CMEC');
-        assert.match(calls[2][1], /Capacity: 50 tents/);
-        assert.match(calls[2][1], /Approximate location/);
+        assert.notEqual(calls[1][2].permanent, true);
+        assert.equal(calls[2][1], 'click');
+        assert.equal(calls[2][2], openDetails);
+        assert.match(calls[0][2].title, /capacity: 50 tents/);
+        assert.match(calls[0][2].title, /approximate location/);
         assert.equal(calls[3][1], map);
 
         calls.length = 0;
         center.tents['CMEC-51'] = '';
-        addEvacuationCenterMarker(map, feature, center);
-        assert.match(calls[2][1], /Capacity: 51 tents/);
+        addEvacuationCenterMarker(map, feature, center, openDetails);
+        assert.match(calls[0][2].title, /capacity: 51 tents/);
     } finally {
         delete globalThis.L;
     }
