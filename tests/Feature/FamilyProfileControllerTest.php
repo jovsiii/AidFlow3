@@ -8,6 +8,7 @@ function familyProfileData(array $overrides = []): array
         'fullName' => 'Maria Santos',
         'address' => '12 Mabini Street',
         'barangay' => 'Batis',
+        'district' => 'District 1',
         'contactNumber' => '09171234567',
         'householdSize' => 4,
     ], $overrides);
@@ -46,6 +47,17 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Balong-Bato')
         ->assertSee('12 Mabini Street')
         ->assertSee('Location of the Affected Family')
+        ->assertSee('name="region" value="NCR" readonly', false)
+        ->assertSee('name="province" value="Metro Manila" readonly', false)
+        ->assertSee('name="cityMunicipality" value="San Juan" readonly', false)
+        ->assertSee('<select name="district" required', false)
+        ->assertSee('<option value="District 1">District 1</option>', false)
+        ->assertSee('<option value="District 2">District 2</option>', false)
+        ->assertSee('<select name="barangay" required', false)
+        ->assertSee('<option value="Corazon de Jesus">Corazon de Jesus</option>', false)
+        ->assertSee('<option value="Ermitaño">Ermitaño</option>', false)
+        ->assertDontSee('<option value="The City-managed Evacuation Center">', false)
+        ->assertSee('name="evacuationCenter" maxlength="255"', false)
         ->assertSee('Monthly family net income')
         ->assertSee('4Ps beneficiary')
         ->assertSee('Permanent Address')
@@ -122,7 +134,11 @@ it('creates a family profile', function () {
     $this->mock(FirebaseService::class, function ($mock) {
         $mock->shouldReceive('createFamilyProfile')
             ->once()
-            ->with(familyProfileData())
+            ->with(familyProfileData([
+                'region' => 'NCR',
+                'province' => 'Metro Manila',
+                'cityMunicipality' => 'San Juan',
+            ]))
             ->andReturn(['name' => '-profile1']);
     });
 
@@ -135,7 +151,8 @@ it('creates a family profile', function () {
 it('updates a family profile', function () {
     $profileData = familyProfileData([
         'region' => 'NCR',
-        'district' => 'District 1',
+        'province' => 'Metro Manila',
+        'cityMunicipality' => 'San Juan',
         'lastName' => 'Santos',
         'firstName' => 'Maria',
         'dateOfBirth' => '1990-05-10',
@@ -161,7 +178,8 @@ it('updates a family profile', function () {
             ->with('-profile1', [
                 ...familyProfileData(),
                 'region' => 'NCR',
-                'district' => 'District 1',
+                'province' => 'Metro Manila',
+                'cityMunicipality' => 'San Juan',
                 'lastName' => 'Santos',
                 'firstName' => 'Maria',
                 'dateOfBirth' => '1990-05-10',
@@ -187,6 +205,73 @@ it('updates a family profile', function () {
         ->put(route('family-profiles.update', '-profile1'), $profileData)
         ->assertRedirect(route('family-profiles.index'))
         ->assertSessionHas('success', 'Family profile updated successfully.');
+});
+
+it('rejects invalid districts and barangays before saving', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldNotReceive('updateFamilyProfile');
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->put(route('family-profiles.update', '-profile1'), familyProfileData([
+            'district' => 'District 3',
+            'barangay' => 'The City-managed Evacuation Center',
+        ]))
+        ->assertSessionHasErrors(['district', 'barangay']);
+});
+
+it('requires a district and barangay for profile creation', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldNotReceive('createFamilyProfile');
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->post(route('family-profiles.store'), familyProfileData([
+            'district' => '',
+            'barangay' => '',
+        ]))
+        ->assertSessionHasErrors(['district', 'barangay']);
+});
+
+it('offers all 21 mapped barangays as affected family locations', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([]);
+    });
+
+    $response = $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('family-profiles.index'))
+        ->assertOk();
+    preg_match('/<select name="barangay" required[^>]*>(.*?)<\/select>/s', $response->getContent(), $matches);
+    expect($matches)->toHaveCount(2);
+    preg_match_all('/<option value="([^"]+)">/', $matches[1], $options);
+    expect($options[1])->toHaveCount(21)
+        ->toContain('Batis', 'Corazon de Jesus', 'Ermitaño', 'West Crame')
+        ->not->toContain('The City-managed Evacuation Center');
+});
+
+it('enforces the standard location when saving a profile', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('updateFamilyProfile')->once()
+            ->with('-profile1', Mockery::on(fn ($data) =>
+                $data['region'] === 'NCR'
+                && $data['province'] === 'Metro Manila'
+                && $data['cityMunicipality'] === 'San Juan'
+                && $data['district'] === 'District 2'
+                && $data['barangay'] === 'Corazon de Jesus'
+                && $data['evacuationCenter'] === 'CMEC'
+            ))->andReturn(true);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->put(route('family-profiles.update', '-profile1'), familyProfileData([
+            'region' => 'Old Region',
+            'province' => 'Old Province',
+            'cityMunicipality' => 'Old City',
+            'district' => 'District 2',
+            'barangay' => 'Corazon de Jesus',
+            'evacuationCenter' => 'CMEC',
+        ]))
+        ->assertRedirect(route('family-profiles.index'));
 });
 
 it('deletes a family profile', function () {

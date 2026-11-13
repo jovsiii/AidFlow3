@@ -161,19 +161,28 @@
                 <input type="hidden" name="profileId">
                 <h3 class="border-b pb-2 text-lg font-semibold text-gray-900 md:col-span-2">Location of the Affected Family</h3>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Region
-                    <input name="region" maxlength="150" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <input name="region" value="NCR" readonly class="rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Province
-                    <input name="province" maxlength="150" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <input name="province" value="Metro Manila" readonly class="rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">City / Municipality
-                    <input name="cityMunicipality" maxlength="150" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <input name="cityMunicipality" value="San Juan" readonly class="rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">District
-                    <input name="district" maxlength="150" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <select name="district" required class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                        <option value="">Select district</option>
+                        <option value="District 1">District 1</option>
+                        <option value="District 2">District 2</option>
+                    </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Barangay
-                    <input name="barangay" maxlength="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <select name="barangay" required class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                        <option value="">Select barangay</option>
+                        @foreach ($locationBarangays as $locationBarangay)
+                            <option value="{{ $locationBarangay }}">{{ $locationBarangay }}</option>
+                        @endforeach
+                    </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Evacuation Center / Site
                     <input name="evacuationCenter" maxlength="255" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
@@ -387,6 +396,7 @@
                     return;
                 }
                 if (field.type === 'hidden' && field.name.endsWith('Beneficiary')) return;
+                if (['region', 'province', 'cityMunicipality'].includes(field.name)) return;
                 const memberField = field.name.match(/^familyMembers\[(\d+)\]\[([^\]]+)\]$/);
                 if (memberField) {
                     field.value = profile.familyMembers?.[memberField[1]]?.[memberField[2]] ?? '';

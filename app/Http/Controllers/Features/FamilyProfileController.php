@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Features;
 use App\Http\Controllers\Controller;
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class FamilyProfileController extends Controller
 {
@@ -27,11 +28,14 @@ class FamilyProfileController extends Controller
             ->sortBy('fullName', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
-        return view('features.family-profiles.index', compact('profiles', 'barangays', 'selectedBarangay'));
+        $locationBarangays = $this->locationBarangays();
+
+        return view('features.family-profiles.index', compact('profiles', 'barangays', 'selectedBarangay', 'locationBarangays'));
     }
 
     public function store(Request $request, FirebaseService $firebase)
     {
+        $request->merge($this->standardLocation());
         $validated = $request->validate($this->rules());
 
         if ($firebase->createFamilyProfile($validated)) {
@@ -45,6 +49,7 @@ class FamilyProfileController extends Controller
 
     public function update(Request $request, string $profileId, FirebaseService $firebase)
     {
+        $request->merge($this->standardLocation());
         $validated = $request->validate($this->rules());
 
         if ($firebase->updateFamilyProfile($profileId, $validated)) {
@@ -67,17 +72,41 @@ class FamilyProfileController extends Controller
         ]);
     }
 
+    private function standardLocation(): array
+    {
+        return [
+            'region' => 'NCR',
+            'province' => 'Metro Manila',
+            'cityMunicipality' => 'San Juan',
+        ];
+    }
+
+    private function locationBarangays(): array
+    {
+        $geojson = json_decode(file_get_contents(public_path('geojson/sanjuan.geojson')), true, 512, JSON_THROW_ON_ERROR);
+
+        return collect($geojson['features'])
+            ->filter(fn ($feature) => ($feature['properties']['boundary'] ?? null) === 'administrative'
+                && ($feature['properties']['admin_level'] ?? null) === '10')
+            ->pluck('properties.name')
+            ->filter()
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
+    }
+
     private function rules(): array
     {
         return [
             'fullName' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
-            'barangay' => ['nullable', 'string', 'max:100'],
+            'barangay' => ['required', 'string', Rule::in($this->locationBarangays())],
             'contactNumber' => ['nullable', 'string', 'max:30'],
             'region' => ['nullable', 'string', 'max:150'],
             'province' => ['nullable', 'string', 'max:150'],
             'cityMunicipality' => ['nullable', 'string', 'max:150'],
-            'district' => ['nullable', 'string', 'max:150'],
+            'district' => ['required', Rule::in(['District 1', 'District 2'])],
             'evacuationCenter' => ['nullable', 'string', 'max:255'],
             'lastName' => ['nullable', 'string', 'max:100'],
             'firstName' => ['nullable', 'string', 'max:100'],
