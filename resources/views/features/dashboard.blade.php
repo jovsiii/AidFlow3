@@ -533,7 +533,7 @@
                                 const info = barangayMap[feature.properties.name];
                                 if (!info) return;
 
-                                addEvacuationCenterMarker(map, feature, layer);
+                                addEvacuationCenterMarker(map, feature);
 
                                 const idLabel = L.tooltip({
                                     permanent: true,

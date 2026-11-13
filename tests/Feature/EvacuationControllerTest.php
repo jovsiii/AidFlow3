@@ -15,7 +15,7 @@ it('shows an empty state instead of sample tent rows when there are no occupied 
         ->assertSee('id="barangay-tent-scroll"', false)
         ->assertSee('max-h-[45vh]', false)
         ->assertSee("import { addEvacuationCenterMarker } from '/js/evacuationCenters.js'", false)
-        ->assertSee('addEvacuationCenterMarker(map, feature, layer)', false)
+        ->assertSee('addEvacuationCenterMarker(map, feature)', false)
         ->assertDontSee('BB-001')
         ->assertDontSee('06/15/2026');
 });
