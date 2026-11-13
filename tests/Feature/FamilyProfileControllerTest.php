@@ -58,6 +58,9 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('<option value="Ermitaño">Ermitaño</option>', false)
         ->assertDontSee('<option value="The City-managed Evacuation Center">', false)
         ->assertSee('name="evacuationCenter" maxlength="255"', false)
+        ->assertSee('<select name="civilStatus"', false)
+        ->assertSee('<select name="religion"', false)
+        ->assertSee('data-previous-value', false)
         ->assertSee('Monthly family net income')
         ->assertSee('4Ps beneficiary')
         ->assertSee('Permanent Address')
@@ -65,6 +68,41 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Relation to head')
         ->assertSee('Highest educational attainment')
         ->assertSee('Type of vulnerability');
+});
+
+it('provides the requested civil status and religion options', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->andReturn([]);
+    });
+
+    $response = $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('family-profiles.index'))
+        ->assertOk();
+    foreach ([
+        'civilStatus' => ['Single', 'Married', 'Widow', 'Separated', 'Common-law'],
+        'religion' => ['Roman Catholic', 'Born Again', 'INC', 'Islam', 'Dating-daan'],
+    ] as $field => $expected) {
+        preg_match('/<select name="' . $field . '"[^>]*>(.*?)<\/select>/s', $response->getContent(), $select);
+        expect($select)->toHaveCount(2);
+        preg_match_all('/<option value="([^"]+)">/', $select[1], $options);
+        expect($options[1])->toBe($expected);
+    }
+});
+
+it('saves civil status and religion selections', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('updateFamilyProfile')->once()
+            ->with('-profile1', Mockery::on(fn ($data) =>
+                $data['civilStatus'] === 'Common-law' && $data['religion'] === 'Born Again'
+            ))->andReturn(true);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->put(route('family-profiles.update', '-profile1'), familyProfileData([
+            'civilStatus' => 'Common-law',
+            'religion' => 'Born Again',
+        ]))
+        ->assertRedirect(route('family-profiles.index'));
 });
 
 it('shows staff a back-to-menu link instead of the desktop sidebar on family profiles', function () {

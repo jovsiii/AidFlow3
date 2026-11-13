@@ -218,13 +218,27 @@
                     </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Civil status
-                    <input name="civilStatus" maxlength="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <select name="civilStatus" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                        <option value="">Select</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widow">Widow</option>
+                        <option value="Separated">Separated</option>
+                        <option value="Common-law">Common-law</option>
+                    </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Mother's maiden name
                     <input name="mothersMaidenName" maxlength="255" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Religion
-                    <input name="religion" maxlength="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    <select name="religion" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                        <option value="">Select</option>
+                        <option value="Roman Catholic">Roman Catholic</option>
+                        <option value="Born Again">Born Again</option>
+                        <option value="INC">INC</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Dating-daan">Dating-daan</option>
+                    </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Occupation
                     <input name="occupation" maxlength="150" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
@@ -400,6 +414,17 @@
                 const memberField = field.name.match(/^familyMembers\[(\d+)\]\[([^\]]+)\]$/);
                 if (memberField) {
                     field.value = profile.familyMembers?.[memberField[1]]?.[memberField[2]] ?? '';
+                    return;
+                }
+                if (field.name === 'civilStatus' || field.name === 'religion') {
+                    field.querySelectorAll('[data-previous-value]').forEach(option => option.remove());
+                    const value = profile[field.name] ?? '';
+                    if (value && !Array.from(field.options).some(option => option.value === value)) {
+                        const option = new Option(`${value} (previous value)`, value);
+                        option.dataset.previousValue = 'true';
+                        field.add(option);
+                    }
+                    field.value = value;
                     return;
                 }
                 field.value = profile[field.name] ?? (field.name === 'fullName' ? fullName : '');
