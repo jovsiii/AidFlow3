@@ -289,6 +289,7 @@
         @endphp
         <script type="module">
             import { barangayList, tentCountsReady } from '/js/barangayList.js';
+            import { addEvacuationCenterMarker } from '/js/evacuationCenters.js';
             await tentCountsReady;
             const whenReady = (fn) => document.readyState === 'loading'
                 ? document.addEventListener('DOMContentLoaded', fn)
@@ -437,6 +438,7 @@
                             onEachFeature(feature, layer) {
                                 const info = barangayMap[feature.properties.name];
                                 if (!info) return;
+                                addEvacuationCenterMarker(map, feature, layer);
                                 const idLabel = L.tooltip({
                                     permanent: true,
                                     direction: 'center',

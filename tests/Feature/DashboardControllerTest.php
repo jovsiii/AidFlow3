@@ -26,6 +26,10 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
     $controller = new DashboardController();
     $response = $controller->index($firebase);
 
+    $html = $response->render();
+    expect($html)->toContain("import { addEvacuationCenterMarker } from '/js/evacuationCenters.js'")
+        ->toContain('addEvacuationCenterMarker(map, feature, layer)');
+
     expect($response->getData()['occupiedTentsCount'])->toBe(3)
         ->and($response->getData()['barangayCount'])->toBe(2)
         ->and($response->getData()['occupancyData'])->toBe([
