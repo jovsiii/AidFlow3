@@ -313,28 +313,30 @@
                                 <th class="border border-gray-200 px-2 py-2">Type of vulnerability</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @for ($memberIndex = 0; $memberIndex < 5; $memberIndex++)
+                        <tbody id="family-members-body"></tbody>
+                    </table>
+                    <template id="family-member-template">
+                            @php $memberIndex = '__INDEX__'; @endphp
                                 <tr>
-                                    <td class="border border-gray-200 px-2 py-2 font-semibold">{{ $memberIndex + 1 }}</td>
+                                    <td class="border border-gray-200 px-2 py-2 font-semibold" data-member-number></td>
                                     <td class="border border-gray-200 p-1">
-                                        <input name="familyMembers[{{ $memberIndex }}][fullName]" maxlength="255" aria-label="Family member {{ $memberIndex + 1 }} full name"
+                                        <input name="familyMembers[{{ $memberIndex }}][fullName]" maxlength="255" aria-label="Family member __NUMBER__ full name"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <input name="familyMembers[{{ $memberIndex }}][relationshipToHead]" maxlength="100" aria-label="Family member {{ $memberIndex + 1 }} relationship to head"
+                                        <input name="familyMembers[{{ $memberIndex }}][relationshipToHead]" maxlength="100" aria-label="Family member __NUMBER__ relationship to head"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <input type="date" name="familyMembers[{{ $memberIndex }}][birthDate]" aria-label="Family member {{ $memberIndex + 1 }} birthdate"
+                                        <input type="date" name="familyMembers[{{ $memberIndex }}][birthDate]" aria-label="Family member __NUMBER__ birthdate"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <input type="number" name="familyMembers[{{ $memberIndex }}][age]" min="0" max="120" aria-label="Family member {{ $memberIndex + 1 }} age"
+                                        <input type="number" name="familyMembers[{{ $memberIndex }}][age]" min="0" max="120" aria-label="Family member __NUMBER__ age"
                                             class="w-20 rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <select name="familyMembers[{{ $memberIndex }}][sex]" aria-label="Family member {{ $memberIndex + 1 }} sex"
+                                        <select name="familyMembers[{{ $memberIndex }}][sex]" aria-label="Family member __NUMBER__ sex"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                             <option value="">Select</option>
                                             <option value="Male">Male</option>
@@ -342,21 +344,19 @@
                                         </select>
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <input name="familyMembers[{{ $memberIndex }}][highestEducationalAttainment]" maxlength="150" aria-label="Family member {{ $memberIndex + 1 }} highest educational attainment"
+                                        <input name="familyMembers[{{ $memberIndex }}][highestEducationalAttainment]" maxlength="150" aria-label="Family member __NUMBER__ highest educational attainment"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <input name="familyMembers[{{ $memberIndex }}][occupation]" maxlength="150" aria-label="Family member {{ $memberIndex + 1 }} occupation"
+                                        <input name="familyMembers[{{ $memberIndex }}][occupation]" maxlength="150" aria-label="Family member __NUMBER__ occupation"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                     <td class="border border-gray-200 p-1">
-                                        <input name="familyMembers[{{ $memberIndex }}][typeOfVulnerability]" maxlength="150" aria-label="Family member {{ $memberIndex + 1 }} type of vulnerability"
+                                        <input name="familyMembers[{{ $memberIndex }}][typeOfVulnerability]" maxlength="150" aria-label="Family member __NUMBER__ type of vulnerability"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                     </td>
                                 </tr>
-                            @endfor
-                        </tbody>
-                    </table>
+                    </template>
                 </div>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Household size
                     <input type="number" name="householdSize" required min="1" max="100"
@@ -387,10 +387,16 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { createFamilyMemberRows } from '/js/familyMemberRows.js';
         const editFamilyProfileModal = document.getElementById('editFamilyProfileModal');
         const editFamilyProfileForm = document.getElementById('editFamilyProfileForm');
         const editFamilyProfileRoute = @json(route('family-profiles.update', '__PROFILE__'));
+        const familyMemberRows = createFamilyMemberRows(
+            document.getElementById('family-members-body'),
+            document.getElementById('family-member-template'),
+            editFamilyProfileForm.elements.namedItem('householdSize')
+        );
 
         function closeFamilyProfileModal() {
             editFamilyProfileModal.classList.add('hidden');
@@ -402,6 +408,7 @@
             editFamilyProfileForm.action = editFamilyProfileRoute.replace('__PROFILE__', encodeURIComponent(profileId));
             editFamilyProfileForm.elements.namedItem('profileId').value = profileId;
             const fullName = profile.fullName ?? profile.headOfFamily ?? profile.familyName ?? '';
+            familyMemberRows.reset(profile.householdSize, profile.familyMembers);
             editFamilyProfileForm.querySelectorAll('[name]').forEach(field => {
                 if (field.name === 'profileId') return;
                 if (field.type === 'checkbox') {
@@ -435,6 +442,12 @@
 
         document.querySelectorAll('.edit-family-profile').forEach(button => {
             button.addEventListener('click', () => openFamilyProfileModal(JSON.parse(button.dataset.profile)));
+        });
+        editFamilyProfileForm.addEventListener('submit', event => {
+            if (familyMemberRows.hasHiddenData()
+                && !window.confirm('Reducing the household size will remove the hidden family member details when you save. Continue?')) {
+                event.preventDefault();
+            }
         });
 
         document.getElementById('closeEditFamilyProfile').addEventListener('click', closeFamilyProfileModal);

@@ -134,7 +134,7 @@ class FamilyProfileController extends Controller
             'fourPsBeneficiary' => ['sometimes', 'boolean'],
             'ipBeneficiary' => ['sometimes', 'boolean'],
             'ipTypeOfEthnicity' => ['nullable', 'string', 'max:255'],
-            'familyMembers' => ['nullable', 'array', 'max:5'],
+            'familyMembers' => ['nullable', 'array', 'max:100'],
             'familyMembers.*.fullName' => ['nullable', 'string', 'max:255'],
             'familyMembers.*.relationshipToHead' => ['nullable', 'string', 'max:100'],
             'familyMembers.*.birthDate' => ['nullable', 'date'],

@@ -65,6 +65,8 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('4Ps beneficiary')
         ->assertSee('Permanent Address')
         ->assertSee('Family Information')
+        ->assertSee('id="family-member-template"', false)
+        ->assertSee("import { createFamilyMemberRows } from '/js/familyMemberRows.js'", false)
         ->assertSee('Relation to head')
         ->assertSee('Highest educational attainment')
         ->assertSee('Type of vulnerability');
@@ -103,6 +105,36 @@ it('saves civil status and religion selections', function () {
             'religion' => 'Born Again',
         ]))
         ->assertRedirect(route('family-profiles.index'));
+});
+
+it('saves all eight family members for an eight-person household', function () {
+    $members = array_map(fn ($number) => ['fullName' => "Member $number"], range(1, 8));
+    $this->mock(FirebaseService::class, function ($mock) use ($members) {
+        $mock->shouldReceive('updateFamilyProfile')->once()
+            ->with('-profile1', Mockery::on(fn ($data) =>
+                $data['householdSize'] === 8 && $data['familyMembers'] === $members
+            ))->andReturn(true);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->put(route('family-profiles.update', '-profile1'), familyProfileData([
+            'householdSize' => 8,
+            'familyMembers' => $members,
+        ]))
+        ->assertRedirect(route('family-profiles.index'));
+});
+
+it('rejects more than 100 family members', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldNotReceive('updateFamilyProfile');
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->put(route('family-profiles.update', '-profile1'), familyProfileData([
+            'householdSize' => 100,
+            'familyMembers' => array_fill(0, 101, ['fullName' => 'Member']),
+        ]))
+        ->assertSessionHasErrors(['familyMembers']);
 });
 
 it('shows staff a back-to-menu link instead of the desktop sidebar on family profiles', function () {
