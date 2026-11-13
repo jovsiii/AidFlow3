@@ -416,7 +416,7 @@
                         || ['1', 'true'].includes(String(profile[field.name] ?? '').toLowerCase());
                     return;
                 }
-                if (field.type === 'hidden' && field.name.endsWith('Beneficiary')) return;
+                if (field.type === 'hidden') return;
                 if (['region', 'province', 'cityMunicipality'].includes(field.name)) return;
                 const memberField = field.name.match(/^familyMembers\[(\d+)\]\[([^\]]+)\]$/);
                 if (memberField) {
