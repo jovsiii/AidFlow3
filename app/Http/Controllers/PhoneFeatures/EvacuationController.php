@@ -20,8 +20,6 @@ class EvacuationController extends Controller
             'tent_code' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/'],
             'barangay_code' => 'required|string|max:10',
             'barangay_name' => 'required|string|max:100',
-            'full_name' => ['required', 'string', 'max:255', 'regex:/^[\p{L} ]+$/u'],
-            'household_size' => 'required|integer|min:1|max:100',
             'confirm_unoccupy' => 'sometimes|boolean',
         ]);
 
@@ -48,8 +46,23 @@ class EvacuationController extends Controller
             ]);
         }
 
-        $scannedAt = now();
+        if (!$occupied && !$request->exists('full_name') && !$request->exists('household_size')) {
+            return response()->json([
+                'success' => false,
+                'requires_family_details' => true,
+                'message' => "Enter family details to mark tent {$tentCode} occupied.",
+            ]);
+        }
+
         $willBeOccupied = !$occupied;
+        $familyDetails = $willBeOccupied
+            ? $request->validate([
+                'full_name' => ['required', 'string', 'max:255', 'regex:/^[\p{L} ]+$/u'],
+                'household_size' => 'required|integer|min:1|max:100',
+            ])
+            : [];
+
+        $scannedAt = now();
         $firebaseData = [
             'tentCode' => $tentCode,
             'barangayCode' => $barangayCode,
@@ -59,15 +72,15 @@ class EvacuationController extends Controller
                 ?: $request->session()->get('user.username')
                 ?: $request->session()->get('username'),
         ];
-        $familyProfile = [
-            'fullName' => trim($validated['full_name']),
-            'headOfFamily' => trim($validated['full_name']),
-            'householdSize' => (int) $validated['household_size'],
+        $familyProfile = $willBeOccupied ? [
+            'fullName' => trim($familyDetails['full_name']),
+            'headOfFamily' => trim($familyDetails['full_name']),
+            'householdSize' => (int) $familyDetails['household_size'],
             'tentCode' => $tentCode,
             'barangayCode' => $barangayCode,
             'barangay' => $barangayName,
             'updatedAt' => $scannedAt->toISOString(),
-        ];
+        ] : null;
 
         if (!$firebase->recordTentScan(
             $tentCode,

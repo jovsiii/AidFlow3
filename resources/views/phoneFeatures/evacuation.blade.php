@@ -278,7 +278,7 @@
             );
         }
 
-        async function submitScan(tentCode, familyDetails, confirmUnoccupy = false) {
+        async function submitScan(tentCode, familyDetails = null, confirmUnoccupy = false) {
             if (scanInProgress) return;
             scanInProgress = true;
 
@@ -300,8 +300,7 @@
                         tent_code: tentCode,
                         barangay_code: barangay.code,
                         barangay_name: barangay.name,
-                        full_name: familyDetails.full_name,
-                        household_size: familyDetails.household_size,
+                        ...(familyDetails || {}),
                         confirm_unoccupy: confirmUnoccupy
                     })
                 });
@@ -324,10 +323,15 @@
                     return;
                 }
 
+                if (data?.requires_family_details) {
+                    openScanDetails(tentCode);
+                    return;
+                }
+
                 if (data?.requires_confirmation) {
                     if (window.confirm(data.message)) {
                         scanInProgress = false;
-                        await submitScan(tentCode, familyDetails, true);
+                        await submitScan(tentCode, null, true);
                         return;
                     }
                     showScanResult('Scan cancelled', `Tent ${tentCode} remains occupied. No changes were made.`);
@@ -363,7 +367,7 @@
             scanStatus.textContent = `Scanned: ${tentCode}`;
             try {
                 await closeScanner();
-                openScanDetails(tentCode);
+                await submitScan(tentCode);
             } catch (error) {
                 console.error(error);
                 showScanResult('Scanner error', 'The camera could not be stopped. Please reload the page before scanning again.');

@@ -53,6 +53,7 @@ class PhoneEvacuationScanTest extends TestCase
     {
         $controller = new EvacuationController();
         $firebase = Mockery::mock(FirebaseService::class);
+        $firebase->shouldReceive('getOccupiedTent')->times(3)->with('BB-001')->andReturn(null);
 
         foreach (['Maria2 Santos', 'Maria@ Santos', 'Maria-Santos'] as $fullName) {
             $request = Request::create('/phoneFeatures/evacuation/scan', 'POST', [
@@ -72,6 +73,26 @@ class PhoneEvacuationScanTest extends TestCase
         }
     }
 
+    public function test_first_scan_requests_family_details_before_marking_tent_occupied(): void
+    {
+        $controller = new EvacuationController();
+        $firebase = Mockery::mock(FirebaseService::class);
+        $firebase->shouldReceive('getOccupiedTent')->once()->with('BB-001')->andReturn(null);
+        $firebase->shouldNotReceive('recordTentScan');
+
+        $response = $controller->scan(Request::create(
+            '/phoneFeatures/evacuation/scan',
+            'POST',
+            [
+                'tent_code' => 'BB-001',
+                'barangay_code' => 'BB',
+                'barangay_name' => 'Balong-Bato',
+            ]
+        ), $firebase);
+
+        $this->assertTrue($response->getData()->requires_family_details);
+    }
+
     public function test_second_scan_requires_confirmation_then_marks_tent_unoccupied(): void
     {
         $controller = new EvacuationController();
@@ -87,8 +108,6 @@ class PhoneEvacuationScanTest extends TestCase
                 'tent_code' => 'WC-002',
                 'barangay_code' => 'WC',
                 'barangay_name' => 'West Crame',
-                'full_name' => 'Juan Dela Cruz',
-                'household_size' => 3,
             ]
         ), $firebase);
         $this->assertTrue($confirmationResponse->getData()->requires_confirmation);
@@ -107,8 +126,6 @@ class PhoneEvacuationScanTest extends TestCase
                 'tent_code' => 'WC-002',
                 'barangay_code' => 'WC',
                 'barangay_name' => 'West Crame',
-                'full_name' => 'Juan Dela Cruz',
-                'household_size' => 3,
                 'confirm_unoccupy' => true,
             ]
         );
