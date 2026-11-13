@@ -17,6 +17,8 @@ it('shows an empty state instead of sample tent rows when there are no occupied 
         ->assertSee("import { addEvacuationCenterMarker } from '/js/evacuationCenters.js'", false)
         ->assertSee('addEvacuationCenterMarker(map, feature, cmec, openCmecDetails)', false)
         ->assertSee('id="cmec-details-modal"', false)
+        ->assertSee('zoomSnap: 0.1', false)
+        ->assertSee("map.on('resize', fitMap)", false)
         ->assertSee('aria-label="Map legend"', false)
         ->assertSee('0% occupied')
         ->assertSee('More than 0% to below 80% occupied')

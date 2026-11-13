@@ -417,6 +417,7 @@
                     doubleClickZoom: false,
                     scrollWheelZoom: false,
                     attributionControl: false,
+                    zoomSnap: 0.1,
                 });
 
                 const barangayIdLabels = [];
@@ -479,12 +480,16 @@
                         }).addTo(map);
 
                         updateLayerTooltips(geoLayer);
-                        setTimeout(() => {
-                            map.invalidateSize();
+                        const fitMap = () => {
                             const bounds = geoLayer.getBounds();
                             if (bounds.isValid()) {
                                 map.fitBounds(bounds, { padding: [16, 16], maxZoom: 16 });
                             }
+                        };
+                        map.on('resize', fitMap);
+                        setTimeout(() => {
+                            map.invalidateSize();
+                            fitMap();
                         }, 200);
                     });
 
