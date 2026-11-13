@@ -246,8 +246,8 @@
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Monthly family net income
                     <input type="number" name="monthlyFamilyNetIncome" min="0" step="0.01" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                 </label>
-                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">TD card number
-                    <input name="tdCardNumber" maxlength="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">ID card presented
+                    <input name="idCardPresented" maxlength="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">ID card number
                     <input name="idCardNumber" maxlength="100" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">

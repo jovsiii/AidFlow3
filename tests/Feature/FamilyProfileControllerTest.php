@@ -60,6 +60,10 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('name="evacuationCenter" maxlength="255"', false)
         ->assertSee('<select name="civilStatus"', false)
         ->assertSee('<select name="religion"', false)
+        ->assertSee('ID card presented')
+        ->assertSee('name="idCardPresented"', false)
+        ->assertSee('ID card number')
+        ->assertDontSee('TD card number')
         ->assertSee('data-previous-value', false)
         ->assertSee('Monthly family net income')
         ->assertSee('4Ps beneficiary')
@@ -103,6 +107,24 @@ it('saves civil status and religion selections', function () {
         ->put(route('family-profiles.update', '-profile1'), familyProfileData([
             'civilStatus' => 'Common-law',
             'religion' => 'Born Again',
+        ]))
+        ->assertRedirect(route('family-profiles.index'));
+});
+
+it('saves the ID card presented separately from its number', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('updateFamilyProfile')->once()
+            ->with('-profile1', Mockery::on(fn ($data) =>
+                $data['idCardPresented'] === 'National ID'
+                && $data['idCardNumber'] === '123456'
+                && !array_key_exists('tdCardNumber', $data)
+            ))->andReturn(true);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->put(route('family-profiles.update', '-profile1'), familyProfileData([
+            'idCardPresented' => 'National ID',
+            'idCardNumber' => '123456',
         ]))
         ->assertRedirect(route('family-profiles.index'));
 });

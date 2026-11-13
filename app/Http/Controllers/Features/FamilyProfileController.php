@@ -122,6 +122,7 @@ class FamilyProfileController extends Controller
             'occupation' => ['nullable', 'string', 'max:150'],
             'monthlyFamilyNetIncome' => ['nullable', 'numeric', 'min:0'],
             'tdCardNumber' => ['nullable', 'string', 'max:100'],
+            'idCardPresented' => ['nullable', 'string', 'max:100'],
             'idCardNumber' => ['nullable', 'string', 'max:100'],
             'alternateContactNumber' => ['nullable', 'string', 'max:30'],
             'permanentAddressHouseBlockLot' => ['nullable', 'string', 'max:255'],
