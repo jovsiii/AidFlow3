@@ -163,9 +163,13 @@
 
                 <!-- Map Area -->
                 <div
-                    class="border border-gray-400 mb-4 w-full h-55 sm:h-65 md:h-80 lg:h-100 xl:h-120 rounded-tr-[14px] rounded-tl-[14px] overflow-hidden bg-gray-50">
+                    class="border border-gray-400 mb-2 w-full h-55 sm:h-65 md:h-80 lg:h-100 xl:h-120 rounded-tr-[14px] rounded-tl-[14px] overflow-hidden bg-gray-50">
 
                     <div id="dashboard-map" class="w-full h-full"></div>
+                </div>
+
+                <div class="mb-4">
+                    @include('features.partials.map-legend')
                 </div>
 
                 <!-- Recent Scanned Tents -->

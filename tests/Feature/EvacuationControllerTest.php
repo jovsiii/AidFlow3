@@ -17,6 +17,11 @@ it('shows an empty state instead of sample tent rows when there are no occupied 
         ->assertSee("import { addEvacuationCenterMarker } from '/js/evacuationCenters.js'", false)
         ->assertSee('addEvacuationCenterMarker(map, feature, cmec, openCmecDetails)', false)
         ->assertSee('id="cmec-details-modal"', false)
+        ->assertSee('aria-label="Map legend"', false)
+        ->assertSee('0% occupied')
+        ->assertSee('More than 0% to below 80% occupied')
+        ->assertSee('80% or more occupied')
+        ->assertSee('CMEC evacuation center')
         ->assertDontSee('BB-001')
         ->assertDontSee('06/15/2026');
 });

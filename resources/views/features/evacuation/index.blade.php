@@ -167,7 +167,7 @@
                 <div class="border border-gray-400 w-full h-full rounded-[14px] overflow-hidden bg-gray-50">
                     <div id="evacuation-map" class="w-full h-full"></div>
                 </div>
-
+                @include('features.partials.map-legend')
             </div>
         </div>
     </div>
