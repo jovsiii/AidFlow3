@@ -168,7 +168,10 @@ class DashboardController extends Controller
 
             'occupancyData' => $occupancyData,
 
-            'barangayCount' => count($occupancyData),
+            'barangayCount' => collect(array_keys($occupancyData))
+                ->map(fn ($code) => $code === 'CMEC' ? 'CDJ' : $code)
+                ->unique()
+                ->count(),
 
             'recentScannedTents' => $recentScannedTents,
 

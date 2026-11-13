@@ -36,7 +36,8 @@ test('CMEC is marked once at an approximate position inside CDJ', async () => {
         const map = {};
         addEvacuationCenterMarker(map, { properties: { name: 'Other' } });
         assert.equal(calls.length, 0);
-        addEvacuationCenterMarker(map, feature);
+        const center = { tents: Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`CMEC-${i + 1}`, ''])) };
+        addEvacuationCenterMarker(map, feature, center);
         assert.equal(calls.length, 4);
         assert.deepEqual(calls[0][1], [position.lat, position.lng]);
         assert.equal(calls[0][2].icon.iconUrl, '/assets/CSWD.png');
@@ -45,6 +46,11 @@ test('CMEC is marked once at an approximate position inside CDJ', async () => {
         assert.match(calls[2][1], /Capacity: 50 tents/);
         assert.match(calls[2][1], /Approximate location/);
         assert.equal(calls[3][1], map);
+
+        calls.length = 0;
+        center.tents['CMEC-51'] = '';
+        addEvacuationCenterMarker(map, feature, center);
+        assert.match(calls[2][1], /Capacity: 51 tents/);
     } finally {
         delete globalThis.L;
     }

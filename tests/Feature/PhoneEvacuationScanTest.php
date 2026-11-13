@@ -49,6 +49,31 @@ class PhoneEvacuationScanTest extends TestCase
         $this->assertSame('occupied', $response->getData()->action);
     }
 
+    public function test_cmec_tent_scan_saves_the_center_code_and_name(): void
+    {
+        $request = Request::create('/phoneFeatures/evacuation/scan', 'POST', [
+            'tent_code' => 'CMEC-050',
+            'barangay_code' => 'CMEC',
+            'barangay_name' => 'The City-managed Evacuation Center',
+            'full_name' => 'Maria Santos',
+            'household_size' => 4,
+        ]);
+        $request->setLaravelSession(app('session')->driver());
+        $firebase = Mockery::mock(FirebaseService::class);
+        $firebase->shouldReceive('getOccupiedTent')->once()->with('CMEC-050')->andReturn(null);
+        $firebase->shouldReceive('recordTentScan')->once()->with(
+            'CMEC-050',
+            Mockery::on(fn ($data) => $data['barangayCode'] === 'CMEC'
+                && $data['barangayName'] === 'The City-managed Evacuation Center'),
+            true,
+            Mockery::on(fn ($profile) => $profile['tentCode'] === 'CMEC-050'
+                && $profile['barangayCode'] === 'CMEC')
+        )->andReturn(true);
+
+        $response = (new EvacuationController())->scan($request, $firebase);
+        $this->assertSame('occupied', $response->getData()->action);
+    }
+
     public function test_scan_rejects_numbers_and_symbols_in_full_name(): void
     {
         $controller = new EvacuationController();

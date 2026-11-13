@@ -30,7 +30,10 @@ class EvacuationController extends Controller
             'recentScannedTents' => $recentScannedTents,
             'occupiedTentsCount' => $occupiedTents->count(),
             'occupiedTents' => $occupiedTents,
-            'barangayCount' => count($occupancyData),
+            'barangayCount' => collect(array_keys($occupancyData))
+                ->map(fn ($code) => $code === 'CMEC' ? 'CDJ' : $code)
+                ->unique()
+                ->count(),
             'occupancyData' => $occupancyData,
         ]);
     }

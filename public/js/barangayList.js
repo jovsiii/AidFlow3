@@ -335,6 +335,16 @@ export const barangayList = [
             "T-010": "Tibagan 10",
         },
     },
+    {
+        code: "CMEC",
+        name: "The City-managed Evacuation Center",
+        tents: Object.fromEntries(
+            Array.from({ length: 50 }, (_, index) => {
+                const number = index + 1;
+                return [`CMEC-${String(number).padStart(3, '0')}`, `CMEC ${number}`];
+            })
+        ),
+    },
 ];
 
 // Apply admin-configured tent counts (stored in Firebase) so every page agrees.

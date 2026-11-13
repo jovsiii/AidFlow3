@@ -404,7 +404,8 @@
                 0
             );
             document.getElementById('total-tents-count').textContent = totalTents.toLocaleString();
-            document.getElementById('total-barangays-count').textContent = barangayList.length.toLocaleString();
+            document.getElementById('total-barangays-count').textContent =
+                barangayList.filter(b => b.code !== 'CMEC').length.toLocaleString();
 
             const barangayMap = {};
             barangayList.forEach(b => {
@@ -533,7 +534,7 @@
                                 const info = barangayMap[feature.properties.name];
                                 if (!info) return;
 
-                                addEvacuationCenterMarker(map, feature);
+                                addEvacuationCenterMarker(map, feature, barangayList.find(b => b.code === 'CMEC'));
 
                                 const idLabel = L.tooltip({
                                     permanent: true,

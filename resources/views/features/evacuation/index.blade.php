@@ -88,6 +88,7 @@
                         <option>Addition Hills</option>
                         <option>Balong-Bato</option>
                         <option>Corazon de Jesus</option>
+                        <option>The City-managed Evacuation Center</option>
                         <option>Greenhills</option>
                         <option>Little Baguio</option>
                         <option>Maytunas</option>
@@ -338,7 +339,8 @@
                 0
             );
             document.getElementById('total-tents-count').textContent = totalTents.toLocaleString();
-            document.getElementById('total-barangays-count').textContent = barangayList.length.toLocaleString();
+            document.getElementById('total-barangays-count').textContent =
+                barangayList.filter(b => b.code !== 'CMEC').length.toLocaleString();
             
             const barangayMap = {};
             barangayList.forEach(b => {
@@ -438,7 +440,7 @@
                             onEachFeature(feature, layer) {
                                 const info = barangayMap[feature.properties.name];
                                 if (!info) return;
-                                addEvacuationCenterMarker(map, feature);
+                                addEvacuationCenterMarker(map, feature, barangayList.find(b => b.code === 'CMEC'));
                                 const idLabel = L.tooltip({
                                     permanent: true,
                                     direction: 'center',
