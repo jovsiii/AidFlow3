@@ -27,11 +27,15 @@ class FirebaseService
         return null;
     }
 
-    private function get($path)
+    private function get($path, bool $throwOnFailure = false)
     {
         $response = Http::withoutVerifying()->get(
             "{$this->databaseUrl}/{$path}.json"
         );
+
+        if ($throwOnFailure) {
+            $response->throw();
+        }
 
         return $response->successful()
             ? $response->json()
@@ -224,11 +228,15 @@ class FirebaseService
         return $this->get('occupiedTents');
     }
 
-    public function getFamilyProfiles(): array
+    public function getFamilyProfiles(bool $throwOnFailure = false): array
     {
-        $profiles = $this->get('familyProfiles');
+        $profiles = $this->get('familyProfiles', $throwOnFailure);
 
         if (!is_array($profiles)) {
+            if ($throwOnFailure && $profiles !== null) {
+                throw new \UnexpectedValueException('Invalid family profile data returned by Firebase.');
+            }
+
             return [];
         }
 

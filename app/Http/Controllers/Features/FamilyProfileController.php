@@ -33,6 +33,52 @@ class FamilyProfileController extends Controller
         return view('features.family-profiles.index', compact('profiles', 'barangays', 'selectedBarangay', 'locationBarangays'));
     }
 
+    public function infoBoard()
+    {
+        return view('features.family-profiles.info-board');
+    }
+
+    public function infoBoardData(FirebaseService $firebase)
+    {
+        $groups = [];
+
+        foreach ($firebase->getFamilyProfiles(true) as $profile) {
+            $barangay = trim((string) ($profile['barangay'] ?? ''));
+            $center = trim((string) ($profile['evacuationCenter'] ?? ''));
+            $key = json_encode([mb_strtolower($barangay), mb_strtolower($center)], JSON_THROW_ON_ERROR);
+
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'barangay' => $barangay !== '' ? $barangay : 'Not specified',
+                    'evacuationCenter' => $center !== '' ? $center : 'Not specified',
+                    'families' => 0,
+                    'individuals' => 0,
+                    'missingHouseholdSizes' => 0,
+                ];
+            }
+
+            $groups[$key]['families']++;
+            $size = filter_var($profile['householdSize'] ?? null, FILTER_VALIDATE_INT);
+            if ($size !== false && $size >= 1) {
+                $groups[$key]['individuals'] += $size;
+            } else {
+                $groups[$key]['missingHouseholdSizes']++;
+            }
+        }
+
+        $rows = collect(array_values($groups))
+            ->sortBy([
+                ['barangay', 'asc'],
+                ['evacuationCenter', 'asc'],
+            ])
+            ->values();
+
+        return response()->json([
+            'asOf' => now()->toIso8601String(),
+            'rows' => $rows,
+        ])->header('Cache-Control', 'no-store');
+    }
+
     public function store(Request $request, FirebaseService $firebase)
     {
         $request->merge($this->standardLocation());

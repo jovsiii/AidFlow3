@@ -23,6 +23,10 @@
             <div class="flex flex-col gap-3 border-b border-gray-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <h2 class="text-lg font-bold text-gray-900 sm:text-xl">Family Profiles</h2>
                 <div class="flex flex-wrap items-center gap-3">
+                    <a href="{{ route('family-profiles.info-board') }}"
+                        class="rounded-lg bg-[#960505] px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
+                        <i class="fas fa-chart-bar mr-1" aria-hidden="true"></i> Info Board
+                    </a>
                     <span class="text-sm text-gray-500">{{ $profiles->count() }} profiles</span>
                     <form method="GET" action="{{ route('family-profiles.index') }}" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
                         <label for="familyBarangayFilter" class="shrink-0 text-sm font-medium text-gray-700">Barangay</label>

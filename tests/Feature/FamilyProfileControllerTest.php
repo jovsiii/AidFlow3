@@ -42,6 +42,7 @@ it('shows family profiles on the family profile page', function () {
         ->get(route('family-profiles.index'))
         ->assertOk()
         ->assertSee('Family Profile')
+        ->assertSee(route('family-profiles.info-board'), false)
         ->assertSee('Maria Santos')
         ->assertSee('BB-001')
         ->assertSee('Balong-Bato')
@@ -74,6 +75,68 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Relation to head')
         ->assertSee('Highest educational attainment')
         ->assertSee('Type of vulnerability');
+});
+
+it('shows the info board to family profile users', function () {
+    $this->withSession(['user' => ['role' => 'user']])
+        ->get(route('family-profiles.info-board'))
+        ->assertOk()
+        ->assertSee('Family Profile Info Board')
+        ->assertSee('Barangay (address)')
+        ->assertSee('Barangay evacuation center')
+        ->assertSee('Back to menu')
+        ->assertSee(json_encode(route('family-profiles.info-board.data')), false);
+});
+
+it('groups current profiles by barangay and evacuation center and counts recorded household sizes', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->with(true)->andReturn([
+            ['barangay' => 'Batis', 'evacuationCenter' => 'School', 'householdSize' => 4],
+            ['barangay' => ' batis ', 'evacuationCenter' => ' SCHOOL ', 'householdSize' => '3'],
+            ['barangay' => 'Batis', 'evacuationCenter' => 'Gym', 'householdSize' => 2],
+            ['barangay' => 'Batis', 'householdSize' => null],
+            ['householdSize' => 0],
+        ]);
+    });
+
+    $response = $this->withSession(['user' => ['role' => 'admin']])
+        ->getJson(route('family-profiles.info-board.data'))
+        ->assertOk()
+        ->assertHeader('Cache-Control', 'no-store, private');
+
+    $rows = collect($response->json('rows'));
+    expect($response->json('asOf'))->not->toBeEmpty()
+        ->and($rows)->toHaveCount(4)
+        ->and($rows->firstWhere('evacuationCenter', 'School'))->toMatchArray([
+            'barangay' => 'Batis', 'families' => 2, 'individuals' => 7, 'missingHouseholdSizes' => 0,
+        ])
+        ->and($rows->firstWhere('evacuationCenter', 'Gym'))->toMatchArray([
+            'families' => 1, 'individuals' => 2,
+        ])
+        ->and($rows->where('evacuationCenter', 'Not specified')->sum('missingHouseholdSizes'))->toBe(2);
+});
+
+it('loads fresh info board data on each request', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->twice()->with(true)->andReturn(
+            [],
+            [['barangay' => 'Batis', 'householdSize' => 5]]
+        );
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->getJson(route('family-profiles.info-board.data'))
+        ->assertOk()->assertJsonCount(0, 'rows');
+    $this->getJson(route('family-profiles.info-board.data'))
+        ->assertOk()->assertJsonPath('rows.0.individuals', 5);
+});
+
+it('does not present a Firebase failure as an empty info board', function () {
+    \Illuminate\Support\Facades\Http::fake(['*' => \Illuminate\Support\Facades\Http::response([], 500)]);
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->getJson(route('family-profiles.info-board.data'))
+        ->assertStatus(500);
 });
 
 it('provides the requested civil status and religion options', function () {
