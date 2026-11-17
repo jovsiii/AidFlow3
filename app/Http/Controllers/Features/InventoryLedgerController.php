@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Features;
 
 use App\Http\Controllers\Controller;
 use App\Services\FirebaseService;
+use App\Services\InventoryReleaseHistory;
 use App\Services\ReliefPackCalculator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -51,21 +52,18 @@ class InventoryLedgerController extends Controller
             ])
             ->values();
 
-        $releases = $inventory->flatMap(function ($item) {
-            return collect($item['releases'] ?? [])
-                ->filter(fn ($release) => is_array($release) && !empty($release['releasedAt']))
-                ->map(fn ($release) => [
-                    'type' => 'release',
-                    'date' => $release['releasedAt'],
-                    'timestamp' => Carbon::parse($release['releasedAt'])->timestamp,
-                    'pack' => null,
-                    'items' => [$release['itemName'] ?? $item['name'] ?? 'Unnamed Item' => (int) ($release['quantity'] ?? 0)],
-                    'distributedBy' => $release['releasedBy'] ?? null,
-                    'batch' => $release['batch'] ?? null,
-                    'purpose' => $release['purpose'] ?? null,
-                    'unit' => $release['unit'] ?? null,
-                ]);
-        });
+        $releases = InventoryReleaseHistory::fromInventory($inventory)
+            ->map(fn ($release) => [
+                'type' => 'release',
+                'date' => $release['releasedAt'],
+                'timestamp' => Carbon::parse($release['releasedAt'])->timestamp,
+                'pack' => null,
+                'items' => [$release['itemName'] => $release['quantity']],
+                'distributedBy' => $release['releasedBy'],
+                'batch' => $release['batch'],
+                'purpose' => $release['purpose'],
+                'unit' => $release['unit'],
+            ]);
 
         $outbound = $outbound->concat($releases)->sortBy('timestamp')->values();
 

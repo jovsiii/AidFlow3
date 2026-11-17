@@ -54,3 +54,47 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
         ->and($response->getData()['auditLogs']->first()['timestamp']->format('M d h:i A'))->toBe('Jun 15 08:00 PM')
         ->and($response->getData()['auditLogs']->first()['timestamp']->timezoneName)->toBe('Asia/Manila');
 });
+
+it('shows inventory releases alongside scans in the audit log, newest first', function () {
+    config(['app.timezone' => 'Asia/Manila']);
+    $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getInventory')->andReturn([
+        'rice' => [
+            'name' => 'Rice', 'stock' => 7, 'unit' => 'Kg',
+            'releases' => [
+                'same-id' => [
+                    'itemName' => 'Rice', 'quantity' => 3, 'unit' => 'Kg', 'batch' => 'Batch A',
+                    'purpose' => 'Evacuation <supplies>', 'releasedBy' => 'Test Officer',
+                    'releasedAt' => '2026-06-16T02:00:00+00:00',
+                ],
+                'invalid' => ['quantity' => 1],
+            ],
+        ],
+        'soap' => [
+            'name' => 'Soap', 'stock' => 4, 'unit' => 'piece',
+            'releases' => ['same-id' => [
+                'quantity' => 1, 'releasedAt' => '2026-06-14T02:00:00+00:00',
+            ]],
+        ],
+    ]);
+    $firebase->shouldReceive('getScans')->andReturn([
+        'same-id' => ['action' => 'occupied', 'tentCode' => 'BB-001', 'scannedAt' => '2026-06-15T12:00:00+00:00'],
+    ]);
+    $firebase->shouldReceive('getReliefPacks')->andReturn([]);
+    $firebase->shouldReceive('getReliefPackScans')->andReturn([
+        'same-id' => ['pack_number' => 7, 'scanned_at' => '2026-06-15T13:00:00+00:00'],
+    ]);
+    $firebase->shouldReceive('getOccupiedTents')->andReturn([]);
+
+    $response = (new DashboardController())->index($firebase);
+    $logs = $response->getData()['auditLogs'];
+    expect($logs->pluck('type')->all())->toBe(['inventoryRelease', 'reliefPackScan', 'scanEvent', 'inventoryRelease'])
+        ->and($logs->first()['timestamp']->format('M d h:i A'))->toBe('Jun 16 10:00 AM')
+        ->and($logs->last()['itemName'])->toBe('Soap');
+
+    $html = $response->render();
+    expect($html)->toContain('value="inventoryRelease"')
+        ->toContain('data-type="inventoryRelease"')
+        ->toContain('Rice × 3 Kg', 'Batch: Batch A', 'Purpose: Evacuation &lt;supplies&gt;', 'By Test Officer')
+        ->toContain('Relief pack #7 scanned', 'Tent occupied');
+});

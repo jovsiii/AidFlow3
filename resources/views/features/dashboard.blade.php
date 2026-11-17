@@ -273,6 +273,7 @@
                                 <option value="">All types</option>
                                 <option value="scanEvent">Tent</option>
                                 <option value="reliefPackScan">Relief packs scanned</option>
+                                <option value="inventoryRelease">Inventory releases</option>
                             </select>
                         </div>
                     </div>
@@ -281,9 +282,15 @@
                             @php
                                 $timestamp = $log['timestamp'] ?? null;
                                 $formattedTime = $timestamp ? \Carbon\Carbon::parse($timestamp)->format('M d • h:i A') : 'Unknown time';
-                                $meta = $log['type'] === 'reliefPackScan'
-                                    ? 'Pack #' . ($log['packNumber'] ?? '')
-                                    : ($log['tentCode'] ?? 'N/A') . ($log['barangayName'] ? ' • ' . $log['barangayName'] : '');
+                                $meta = match ($log['type']) {
+                                    'reliefPackScan' => 'Pack #' . ($log['packNumber'] ?? ''),
+                                    'inventoryRelease' => implode(' • ', array_filter([
+                                        ($log['itemName'] ?? 'Unnamed Item') . ' × ' . number_format($log['quantity'] ?? 0) . (($log['unit'] ?? null) ? ' ' . $log['unit'] : ''),
+                                        ($log['batch'] ?? null) ? 'Batch: ' . $log['batch'] : null,
+                                        ($log['purpose'] ?? null) ? 'Purpose: ' . $log['purpose'] : null,
+                                    ])),
+                                    default => ($log['tentCode'] ?? 'N/A') . (($log['barangayName'] ?? null) ? ' • ' . $log['barangayName'] : ''),
+                                };
                             @endphp
 
                             <div data-audit-log data-type="{{ $log['type'] }}" data-year="{{ $timestamp ? \Carbon\Carbon::parse($timestamp)->format('Y') : '' }}" data-month="{{ $timestamp ? \Carbon\Carbon::parse($timestamp)->format('n') : '' }}" class="flex items-start gap-2 pb-2 border-b border-gray-200 last:border-b-0 last:pb-0">

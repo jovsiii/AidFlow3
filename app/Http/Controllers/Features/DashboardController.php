@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Features;
 
 use App\Http\Controllers\Controller;
 use App\Services\FirebaseService;
+use App\Services\InventoryReleaseHistory;
 use App\Services\ReliefPackCalculator;
 use Carbon\Carbon;
 
@@ -146,8 +147,22 @@ class DashboardController extends Controller
                     'color' => 'bg-blue-500',
                 ];
             });
+        $inventoryReleases = InventoryReleaseHistory::fromInventory($inventory)
+            ->map(fn ($release) => [
+                'type' => 'inventoryRelease',
+                'label' => 'Inventory released',
+                'itemName' => $release['itemName'],
+                'quantity' => $release['quantity'],
+                'unit' => $release['unit'],
+                'batch' => $release['batch'],
+                'purpose' => $release['purpose'],
+                'accountName' => $release['releasedBy'],
+                'timestamp' => Carbon::parse($release['releasedAt'])->setTimezone(config('app.timezone')),
+                'color' => 'bg-red-500',
+            ]);
         $auditLogs = $scanEvents
-            ->merge($reliefPackScans)
+            ->concat($reliefPackScans)
+            ->concat($inventoryReleases)
             ->sortByDesc('timestamp')
             ->take(500)
             ->values();

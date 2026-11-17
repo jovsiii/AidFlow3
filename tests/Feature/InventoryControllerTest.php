@@ -152,6 +152,11 @@ it('releases a selected batch record and shows the release in the outbound ledge
         if (str_contains($request->url(), '/reliefPackScans.json')) {
             return \Illuminate\Support\Facades\Http::response(null);
         }
+        if (str_ends_with($request->url(), '/relief_packs.json')
+            || str_ends_with($request->url(), '/scanEvents.json')
+            || str_ends_with($request->url(), '/occupiedTents.json')) {
+            return \Illuminate\Support\Facades\Http::response(null);
+        }
 
         return \Illuminate\Support\Facades\Http::response([], 500);
     });
@@ -192,6 +197,13 @@ it('releases a selected batch record and shows the release in the outbound ledge
         ->assertSee('Test Officer')
         ->assertSee('Rice × 3 Kg')
         ->assertSee('15</span> units left', false);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Inventory released')
+        ->assertSee('Rice × 3 Kg')
+        ->assertSee('Purpose: Evacuation supplies')
+        ->assertSee('By Test Officer');
 
     $this->from(route('inventory.index'))
         ->delete(route('inventory.destroy', 'record-b'))

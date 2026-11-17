@@ -62,7 +62,7 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 On the Inventory List, select **Edit** beside an item, choose a batch record,
 and enter the quantity and purpose. The release reduces that record's stock and
-appears in the outbound inventory ledger. Expired records and quantities above
+appears in the outbound inventory ledger and dashboard audit logs. Expired records and quantities above
 the available stock cannot be released. Records with release history cannot be
 deleted, so their ledger entries are retained.
 
