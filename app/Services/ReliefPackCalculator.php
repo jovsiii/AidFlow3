@@ -47,6 +47,13 @@ class ReliefPackCalculator
     {
         $inventory = collect($inventory);
         $standardPacks = $inventory->filter(fn ($item) => is_array($item) && ($item['type'] ?? '') === 'standard')->count();
+
+        return $standardPacks + $this->countForItems($inventory, self::REQUIRED_ITEMS);
+    }
+
+    public function countForItems($inventory, array $requirements): int
+    {
+        $inventory = collect($inventory);
         $stockByNameAndUnit = $inventory
             ->filter(fn ($item) => is_array($item)
                 && filled($item['name'] ?? null)
@@ -54,14 +61,12 @@ class ReliefPackCalculator
             ->groupBy(fn ($item) => $this->inventoryKey($item['name'], $item['unit']))
             ->map(fn (Collection $items) => $items->sum(fn ($item) => (int) ($item['stock'] ?? 0)));
 
-        $completePacks = collect(self::REQUIRED_ITEMS)
+        return collect($requirements)
             ->map(fn ($item) => intdiv(
                 (int) $stockByNameAndUnit->get($this->inventoryKey($item['name'], $item['unit']), 0),
                 $item['quantity']
             ))
             ->min() ?? 0;
-
-        return $standardPacks + $completePacks;
     }
 
     private function inventoryKey(string $name, string $unit): string

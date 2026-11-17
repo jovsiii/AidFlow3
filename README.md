@@ -65,3 +65,11 @@ and enter the quantity and purpose. The release reduces that record's stock and
 appears in the outbound inventory ledger. Expired records and quantities above
 the available stock cannot be released. Records with release history cannot be
 deleted, so their ledger entries are retained.
+
+## Relief pack planning
+
+Admins can open **Configure relief pack plan** from Inventory to choose the
+items and quantities in a planned pack. The estimate uses unexpired inventory
+and matching units; it excludes preassembled packs. This plan is for planning
+only: saving it does not reserve stock or change QR generation, scanning, or
+the standard relief pack.

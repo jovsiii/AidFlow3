@@ -52,9 +52,47 @@ class FirebaseService
         return $response->successful() ? $response->json() : null;
     }
 
-    public function getInventory()
+    public function getInventory(bool $throwOnFailure = false)
     {
-        return $this->get('inventory');
+        $inventory = $this->get('inventory', $throwOnFailure);
+
+        if ($throwOnFailure && $inventory !== null && !is_array($inventory)) {
+            throw new \UnexpectedValueException('Invalid inventory data returned by Firebase.');
+        }
+
+        return $inventory;
+    }
+
+    public function getReliefPackPlan(): ?array
+    {
+        $plan = $this->get('reliefPackPlan', true);
+        if ($plan === null) {
+            return null;
+        }
+
+        if (!is_array($plan)) {
+            throw new \UnexpectedValueException('Invalid relief pack plan returned by Firebase.');
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($plan, [
+            'items' => ['required', 'array', 'min:1', 'max:100'],
+            'items.*.name' => ['required', 'string', 'max:255'],
+            'items.*.unit' => ['required', 'string', 'max:100'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:1000000'],
+        ]);
+        if ($validator->fails()) {
+            throw new \UnexpectedValueException('Invalid relief pack plan returned by Firebase.');
+        }
+
+        return $plan;
+    }
+
+    public function saveReliefPackPlan(array $items): bool
+    {
+        return Http::withoutVerifying()->put("{$this->databaseUrl}/reliefPackPlan.json", [
+            'items' => array_values($items),
+            'updatedAt' => now()->toIso8601String(),
+        ])->successful();
     }
 
     /** Fetch only the record keys of a node, which is far cheaper than downloading its contents. */

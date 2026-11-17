@@ -7,6 +7,7 @@ use App\Http\Controllers\Features\FeaturesController;
 use App\Http\Controllers\Features\DashboardController;
 use App\Http\Controllers\Features\InventoryController;
 use App\Http\Controllers\Features\InventoryLedgerController;
+use App\Http\Controllers\Features\ReliefPackPlanController;
 use App\Http\Controllers\Features\UsersController;
 use App\Http\Controllers\Features\QRCodeController;
 use App\Http\Controllers\Features\FamilyProfileController;
@@ -33,6 +34,8 @@ Route::middleware('firebase.auth')->group(function () {
     Route::put('/features/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
     Route::delete('/features/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
     Route::get('/features/inventory/batch/{batchId}', [InventoryController::class, 'batch'])->name('inventory.batch');
+    Route::get('/features/relief-pack-plan', [ReliefPackPlanController::class, 'index'])->name('relief-pack-plan.index');
+    Route::post('/features/relief-pack-plan', [ReliefPackPlanController::class, 'store'])->name('relief-pack-plan.store');
 
     Route::get('/features/ledger', [InventoryLedgerController::class, 'index'])->name('ledger.index');
     Route::get('/features/ledger/version', [InventoryLedgerController::class, 'version'])->name('ledger.version');

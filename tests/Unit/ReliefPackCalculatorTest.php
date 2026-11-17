@@ -45,3 +45,21 @@ it('does not combine stock recorded in incompatible units', function () {
 
     expect((new ReliefPackCalculator())->count($items))->toBe(0);
 });
+
+it('counts configurable packs from matching item names and units across batches', function () {
+    $inventory = [
+        ['name' => 'Rice', 'unit' => 'Kg', 'stock' => 7],
+        ['name' => ' rice ', 'unit' => 'kg', 'stock' => 5],
+        ['name' => 'Rice', 'unit' => 'sack', 'stock' => 100],
+        ['name' => 'Water', 'unit' => 'bottle', 'stock' => 8],
+        ['type' => 'standard'],
+    ];
+
+    expect((new ReliefPackCalculator())->countForItems($inventory, [
+        ['name' => 'Rice', 'unit' => 'kg', 'quantity' => 3],
+        ['name' => 'Water', 'unit' => 'bottle', 'quantity' => 2],
+    ]))->toBe(4)
+        ->and((new ReliefPackCalculator())->countForItems($inventory, [
+            ['name' => 'Soap', 'unit' => 'piece', 'quantity' => 1],
+        ]))->toBe(0);
+});

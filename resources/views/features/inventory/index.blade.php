@@ -123,6 +123,15 @@
         </div>
     </div>
 
+    @if (strtolower((string) session('user.role', '')) === 'admin')
+        <div class="mt-4">
+            <a href="{{ route('relief-pack-plan.index') }}"
+                class="inline-flex items-center gap-2 rounded-md border-2 border-red-600 bg-white px-4 py-2 font-semibold text-red-700 hover:bg-red-50">
+                <i class="fas fa-box-open" aria-hidden="true"></i> Configure relief pack plan
+            </a>
+        </div>
+    @endif
+
     <form method="GET" action="{{ route('inventory.index') }}" class="flex flex-wrap gap-3 items-center mb-4 mt-4">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Item"
             class="flex-1 min-w-[220px] rounded-full pl-4 py-2 border-2 border-pink-200" />
