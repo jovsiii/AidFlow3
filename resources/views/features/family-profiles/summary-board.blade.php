@@ -16,10 +16,6 @@
     <div class="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <a href="{{ route('family-profiles.index') }}" class="font-semibold text-[#960505] hover:underline">&larr; Back to Family Profiles</a>
-            <button type="button" id="family-summary-export" disabled
-                class="rounded-lg bg-[#960505] px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50">
-                Export to PDF
-            </button>
         </div>
         <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm" aria-labelledby="summary-title">
             <div class="flex flex-wrap items-end justify-between gap-3 border-b border-gray-200 px-5 py-5">
@@ -44,12 +40,9 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script type="module">
         import { setupFamilySummary } from '/js/familyProfileSummary.js';
         setupFamilySummary({
-            button: document.getElementById('family-summary-export'),
             status: document.getElementById('family-summary-status'),
             head: document.getElementById('family-summary-head'),
             body: document.getElementById('family-summary-body'),

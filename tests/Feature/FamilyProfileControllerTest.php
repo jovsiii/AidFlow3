@@ -80,7 +80,7 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Type of vulnerability');
 });
 
-it('opens the family profile summary page with its table and PDF export', function () {
+it('opens the family profile summary page without a PDF export', function () {
     $this->withSession(['user' => ['role' => 'user']])
         ->get(route('family-profiles.summary'))
         ->assertOk()
@@ -88,7 +88,8 @@ it('opens the family profile summary page with its table and PDF export', functi
         ->assertSee('Back to Family Profiles')
         ->assertSee('id="family-summary-head"', false)
         ->assertSee('id="family-summary-body"', false)
-        ->assertSee('Export to PDF')
+        ->assertDontSee('Export to PDF')
+        ->assertDontSee('jspdf')
         ->assertSee(json_encode(route('family-profiles.summary.data')), false);
 });
 

@@ -42,16 +42,9 @@ function tableData(profiles) {
 }
 
 export function setupFamilySummary(elements, url) {
-    const { button, status, head, body, count, asOf } = elements;
-    let report;
+    const { status, head, body, count, asOf } = elements;
     let currentRefresh = null;
     let pending = false;
-    let valid = false;
-    let exporting = false;
-
-    function updateButton() {
-        button.disabled = !valid || exporting;
-    }
 
     function render(data) {
         const table = tableData(data.profiles);
@@ -81,7 +74,6 @@ export function setupFamilySummary(elements, url) {
         }).format(new Date(data.asOf));
         status.textContent = data.profiles.length ? '' : 'No family profiles have been added yet.';
         status.hidden = data.profiles.length > 0;
-        return table;
     }
 
     async function fetchReport() {
@@ -95,17 +87,11 @@ export function setupFamilySummary(elements, url) {
                 || !data.asOf || Number.isNaN(Date.parse(data.asOf))) {
                 throw new Error('Invalid family profile summary.');
             }
-            report = { ...data, table: render(data), asOfText: asOf.textContent };
-            valid = true;
-            updateButton();
-            return true;
+            render(data);
         } catch (error) {
             console.error('Unable to load family profile summary:', error);
             status.textContent = 'Unable to load the family profile summary. Displayed data may be out of date; retrying automatically.';
             status.hidden = false;
-            valid = false;
-            updateButton();
-            return false;
         }
     }
 
@@ -115,58 +101,13 @@ export function setupFamilySummary(elements, url) {
             return currentRefresh;
         }
         currentRefresh = (async () => {
-            let success;
             do {
                 pending = false;
-                success = await fetchReport();
+                await fetchReport();
             } while (pending);
-            return success;
         })().finally(() => { currentRefresh = null; });
         return currentRefresh;
     }
-
-    button.addEventListener('click', async () => {
-        exporting = true;
-        updateButton();
-        try {
-            if (!await refresh()) return;
-            if (!window.jspdf?.jsPDF || !window.jspdf.jsPDF.API.autoTable) {
-                throw new Error('PDF tools could not be loaded.');
-            }
-            const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-            pdf.autoTable({
-                startY: 25,
-                margin: { top: 25, bottom: 10, left: 10, right: 10 },
-                head: [report.table.head],
-                body: report.table.body.length ? report.table.body : [['No family profiles have been added yet.']],
-                theme: 'grid',
-                styles: { cellWidth: 30, fontSize: 7, cellPadding: 0.8, overflow: 'linebreak' },
-                headStyles: { fillColor: [150, 5, 5] },
-                columnStyles: { 0: { cellWidth: 35 } },
-                horizontalPageBreak: true,
-                horizontalPageBreakRepeat: 0,
-                didDrawPage: () => {
-                    pdf.setTextColor(17, 24, 39);
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(12);
-                    pdf.text('Family Profile Summary', 10, 10);
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(8);
-                    pdf.text(`${report.asOfText} | Total families: ${report.profiles.length}`, 10, 17);
-                    pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, pdf.internal.pageSize.getWidth() - 10,
-                        pdf.internal.pageSize.getHeight() - 5, { align: 'right' });
-                },
-            });
-            pdf.save('family-profile-summary.pdf');
-        } catch (error) {
-            console.error('Unable to export family profile summary:', error);
-            status.textContent = 'Unable to export the family profile summary. Please check your connection and try again.';
-            status.hidden = false;
-        } finally {
-            exporting = false;
-            updateButton();
-        }
-    });
 
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
     refresh();
