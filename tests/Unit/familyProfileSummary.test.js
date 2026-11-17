@@ -1,14 +1,37 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { setupFamilySummaryExport } from '../../public/js/familyProfileSummary.js';
+import { setupFamilySummary } from '../../public/js/familyProfileSummary.js';
 
-test('exports freshly fetched profile and member data as a landscape PDF table', async () => {
-    const button = { addEventListener(_name, handler) { this.click = handler; } };
-    const status = {};
+function setup(t, responses) {
+    const originals = { document: globalThis.document, window: globalThis.window, fetch: globalThis.fetch, setInterval: globalThis.setInterval };
+    t.after(() => Object.assign(globalThis, originals));
+    function element() {
+        return {
+            children: [], hidden: false, textContent: '',
+            appendChild(child) { this.children.push(child); },
+            replaceChildren(child) { this.children = child.isFragment ? child.children : [child]; },
+            addEventListener(_name, handler) { this.click = handler; },
+        };
+    }
+    const elements = Object.fromEntries(['button', 'status', 'head', 'body', 'count', 'asOf'].map(key => [key, element()]));
+    globalThis.document = {
+        hidden: false,
+        createElement: element,
+        createDocumentFragment: () => ({ ...element(), isFragment: true }),
+        addEventListener() {},
+    };
+    let interval;
+    globalThis.setInterval = (callback, delay) => { assert.equal(delay, 15000); interval = callback; };
+    let calls = 0;
+    globalThis.fetch = async (_url, options) => {
+        assert.equal(options.cache, 'no-store');
+        const result = responses[calls++];
+        if (result instanceof Error) throw result;
+        return { ok: true, headers: { get: () => 'application/json' }, json: async () => result };
+    };
     let pdfOptions;
     let table;
     let saved;
-    let calls = 0;
     class Pdf {
         static API = { autoTable() {} };
         internal = { getNumberOfPages: () => 1, pageSize: { getWidth: () => 297, getHeight: () => 210 } };
@@ -21,52 +44,65 @@ test('exports freshly fetched profile and member data as a landscape PDF table',
         save(name) { saved = name; }
     }
     globalThis.window = { jspdf: { jsPDF: Pdf } };
-    globalThis.fetch = async (_url, options) => {
-        calls++;
-        assert.equal(options.cache, 'no-store');
-        return {
-            ok: true, headers: { get: () => 'application/json' },
-            json: async () => ({
-                asOf: '2026-01-01T00:00:00+08:00',
-                profiles: calls === 1 ? [{
-                    fullName: 'Maria Santos', householdSize: 2, fourPsBeneficiary: false,
-                    familyMembers: [{ fullName: 'Ana Santos', age: 0, typeOfVulnerability: 'Senior' }],
-                    legacyField: 'Preserved',
-                }] : [],
-            }),
-        };
-    };
-    setupFamilySummaryExport(button, status, '/summary');
-    await button.click();
-    assert.equal(pdfOptions.orientation, 'landscape');
-    assert.deepEqual(table.head, [['Field', 'Details']]);
-    assert.equal(table.body[0][0].content, 'Family 1: Maria Santos');
-    assert.ok(table.body.some(row => row[0] === 'Family Members / 1 / Full Name' && row[1] === 'Ana Santos'));
-    assert.ok(table.body.some(row => row[0] === 'Family Members / 1 / Age' && row[1] === '0'));
-    assert.ok(table.body.some(row => row[0] === 'Four Ps Beneficiary' && row[1] === 'No'));
-    assert.ok(table.body.some(row => row[0] === 'Legacy Field' && row[1] === 'Preserved'));
-    assert.equal(saved, 'family-profile-summary.pdf');
-    assert.equal(button.disabled, false);
+    setupFamilySummary(elements, '/summary');
+    return { elements, Pdf, interval: () => interval(), calls: () => calls, pdfOptions: () => pdfOptions, table: () => table, saved: () => saved };
+}
 
-    await button.click();
-    assert.equal(calls, 2);
-    assert.match(table.body[0][0].content, /No family profiles/);
+test('displays one row per family and exports the fresh horizontal table', async t => {
+    const data = {
+        asOf: '2026-01-01T00:00:00+08:00',
+        profiles: [
+            { fullName: 'Maria Santos', householdSize: 2, fourPsBeneficiary: false, familyMembers: [{ fullName: 'Ana Santos', age: 0 }] },
+            { headOfFamily: 'Juan Cruz', legacyField: 'Preserved' },
+        ],
+    };
+    const fresh = { ...data, profiles: [{ ...data.profiles[0], householdSize: 3 }, data.profiles[1]] };
+    const context = setup(t, [data, fresh, { ...data, profiles: [] }]);
+    await new Promise(setImmediate);
+    const { elements } = context;
+    const headers = elements.head.children[0].children.map(cell => cell.textContent);
+    const rows = elements.body.children.map(row => row.children.map(cell => cell.textContent));
+    assert.equal(headers[0], 'Family head');
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0][0], 'Maria Santos');
+    assert.equal(rows[1][0], 'Juan Cruz');
+    assert.equal(rows[0][headers.indexOf('Family Members / 1 / Full Name')], 'Ana Santos');
+    assert.equal(rows[0][headers.indexOf('Family Members / 1 / Age')], '0');
+    assert.equal(rows[0][headers.indexOf('Four Ps Beneficiary')], 'No');
+    assert.equal(rows[1][headers.indexOf('Legacy Field')], 'Preserved');
+    assert.equal(rows[0][headers.indexOf('Legacy Field')], '-');
+    assert.equal(elements.count.textContent, 'Families: 2');
+
+    await elements.button.click();
+    assert.equal(context.calls(), 2);
+    assert.equal(context.pdfOptions().orientation, 'landscape');
+    assert.equal(context.table().horizontalPageBreak, true);
+    assert.equal(context.table().horizontalPageBreakRepeat, 0);
+    assert.deepEqual(context.table().head[0], headers);
+    assert.equal(context.table().body[0][headers.indexOf('Household Size')], '3');
+    assert.equal(context.saved(), 'family-profile-summary.pdf');
+
+    context.interval();
+    await new Promise(setImmediate);
+    assert.equal(elements.body.children.length, 0);
+    assert.match(elements.status.textContent, /No family profiles/);
 });
 
-test('reports export failures and allows retry', async () => {
-    const button = { addEventListener(_name, handler) { this.click = handler; } };
-    const status = {};
-    globalThis.window = { jspdf: { jsPDF: class { static API = { autoTable() {} }; } } };
-    globalThis.fetch = async () => ({ ok: false, headers: { get: () => 'application/json' } });
-    const previousError = console.error;
+test('shows loading and export errors without presenting stale data as current', async t => {
+    const data = { asOf: '2026-01-01T00:00:00+08:00', profiles: [{ fullName: 'Maria' }] };
+    const oldError = console.error;
     console.error = () => {};
-    try {
-        setupFamilySummaryExport(button, status, '/summary');
-        await button.click();
-        assert.equal(status.hidden, false);
-        assert.match(status.textContent, /Unable to export/);
-        assert.equal(button.disabled, false);
-    } finally {
-        console.error = previousError;
-    }
+    t.after(() => { console.error = oldError; });
+    const context = setup(t, [new Error('offline'), data, data]);
+    await new Promise(setImmediate);
+    assert.equal(context.elements.button.disabled, true);
+    assert.match(context.elements.status.textContent, /retrying automatically/);
+
+    context.interval();
+    await new Promise(setImmediate);
+    assert.equal(context.elements.button.disabled, false);
+    context.Pdf.API.autoTable = undefined;
+    await context.elements.button.click();
+    assert.match(context.elements.status.textContent, /Unable to export/);
+    assert.equal(context.elements.button.disabled, false);
 });

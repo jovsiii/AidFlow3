@@ -27,10 +27,10 @@
                         class="rounded-lg bg-[#960505] px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
                         <i class="fas fa-chart-bar mr-1" aria-hidden="true"></i> Info Board
                     </a>
-                    <button type="button" id="family-summary-export" title="Download a PDF of all family profiles, regardless of the barangay filter"
-                        class="rounded-lg border border-[#960505] px-4 py-2 text-sm font-semibold text-[#960505] hover:bg-red-50 disabled:opacity-50">
-                        <i class="fas fa-file-pdf mr-1" aria-hidden="true"></i> Family Profile Summary
-                    </button>
+                    <a href="{{ route('family-profiles.summary') }}"
+                        class="rounded-lg border border-[#960505] px-4 py-2 text-sm font-semibold text-[#960505] hover:bg-red-50">
+                        <i class="fas fa-table mr-1" aria-hidden="true"></i> Family Profile Summary
+                    </a>
                     <span class="text-sm text-gray-500">{{ $profiles->count() }} profiles</span>
                     <form method="GET" action="{{ route('family-profiles.index') }}" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
                         <label for="familyBarangayFilter" class="shrink-0 text-sm font-medium text-gray-700">Barangay</label>
@@ -48,7 +48,6 @@
                 </div>
             </div>
 
-            <p id="family-summary-status" class="px-4 text-sm text-red-700 sm:px-5" role="status" aria-live="polite" hidden></p>
             @if ($profiles->isEmpty())
                 <p class="px-4 py-10 text-center text-gray-500 sm:px-5">
                     {{ $selectedBarangay !== '' ? 'No family profiles found for this barangay.' : 'No family profiles have been added yet.' }}
@@ -396,16 +395,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
-    <script type="module">
-        import { setupFamilySummaryExport } from '/js/familyProfileSummary.js';
-        setupFamilySummaryExport(
-            document.getElementById('family-summary-export'),
-            document.getElementById('family-summary-status'),
-            @json(route('family-profiles.summary.data'))
-        );
-    </script>
     <script type="module">
         import { createFamilyMemberRows } from '/js/familyMemberRows.js';
         const editFamilyProfileModal = document.getElementById('editFamilyProfileModal');

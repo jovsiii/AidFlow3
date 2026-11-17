@@ -44,7 +44,8 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Family Profile')
         ->assertSee(route('family-profiles.info-board'), false)
         ->assertSee('Family Profile Summary')
-        ->assertSee(json_encode(route('family-profiles.summary.data')), false)
+        ->assertSee(route('family-profiles.summary'), false)
+        ->assertDontSee('id="family-summary-export"', false)
         ->assertSee('Maria Santos')
         ->assertSee('BB-001')
         ->assertSee('Balong-Bato')
@@ -77,6 +78,18 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Relation to head')
         ->assertSee('Highest educational attainment')
         ->assertSee('Type of vulnerability');
+});
+
+it('opens the family profile summary page with its table and PDF export', function () {
+    $this->withSession(['user' => ['role' => 'user']])
+        ->get(route('family-profiles.summary'))
+        ->assertOk()
+        ->assertSee('Family Profile Summary')
+        ->assertSee('Back to Family Profiles')
+        ->assertSee('id="family-summary-head"', false)
+        ->assertSee('id="family-summary-body"', false)
+        ->assertSee('Export to PDF')
+        ->assertSee(json_encode(route('family-profiles.summary.data')), false);
 });
 
 it('provides fresh, complete family profile summary data without caching', function () {

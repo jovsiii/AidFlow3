@@ -38,6 +38,11 @@ class FamilyProfileController extends Controller
         return view('features.family-profiles.info-board');
     }
 
+    public function summary()
+    {
+        return view('features.family-profiles.summary-board');
+    }
+
     public function summaryData(FirebaseService $firebase)
     {
         return response()->json([
