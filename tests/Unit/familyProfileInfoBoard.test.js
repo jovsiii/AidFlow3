@@ -52,6 +52,11 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
         static API = { autoTable() {} };
         internal = { pageSize: { getHeight: () => 297, getWidth: () => 210 } };
         setFontSize() {}
+        setFont() {}
+        setTextColor() {}
+        setFillColor() {}
+        setDrawColor() {}
+        roundedRect() {}
         text(value) { pdfText.push(value); }
         autoTable(options) { table = options; options.didDrawPage({ pageNumber: 1 }); }
         save(name) { saved = name; }
@@ -85,7 +90,11 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     assert.equal(saved, 'family-profile-info-board.pdf');
     assert.deepEqual(Array.from(table.head[0]), ['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']);
     assert.deepEqual(Array.from(table.body[0]), ['Batis', 'School', '4', '12 *']);
-    assert.deepEqual(Array.from(table.foot[0]), ['Total', '', '4', '12 *']);
+    assert.equal(table.foot[0][0].content, 'GRAND TOTAL');
+    assert.equal(table.foot[0][0].colSpan, 2);
+    assert.deepEqual(Array.from(table.foot[0]).slice(1), ['4', '12 *']);
+    assert.ok(pdfText.includes('TOTAL FAMILIES'));
+    assert.ok(pdfText.includes('TOTAL INDIVIDUALS'));
     assert.ok(pdfText.includes(elements['board-as-of'].textContent));
     assert.ok(pdfText.every((text) => !text.includes('Philippine time')));
     assert.equal(elements['board-families'].textContent, '4');

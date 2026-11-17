@@ -179,22 +179,47 @@
                         formatter.format(row.individuals) + (row.missingHouseholdSizes ? ' *' : ''),
                     ]);
                     pdf.autoTable({
-                        startY: 32,
+                        startY: 58,
                         margin: { top: 32, bottom: 20 },
                         head: [['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']],
                         body: body.length ? body : [[{ content: 'No family profiles have been added yet.', colSpan: 4 }]],
-                        foot: [['Total', '', formatter.format(report.totalFamilies),
+                        foot: [[{ content: 'GRAND TOTAL', colSpan: 2 }, formatter.format(report.totalFamilies),
                             formatter.format(report.totalIndividuals) + (report.missing ? ' *' : '')]],
                         showFoot: 'lastPage',
                         theme: 'grid',
                         headStyles: { fillColor: [150, 5, 5] },
-                        footStyles: { fillColor: [245, 235, 235], textColor: [30, 30, 30] },
+                        footStyles: { fillColor: [150, 5, 5], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 11 },
                         columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' } },
                         didDrawPage: (page) => {
+                            pdf.setTextColor(17, 24, 39);
+                            pdf.setFont('helvetica', 'bold');
                             pdf.setFontSize(16);
                             pdf.text('Family Profile Info Board', 14, 14);
+                            pdf.setFont('helvetica', 'normal');
                             pdf.setFontSize(9);
                             pdf.text(report.asOf, 14, 22);
+                            if (page.pageNumber === 1) {
+                                const cardWidth = (pdf.internal.pageSize.getWidth() - 34) / 2;
+                                [
+                                    ['TOTAL FAMILIES', formatter.format(report.totalFamilies)],
+                                    ['TOTAL INDIVIDUALS', formatter.format(report.totalIndividuals) + (report.missing ? ' *' : '')],
+                                ].forEach(([label, value], index) => {
+                                    const x = 14 + index * (cardWidth + 6);
+                                    pdf.setFillColor(253, 247, 247);
+                                    pdf.setDrawColor(243, 217, 217);
+                                    pdf.roundedRect(x, 28, cardWidth, 22, 2, 2, 'FD');
+                                    pdf.setTextColor(100, 100, 100);
+                                    pdf.setFont('helvetica', 'bold');
+                                    pdf.setFontSize(8);
+                                    pdf.text(label, x + 5, 35);
+                                    pdf.setTextColor(150, 5, 5);
+                                    pdf.setFontSize(15);
+                                    pdf.text(value, x + 5, 44);
+                                });
+                            }
+                            pdf.setTextColor(75, 85, 99);
+                            pdf.setFont('helvetica', 'normal');
+                            pdf.setFontSize(9);
                             const pageHeight = pdf.internal.pageSize.getHeight();
                             if (report.missing) {
                                 pdf.text('* Individual counts exclude ' + formatter.format(report.missing) + ' profile(s) without a valid household size.', 14, pageHeight - 12);
