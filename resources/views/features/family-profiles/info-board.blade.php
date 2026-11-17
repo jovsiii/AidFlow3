@@ -29,12 +29,19 @@
         .info-board-note { padding: 0 1.5rem 1.25rem; color: #6b7280; font-size: .8rem; }
         .info-board-refresh { border: 1px solid #d1d5db; border-radius: .5rem; background: white; padding: .5rem .85rem; color: #374151; font-weight: 600; }
         .info-board-refresh:hover { background: #f9fafb; }
+        .info-board-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .info-board-export { background: #960505; border-color: #960505; color: white; }
+        .info-board-export:hover { background: #7f1d1d; }
+        .info-board-export:disabled { opacity: .5; cursor: not-allowed; }
     </style>
 
     <div class="info-board">
         <div class="info-board-header">
             <a class="info-board-back" href="{{ route('family-profiles.index') }}">&larr; Back to Family Profiles</a>
-            <button type="button" class="info-board-refresh" id="board-refresh">Refresh now</button>
+            <div class="info-board-actions">
+                <button type="button" class="info-board-refresh" id="board-refresh">Refresh now</button>
+                <button type="button" class="info-board-refresh info-board-export" id="board-export" disabled>Export to PDF</button>
+            </div>
         </div>
         <section class="info-board-card" aria-labelledby="board-title">
             <div class="info-board-heading">
@@ -62,12 +69,14 @@
                 </table>
             </div>
             <p id="board-status" class="info-board-status" role="status" aria-live="polite">Loading family profiles...</p>
-            <p id="board-note" class="info-board-note">Individual counts are based on recorded household sizes. Automatically refreshes every 15 seconds.</p>
+            <p id="board-note" class="info-board-note">Individual counts are based on recorded household sizes. Checking for live updates; automatic refresh is available as a fallback.</p>
         </section>
     </div>
 @endsection
 
 @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script>
         (() => {
             const url = @json(route('family-profiles.info-board.data'));
@@ -77,12 +86,40 @@
             const families = document.getElementById('board-families');
             const individuals = document.getElementById('board-individuals');
             const note = document.getElementById('board-note');
+            const exportButton = document.getElementById('board-export');
             const formatter = new Intl.NumberFormat();
-            let loading = false;
+            let currentRefresh = null;
+            let pending = false;
+            let live = false;
+            let missingSizes = 0;
+            let latestReport = null;
 
-            async function refresh() {
-                if (loading) return;
-                loading = true;
+            function updateNote() {
+                note.textContent = (missingSizes
+                    ? '* Individual counts exclude ' + formatter.format(missingSizes) + ' profile(s) without a valid household size. '
+                    : 'Individual counts are based on recorded household sizes. ')
+                    + (live ? 'Live updates connected.' : 'Live updates unavailable; automatically refreshing every 15 seconds.');
+            }
+
+            function refresh() {
+                if (currentRefresh) {
+                    pending = true;
+                    return currentRefresh;
+                }
+                currentRefresh = refreshUntilCurrent().finally(() => { currentRefresh = null; });
+                return currentRefresh;
+            }
+
+            async function refreshUntilCurrent() {
+                let success = false;
+                do {
+                    pending = false;
+                    success = await fetchBoard();
+                } while (pending);
+                return success;
+            }
+
+            async function fetchBoard() {
                 try {
                     const response = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
                     if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
@@ -113,27 +150,119 @@
                     asOf.textContent = 'As of: ' + new Intl.DateTimeFormat('en-PH', {
                         dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Manila'
                     }).format(new Date(data.asOf)) + ' (Philippine time)';
+                    latestReport = { rows: data.rows, totalFamilies, totalIndividuals, missing, asOf: asOf.textContent };
                     status.classList.remove('error');
                     status.textContent = data.rows.length ? '' : 'No family profiles have been added yet.';
                     status.hidden = data.rows.length > 0;
-                    note.textContent = (missing
-                        ? '* Individual counts exclude ' + formatter.format(missing) + ' profile(s) without a valid household size. '
-                        : 'Individual counts are based on recorded household sizes. ')
-                        + 'Automatically refreshes every 15 seconds.';
+                    missingSizes = missing;
+                    updateNote();
+                    exportButton.disabled = false;
+                    return true;
                 } catch (error) {
                     status.hidden = false;
                     status.classList.add('error');
                     status.textContent = 'Unable to refresh the info board. Displayed data may be out of date; retrying automatically.';
+                    exportButton.disabled = true;
                     console.error('Info board refresh failed:', error);
-                } finally {
-                    loading = false;
+                    return false;
                 }
             }
 
             document.getElementById('board-refresh').addEventListener('click', refresh);
+            exportButton.addEventListener('click', async () => {
+                exportButton.disabled = true;
+                if (!await refresh()) return;
+                exportButton.disabled = true;
+                try {
+                    if (!window.jspdf?.jsPDF || !window.jspdf.jsPDF.API.autoTable) {
+                        throw new Error('PDF tools could not be loaded.');
+                    }
+                    const report = latestReport;
+                    const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+                    const body = report.rows.map((row) => [
+                        row.barangay,
+                        row.evacuationCenter,
+                        formatter.format(row.families),
+                        formatter.format(row.individuals) + (row.missingHouseholdSizes ? ' *' : ''),
+                    ]);
+                    pdf.autoTable({
+                        startY: 32,
+                        margin: { top: 32, bottom: 20 },
+                        head: [['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']],
+                        body: body.length ? body : [[{ content: 'No family profiles have been added yet.', colSpan: 4 }]],
+                        foot: [['Total', '', formatter.format(report.totalFamilies),
+                            formatter.format(report.totalIndividuals) + (report.missing ? ' *' : '')]],
+                        showFoot: 'lastPage',
+                        theme: 'grid',
+                        headStyles: { fillColor: [150, 5, 5] },
+                        footStyles: { fillColor: [245, 235, 235], textColor: [30, 30, 30] },
+                        columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' } },
+                        didDrawPage: (page) => {
+                            pdf.setFontSize(16);
+                            pdf.text('Family Profile Info Board', 14, 14);
+                            pdf.setFontSize(9);
+                            pdf.text(report.asOf, 14, 22);
+                            const pageHeight = pdf.internal.pageSize.getHeight();
+                            if (report.missing) {
+                                pdf.text('* Individual counts exclude ' + formatter.format(report.missing) + ' profile(s) without a valid household size.', 14, pageHeight - 12);
+                            }
+                            pdf.text('Page ' + page.pageNumber, pdf.internal.pageSize.getWidth() - 14, pageHeight - 6, { align: 'right' });
+                        },
+                    });
+                    pdf.save('family-profile-info-board.pdf');
+                } catch (error) {
+                    console.error('Unable to export the info board:', error);
+                    status.hidden = false;
+                    status.classList.add('error');
+                    status.textContent = 'Unable to export the PDF. Please check your connection and try again.';
+                } finally {
+                    exportButton.disabled = false;
+                }
+            });
+            document.addEventListener('family-board-change', refresh);
+            document.addEventListener('family-board-connection', (event) => {
+                live = event.detail;
+                updateNote();
+            });
             document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
             refresh();
             setInterval(() => { if (!document.hidden) refresh(); }, 15000);
         })();
+    </script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+        import { getDatabase, onValue, ref } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js';
+
+        try {
+            const databaseURL = @json(config('firebase.family_profiles_database_url'));
+            if (!databaseURL) throw new Error('Firebase database URL is not configured.');
+            const app = initializeApp({ databaseURL }, 'family-info-board');
+            const database = getDatabase(app);
+            let connected = false;
+            let watching = false;
+            const updateConnection = () => document.dispatchEvent(new CustomEvent('family-board-connection', {
+                detail: connected && watching
+            }));
+            onValue(ref(database, '.info/connected'), (snapshot) => {
+                connected = snapshot.val() === true;
+                updateConnection();
+            }, (error) => {
+                console.error('Unable to monitor Firebase connection:', error);
+                connected = false;
+                updateConnection();
+            });
+            onValue(ref(database, 'familyProfiles'), () => {
+                watching = true;
+                updateConnection();
+                document.dispatchEvent(new Event('family-board-change'));
+            }, (error) => {
+                console.error('Unable to watch family profiles:', error);
+                watching = false;
+                updateConnection();
+            });
+        } catch (error) {
+            console.error('Unable to initialize live family profile updates:', error);
+            document.dispatchEvent(new CustomEvent('family-board-connection', { detail: false }));
+        }
     </script>
 @endpush
