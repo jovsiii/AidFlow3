@@ -38,6 +38,16 @@ class FamilyProfileController extends Controller
         return view('features.family-profiles.info-board');
     }
 
+    public function summaryData(FirebaseService $firebase)
+    {
+        return response()->json([
+            'asOf' => now()->toIso8601String(),
+            'profiles' => collect($firebase->getFamilyProfiles(true))
+                ->sortBy('fullName', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values(),
+        ])->header('Cache-Control', 'no-store');
+    }
+
     public function infoBoardData(FirebaseService $firebase)
     {
         $groups = [];

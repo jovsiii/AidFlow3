@@ -43,6 +43,8 @@ it('shows family profiles on the family profile page', function () {
         ->assertOk()
         ->assertSee('Family Profile')
         ->assertSee(route('family-profiles.info-board'), false)
+        ->assertSee('Family Profile Summary')
+        ->assertSee(json_encode(route('family-profiles.summary.data')), false)
         ->assertSee('Maria Santos')
         ->assertSee('BB-001')
         ->assertSee('Balong-Bato')
@@ -75,6 +77,37 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Relation to head')
         ->assertSee('Highest educational attainment')
         ->assertSee('Type of vulnerability');
+});
+
+it('provides fresh, complete family profile summary data without caching', function () {
+    $profiles = [[
+        'id' => '-profile1',
+        'fullName' => 'Maria Santos',
+        'fourPsBeneficiary' => false,
+        'familyMembers' => [['fullName' => 'Ana Santos', 'typeOfVulnerability' => 'Senior']],
+        'legacyField' => 'Preserved',
+    ]];
+    $this->mock(FirebaseService::class, function ($mock) use ($profiles) {
+        $mock->shouldReceive('getFamilyProfiles')->twice()->with(true)->andReturn($profiles, []);
+    });
+
+    $this->withSession(['user' => ['role' => 'user']])
+        ->getJson(route('family-profiles.summary.data'))
+        ->assertOk()
+        ->assertHeader('Cache-Control', 'no-store, private')
+        ->assertJsonPath('profiles.0.familyMembers.0.typeOfVulnerability', 'Senior')
+        ->assertJsonPath('profiles.0.fourPsBeneficiary', false)
+        ->assertJsonPath('profiles.0.legacyField', 'Preserved');
+    $this->getJson(route('family-profiles.summary.data'))
+        ->assertOk()->assertJsonCount(0, 'profiles');
+});
+
+it('does not present a Firebase failure as an empty family profile summary', function () {
+    \Illuminate\Support\Facades\Http::fake(['*' => \Illuminate\Support\Facades\Http::response([], 500)]);
+
+    $this->withSession(['user' => ['role' => 'user']])
+        ->getJson(route('family-profiles.summary.data'))
+        ->assertStatus(500);
 });
 
 it('shows the info board to family profile users', function () {

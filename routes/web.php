@@ -48,6 +48,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/features/family-profiles', [FamilyProfileController::class, 'index'])->name('family-profiles.index');
     Route::get('/features/family-profiles/info-board', [FamilyProfileController::class, 'infoBoard'])->name('family-profiles.info-board');
     Route::get('/features/family-profiles/info-board/data', [FamilyProfileController::class, 'infoBoardData'])->name('family-profiles.info-board.data');
+    Route::get('/features/family-profiles/summary/data', [FamilyProfileController::class, 'summaryData'])->name('family-profiles.summary.data');
     Route::post('/features/family-profiles', [FamilyProfileController::class, 'store'])->name('family-profiles.store');
     Route::put('/features/family-profiles/{profileId}', [FamilyProfileController::class, 'update'])
         ->where('profileId', '[A-Za-z0-9_-]+')
