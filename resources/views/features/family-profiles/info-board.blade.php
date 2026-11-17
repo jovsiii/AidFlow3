@@ -27,10 +27,7 @@
         .info-board-status { padding: 1rem 1.5rem; color: #6b7280; font-size: .875rem; }
         .info-board-status.error { color: #b91c1c; background: #fef2f2; }
         .info-board-note { padding: 0 1.5rem 1.25rem; color: #6b7280; font-size: .8rem; }
-        .info-board-refresh { border: 1px solid #d1d5db; border-radius: .5rem; background: white; padding: .5rem .85rem; color: #374151; font-weight: 600; }
-        .info-board-refresh:hover { background: #f9fafb; }
-        .info-board-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
-        .info-board-export { background: #960505; border-color: #960505; color: white; }
+        .info-board-export { border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; }
         .info-board-export:hover { background: #7f1d1d; }
         .info-board-export:disabled { opacity: .5; cursor: not-allowed; }
     </style>
@@ -38,10 +35,7 @@
     <div class="info-board">
         <div class="info-board-header">
             <a class="info-board-back" href="{{ route('family-profiles.index') }}">&larr; Back to Family Profiles</a>
-            <div class="info-board-actions">
-                <button type="button" class="info-board-refresh" id="board-refresh">Refresh now</button>
-                <button type="button" class="info-board-refresh info-board-export" id="board-export" disabled>Export to PDF</button>
-            </div>
+            <button type="button" class="info-board-export" id="board-export" disabled>Export to PDF</button>
         </div>
         <section class="info-board-card" aria-labelledby="board-title">
             <div class="info-board-heading">
@@ -149,7 +143,7 @@
                     individuals.textContent = formatter.format(totalIndividuals) + (missing ? ' *' : '');
                     asOf.textContent = 'As of: ' + new Intl.DateTimeFormat('en-PH', {
                         dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Manila'
-                    }).format(new Date(data.asOf)) + ' (Philippine time)';
+                    }).format(new Date(data.asOf));
                     latestReport = { rows: data.rows, totalFamilies, totalIndividuals, missing, asOf: asOf.textContent };
                     status.classList.remove('error');
                     status.textContent = data.rows.length ? '' : 'No family profiles have been added yet.';
@@ -168,7 +162,6 @@
                 }
             }
 
-            document.getElementById('board-refresh').addEventListener('click', refresh);
             exportButton.addEventListener('click', async () => {
                 exportButton.disabled = true;
                 if (!await refresh()) return;

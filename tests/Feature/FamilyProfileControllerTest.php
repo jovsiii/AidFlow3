@@ -86,6 +86,7 @@ it('shows the info board to family profile users', function () {
         ->assertSee('Barangay evacuation center')
         ->assertSee('Back to menu')
         ->assertSee('Export to PDF')
+        ->assertDontSee('Refresh now')
         ->assertSee('jspdf.plugin.autotable.min.js')
         ->assertSee(json_encode(route('family-profiles.info-board.data')), false);
 });

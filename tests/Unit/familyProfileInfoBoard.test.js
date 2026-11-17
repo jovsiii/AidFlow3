@@ -19,13 +19,14 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
             addEventListener(name, callback) { this[name] = callback; },
         };
     }
-    for (const id of ['board-rows', 'board-status', 'board-as-of', 'board-families', 'board-individuals', 'board-note', 'board-refresh', 'board-export']) {
+    for (const id of ['board-rows', 'board-status', 'board-as-of', 'board-families', 'board-individuals', 'board-note', 'board-export']) {
         elements[id] = element();
     }
     let interval;
     let calls = 0;
     let saved;
     let table;
+    const pdfText = [];
     let release;
     const document = {
         hidden: false,
@@ -49,7 +50,10 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     };
     class Pdf {
         static API = { autoTable() {} };
-        autoTable(options) { table = options; }
+        internal = { pageSize: { getHeight: () => 297, getWidth: () => 210 } };
+        setFontSize() {}
+        text(value) { pdfText.push(value); }
+        autoTable(options) { table = options; options.didDrawPage({ pageNumber: 1 }); }
         save(name) { saved = name; }
     }
     runInNewContext(script, {
@@ -62,7 +66,8 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     assert.equal(elements['board-families'].textContent, '1');
     assert.equal(elements['board-individuals'].textContent, '3 *');
     assert.match(elements['board-note'].textContent, /exclude 1 profile/);
-    assert.match(elements['board-as-of'].textContent, /Philippine time/);
+    assert.match(elements['board-as-of'].textContent, /^As of: /);
+    assert.doesNotMatch(elements['board-as-of'].textContent, /Philippine time/);
 
     handlers['family-board-connection']({ detail: true });
     assert.match(elements['board-note'].textContent, /Live updates connected/);
@@ -81,6 +86,8 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     assert.deepEqual(Array.from(table.head[0]), ['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']);
     assert.deepEqual(Array.from(table.body[0]), ['Batis', 'School', '4', '12 *']);
     assert.deepEqual(Array.from(table.foot[0]), ['Total', '', '4', '12 *']);
+    assert.ok(pdfText.includes(elements['board-as-of'].textContent));
+    assert.ok(pdfText.every((text) => !text.includes('Philippine time')));
     assert.equal(elements['board-families'].textContent, '4');
 
     interval();
