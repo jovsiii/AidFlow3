@@ -135,26 +135,26 @@ export function setupFamilySummary(elements, url) {
             }
             const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
             pdf.autoTable({
-                startY: 32,
-                margin: { top: 32, bottom: 15 },
+                startY: 25,
+                margin: { top: 25, bottom: 10, left: 10, right: 10 },
                 head: [report.table.head],
                 body: report.table.body.length ? report.table.body : [['No family profiles have been added yet.']],
                 theme: 'grid',
-                styles: { cellWidth: 45, fontSize: 8, overflow: 'linebreak' },
+                styles: { cellWidth: 30, fontSize: 7, cellPadding: 0.8, overflow: 'linebreak' },
                 headStyles: { fillColor: [150, 5, 5] },
-                columnStyles: { 0: { cellWidth: 50 } },
+                columnStyles: { 0: { cellWidth: 35 } },
                 horizontalPageBreak: true,
                 horizontalPageBreakRepeat: 0,
                 didDrawPage: () => {
                     pdf.setTextColor(17, 24, 39);
                     pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(15);
-                    pdf.text('Family Profile Summary', 14, 14);
+                    pdf.setFontSize(12);
+                    pdf.text('Family Profile Summary', 10, 10);
                     pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(9);
-                    pdf.text(`${report.asOfText} | Total families: ${report.profiles.length}`, 14, 22);
-                    pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, pdf.internal.pageSize.getWidth() - 14,
-                        pdf.internal.pageSize.getHeight() - 7, { align: 'right' });
+                    pdf.setFontSize(8);
+                    pdf.text(`${report.asOfText} | Total families: ${report.profiles.length}`, 10, 17);
+                    pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, pdf.internal.pageSize.getWidth() - 10,
+                        pdf.internal.pageSize.getHeight() - 5, { align: 'right' });
                 },
             });
             pdf.save('family-profile-summary.pdf');

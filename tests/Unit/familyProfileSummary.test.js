@@ -78,6 +78,11 @@ test('displays one row per family and exports the fresh horizontal table', async
     assert.equal(context.pdfOptions().orientation, 'landscape');
     assert.equal(context.table().horizontalPageBreak, true);
     assert.equal(context.table().horizontalPageBreakRepeat, 0);
+    const table = context.table();
+    const availableWidth = 297 - table.margin.left - table.margin.right - table.columnStyles[0].cellWidth;
+    assert.ok(Math.floor(availableWidth / table.styles.cellWidth) >= 8);
+    assert.ok(table.styles.cellPadding <= 1);
+    assert.ok(table.styles.fontSize >= 7);
     assert.deepEqual(context.table().head[0], headers);
     assert.equal(context.table().body[0][headers.indexOf('Household Size')], '3');
     assert.equal(context.saved(), 'family-profile-summary.pdf');
