@@ -195,6 +195,40 @@ class InventoryController extends Controller
         return redirect()->back()->with('success', 'Item added successfully');
     }
 
+    public function release(Request $request, FirebaseService $firebase)
+    {
+        $validated = $request->validate([
+            'item_name' => ['required', 'string', 'max:255'],
+            'record_id' => ['required', 'string', 'max:768', 'regex:/^[^.#$\[\]\/\x00-\x1F\x7F]+$/u'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'purpose' => ['required', 'string', 'max:500'],
+        ]);
+
+        $result = $firebase->releaseInventory(
+            $validated['record_id'],
+            $validated['item_name'],
+            (int) $validated['quantity'],
+            trim($validated['purpose']),
+            $request->session()->get('user.fullName')
+                ?: $request->session()->get('user.username')
+                ?: $request->session()->get('username')
+        );
+
+        if ($result !== 'released') {
+            $message = match ($result) {
+                'not_found' => 'The selected inventory record no longer exists or does not match this item.',
+                'expired' => 'Expired inventory cannot be released.',
+                'insufficient_stock' => 'The selected batch record does not have enough stock.',
+                'conflict' => 'The inventory changed while processing your request. Please try again.',
+                default => 'Unable to release inventory. Please try again.',
+            };
+
+            return back()->withInput()->withErrors(['release' => $message]);
+        }
+
+        return back()->with('success', 'Inventory released successfully.');
+    }
+
     /** Validate and replace the selected inventory record's data. */
     public function update(Request $request, $id, FirebaseService $firebase)
     {
@@ -219,7 +253,11 @@ class InventoryController extends Controller
     /** Remove the selected inventory record. */
     public function destroy($id, FirebaseService $firebase)
     {
-        $firebase->deleteInventory($id);
+        if (!$firebase->deleteInventory($id)) {
+            return redirect()->back()->withErrors([
+                'error' => 'Unable to delete the item. Records with release history cannot be deleted.',
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Item deleted successfully');
     }

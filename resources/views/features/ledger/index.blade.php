@@ -18,7 +18,7 @@
             $rows = $rows->filter(function ($row) use ($tab, $search) {
                 $haystack = $tab === 'inbound'
                     ? [$row['name'], $row['category'], $row['batch'], $row['receivedBy']]
-                    : [$row['pack'], $row['distributedBy'], collect($row['items'])->keys()->implode(' ')];
+                    : [$row['pack'], $row['distributedBy'], $row['batch'], $row['purpose'], collect($row['items'])->keys()->implode(' ')];
 
                 return str_contains(mb_strtolower(implode(' ', array_filter($haystack, fn ($v) => $v !== null))), $search);
             })->values();
@@ -27,7 +27,7 @@
         $cards = [
             ['icon' => 'fa-arrow-down', 'label' => 'Inbound Records', 'value' => $inbound->count()],
             ['icon' => 'fa-boxes-stacked', 'label' => 'Total Units Received', 'value' => $inbound->sum('quantity')],
-            ['icon' => 'fa-arrow-up', 'label' => 'Relief Packs Distributed', 'value' => $outbound->count()],
+            ['icon' => 'fa-arrow-up', 'label' => 'Relief Packs Distributed', 'value' => $outbound->where('type', 'pack')->count()],
             ['icon' => 'fa-warehouse', 'label' => 'Units Still Available', 'value' => number_format($inbound->sum('quantity') - $outbound->sum(fn ($row) => collect($row['items'])->sum())) . '/' . number_format($inbound->sum('quantity'))],
             ['icon' => 'fa-user-check', 'label' => 'Accounts Involved', 'value' => $inbound->pluck('receivedBy')->merge($outbound->pluck('distributedBy'))->filter()->unique()->count()],
         ];
@@ -52,7 +52,7 @@
     <form method="GET" action="{{ route('ledger.index') }}" class="flex flex-wrap gap-3 items-center mb-4 mt-4">
         <input type="hidden" name="tab" value="{{ $tab }}">
         <input type="text" name="search" value="{{ request('search') }}"
-            placeholder="{{ $tab === 'inbound' ? 'Search item, batch or account' : 'Search pack, item or account' }}"
+            placeholder="{{ $tab === 'inbound' ? 'Search item, batch or account' : 'Search pack, item, batch, purpose or account' }}"
             class="flex-1 min-w-[220px] rounded-full pl-4 py-2 border-2 border-pink-200" />
         @if ($tab === 'inbound')
             <select name="batch" class="px-3 py-2 rounded-md border-2 border-pink-200" onchange="this.form.submit()">
@@ -129,6 +129,8 @@
                             <th class="px-3 py-2 text-left">Date</th>
                             <th class="px-3 py-2 text-left">Relief Pack</th>
                             <th class="px-3 py-2 text-left">Items Distributed</th>
+                            <th class="px-3 py-2 text-left">Batch</th>
+                            <th class="px-3 py-2 text-left">Purpose</th>
                             <th class="px-3 py-2 text-left">Total Units</th>
                             <th class="px-3 py-2 text-left">Still Available</th>
                             <th class="px-3 py-2 text-left">Distributed By</th>
@@ -138,14 +140,16 @@
                         @forelse ($rows as $row)
                             <tr class="border-b align-top hover:bg-pink-50">
                                 <td class="px-3 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($row['date'])->format('M d, Y h:i A') }}</td>
-                                <td class="px-3 py-2 font-semibold text-red-700">#{{ $row['pack'] }}</td>
+                                <td class="px-3 py-2 font-semibold text-red-700">{{ $row['type'] === 'pack' ? '#' . $row['pack'] : 'Manual release' }}</td>
                                 <td class="px-3 py-2">
                                     <div class="flex flex-wrap gap-1">
                                         @foreach ($row['items'] as $name => $qty)
-                                            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">{{ $name }} × {{ $qty }}</span>
+                                            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">{{ $name }} × {{ $qty }} {{ $row['unit'] }}</span>
                                         @endforeach
                                     </div>
                                 </td>
+                                <td class="px-3 py-2">{{ $row['batch'] ?? '—' }}</td>
+                                <td class="px-3 py-2">{{ $row['purpose'] ?? '—' }}</td>
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <span class="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">−{{ number_format(collect($row['items'])->sum()) }}</span> units
                                 </td>
@@ -161,7 +165,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="py-10 text-center text-gray-500">No outbound records found.</td></tr>
+                            <tr><td colspan="8" class="py-10 text-center text-gray-500">No outbound records found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

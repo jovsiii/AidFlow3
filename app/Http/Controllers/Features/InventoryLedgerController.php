@@ -8,15 +8,15 @@ use App\Services\ReliefPackCalculator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-/** Shows the inventory ledger: inbound receipts and outbound relief-pack distributions. */
+/** Shows the inventory ledger: inbound receipts and outbound distributions. */
 class InventoryLedgerController extends Controller
 {
     public function index(Request $request, FirebaseService $firebase, ReliefPackCalculator $calculator)
     {
         $tab = $request->query('tab') === 'outbound' ? 'outbound' : 'inbound';
 
-        $inbound = collect($firebase->getInventory())
-            ->filter(fn ($item) => is_array($item))
+        $inventory = collect($firebase->getInventory())->filter(fn ($item) => is_array($item));
+        $inbound = $inventory
             ->map(function ($item) {
                 $date = $item['added'] ?? $item['received'] ?? null;
 
@@ -39,16 +39,37 @@ class InventoryLedgerController extends Controller
         $outbound = collect($firebase->getReliefPackScans())
             ->filter(fn ($scan) => is_array($scan) && !empty($scan['scanned_at']))
             ->map(fn ($scan) => [
+                'type' => 'pack',
                 'date' => $scan['scanned_at'],
                 'timestamp' => Carbon::parse($scan['scanned_at'])->timestamp,
                 'pack' => $scan['pack_number'] ?? null,
                 'items' => $packItems,
                 'distributedBy' => $scan['accountName'] ?? null,
+                'batch' => null,
+                'purpose' => null,
+                'unit' => null,
             ])
-            ->sortBy('timestamp')
             ->values();
 
-        // Running balance: total units received minus units distributed up to each scan.
+        $releases = $inventory->flatMap(function ($item) {
+            return collect($item['releases'] ?? [])
+                ->filter(fn ($release) => is_array($release) && !empty($release['releasedAt']))
+                ->map(fn ($release) => [
+                    'type' => 'release',
+                    'date' => $release['releasedAt'],
+                    'timestamp' => Carbon::parse($release['releasedAt'])->timestamp,
+                    'pack' => null,
+                    'items' => [$release['itemName'] ?? $item['name'] ?? 'Unnamed Item' => (int) ($release['quantity'] ?? 0)],
+                    'distributedBy' => $release['releasedBy'] ?? null,
+                    'batch' => $release['batch'] ?? null,
+                    'purpose' => $release['purpose'] ?? null,
+                    'unit' => $release['unit'] ?? null,
+                ]);
+        });
+
+        $outbound = $outbound->concat($releases)->sortBy('timestamp')->values();
+
+        // Running balance: total units received minus units distributed up to each event.
         $balance = (int) $inbound->sum('quantity');
         $outbound = $outbound->map(function ($row) use (&$balance) {
             $balance -= (int) collect($row['items'])->sum();
@@ -57,7 +78,7 @@ class InventoryLedgerController extends Controller
             return $row;
         })->sortByDesc('timestamp')->values();
 
-        $version = $this->fingerprint($firebase);
+        $version = $this->fingerprint($firebase, $inventory->all());
 
         return view('features.ledger.index', compact('tab', 'inbound', 'outbound', 'version'));
     }
@@ -69,10 +90,10 @@ class InventoryLedgerController extends Controller
             ->header('Cache-Control', 'no-store');
     }
 
-    private function fingerprint(FirebaseService $firebase): string
+    private function fingerprint(FirebaseService $firebase, ?array $inventory = null): string
     {
         return md5(json_encode([
-            $firebase->getKeys('inventory'),
+            $inventory ?? collect($firebase->getInventory())->filter(fn ($item) => is_array($item))->all(),
             $firebase->getKeys('reliefPackScans'),
         ]));
     }

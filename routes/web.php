@@ -29,6 +29,7 @@ Route::middleware('firebase.auth')->group(function () {
 
     Route::get('/features/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/features/inventory', [InventoryController::class, 'store'])->name('inventory.store');
+    Route::post('/features/inventory/release', [InventoryController::class, 'release'])->name('inventory.release');
     Route::put('/features/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
     Route::delete('/features/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
     Route::get('/features/inventory/batch/{batchId}', [InventoryController::class, 'batch'])->name('inventory.batch');

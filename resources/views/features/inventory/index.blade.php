@@ -6,11 +6,20 @@
 @section('content')
     @php
         $today = now()->startOfDay();
+        $releaseHasErrors = isset($errors) && $errors->any();
     @endphp
 
     @if (session('success'))
         <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($releaseHasErrors)
+        <div role="alert" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @foreach ($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
         </div>
     @endif
 
@@ -147,6 +156,7 @@
                             <th class="py-2 text-left">Category</th>
                             <th class="py-2 text-left">Unit</th>
                             <th class="py-2 text-left">Stock</th>
+                            <th class="py-2 text-left">Action</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
@@ -162,9 +172,17 @@
                                 <td>{{ $item['category'] ?? 'Uncategorized' }}</td>
                                 <td>{{ $item['unit'] ?? '-' }}</td>
                                 <td>{{ $item['stock'] ?? 0 }}</td>
+                                <td class="py-2">
+                                    <button type="button" class="inventory-details-toggle rounded-md border border-red-600 px-3 py-1 text-red-700 hover:bg-red-50"
+                                        aria-expanded="{{ old('item_name') === ($item['name'] ?? null) && $releaseHasErrors ? 'true' : 'false' }}"
+                                        aria-controls="inventory-release-{{ $loop->index }}"
+                                        @disabled(empty($item['name']))>
+                                        Edit
+                                    </button>
+                                </td>
                             </tr>
                             <tr id="inventory-details-{{ $loop->index }}" class="hidden bg-red-200">
-                                <td colspan="4" class="p-3">
+                                <td colspan="5" class="p-3">
                                     <div class="overflow-x-auto">
                                         <table class="w-full text-sm text-left">
                                             <thead class="text-red-800">
@@ -202,6 +220,41 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                </td>
+                            </tr>
+                            <tr id="inventory-release-{{ $loop->index }}"
+                                class="{{ old('item_name') === ($item['name'] ?? null) && $releaseHasErrors ? '' : 'hidden' }} bg-red-50">
+                                <td colspan="5" class="p-4">
+                                    <form method="POST" action="{{ route('inventory.release') }}" class="flex flex-wrap items-end gap-3">
+                                        @csrf
+                                        <input type="hidden" name="item_name" value="{{ $item['name'] ?? '' }}">
+                                        <label class="flex min-w-[220px] flex-1 flex-col gap-1 text-sm font-medium text-gray-700">
+                                            Batch record
+                                            <select name="record_id" required class="rounded-md border border-gray-300 bg-white px-3 py-2">
+                                                <option value="">Select a batch record</option>
+                                                @foreach ($item['records'] as $record)
+                                                    <option value="{{ $record['id'] }}" @selected(old('item_name') === ($item['name'] ?? null) && old('record_id') === (string) $record['id']) @disabled((int) ($record['stock'] ?? 0) <= 0)>
+                                                        {{ filled($record['batch'] ?? null) ? $record['batch'] : 'No batch' }}
+                                                        — expiry {{ !empty($record['expirationDate']) ? \Carbon\Carbon::parse($record['expirationDate'])->format('m/d/Y') : 'not specified' }}
+                                                        — {{ number_format((int) ($record['stock'] ?? 0)) }} {{ $record['unit'] ?? '' }} available
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </label>
+                                        <label class="flex w-36 flex-col gap-1 text-sm font-medium text-gray-700">
+                                            Quantity to release
+                                            <input type="number" name="quantity" min="1" step="1" required
+                                                value="{{ old('item_name') === ($item['name'] ?? null) ? old('quantity') : '' }}"
+                                                class="rounded-md border border-gray-300 bg-white px-3 py-2">
+                                        </label>
+                                        <label class="flex min-w-[200px] flex-1 flex-col gap-1 text-sm font-medium text-gray-700">
+                                            Purpose
+                                            <input type="text" name="purpose" maxlength="500" required
+                                                value="{{ old('item_name') === ($item['name'] ?? null) ? old('purpose') : '' }}"
+                                                class="rounded-md border border-gray-300 bg-white px-3 py-2">
+                                        </label>
+                                        <button type="submit" class="rounded-md bg-red-700 px-4 py-2 font-semibold text-white hover:bg-red-800">Release stock</button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty

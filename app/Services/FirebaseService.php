@@ -80,13 +80,67 @@ class FirebaseService
         return $this->write("inventory/{$id}", $data, 'put');
     }
 
+    public function releaseInventory(string $id, string $itemName, int $quantity, string $purpose, ?string $accountName): string
+    {
+        $url = "{$this->databaseUrl}/inventory/" . rawurlencode($id) . '.json';
+        $response = Http::withoutVerifying()->withHeaders(['X-Firebase-ETag' => 'true'])->get($url);
+
+        if (!$response->successful() || !$response->header('ETag')) {
+            return 'failed';
+        }
+
+        $item = $response->json();
+        if (!is_array($item) || mb_strtolower(trim((string) ($item['name'] ?? ''))) !== mb_strtolower(trim($itemName))) {
+            return 'not_found';
+        }
+
+        if (!empty($item['expirationDate']) && \Carbon\Carbon::parse($item['expirationDate'])->startOfDay()->lt(now()->startOfDay())) {
+            return 'expired';
+        }
+
+        $stock = filter_var($item['stock'] ?? null, FILTER_VALIDATE_INT);
+        if ($stock === false || $stock < $quantity) {
+            return 'insufficient_stock';
+        }
+        if (isset($item['releases']) && !is_array($item['releases'])) {
+            return 'failed';
+        }
+
+        $item['startingStock'] = (int) ($item['startingStock'] ?? $stock);
+        $item['stock'] = $stock - $quantity;
+        $item['releases'][(string) Str::uuid()] = [
+            'itemName' => $item['name'],
+            'batch' => $item['batch'] ?? null,
+            'unit' => $item['unit'] ?? '',
+            'quantity' => $quantity,
+            'purpose' => $purpose,
+            'releasedAt' => now()->toIso8601String(),
+            'releasedBy' => $accountName,
+        ];
+
+        $write = Http::withoutVerifying()->withHeaders(['if-match' => $response->header('ETag')])->put($url, $item);
+
+        if ($write->status() === 412) {
+            return 'conflict';
+        }
+
+        return $write->successful() ? 'released' : 'failed';
+    }
+
     public function deleteInventory($id)
     {
-        $response = Http::withoutVerifying()->delete(
-            "{$this->databaseUrl}/inventory/{$id}.json"
-        );
+        $url = "{$this->databaseUrl}/inventory/" . rawurlencode($id) . '.json';
+        $response = Http::withoutVerifying()->withHeaders(['X-Firebase-ETag' => 'true'])->get($url);
+        $item = $response->json();
 
-        return $response->successful();
+        if (!$response->successful() || !$response->header('ETag') || !is_array($item) || !empty($item['releases'])) {
+            return false;
+        }
+
+        return Http::withoutVerifying()
+            ->withHeaders(['if-match' => $response->header('ETag')])
+            ->delete($url)
+            ->successful();
     }
 
     public function getReliefPacks()
