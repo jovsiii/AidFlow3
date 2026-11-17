@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 it('renders a qr generator with tent and food pack options', function () {
     $calculator = new ReliefPackCalculator();
     $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getReliefPackPlan')->once()->andReturn(null);
     $firebase->shouldReceive('getInventory')->once()->andReturn(
         collect($calculator->requiredItemDetails())
             ->map(fn ($item) => [

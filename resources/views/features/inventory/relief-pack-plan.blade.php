@@ -24,7 +24,7 @@
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Relief pack plan</h2>
-                    <p class="mt-1 text-sm text-gray-600">Choose the items and quantities for one planned pack.</p>
+                    <p class="mt-1 text-sm text-gray-600">Choose the items and quantities for one relief pack.</p>
                 </div>
                 <div class="rounded-lg border border-red-200 bg-red-50 px-5 py-3">
                     <p class="text-sm text-gray-600">Packs possible with current stock</p>
@@ -32,8 +32,8 @@
                 </div>
             </div>
             <p class="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Planning only: saving this plan does not reserve stock or change QR codes, scanned pack contents, or the standard pack count.
-                The estimate excludes expired stock and does not include preassembled standard packs.
+                Saving this plan makes it active for relief pack estimates and scans. Existing unscanned QR codes use the active plan when scanned.
+                Saving does not reserve stock. The estimate excludes expired stock and preassembled standard packs.
             </p>
 
             <form method="POST" action="{{ route('relief-pack-plan.store') }}" class="mt-5">

@@ -43,12 +43,24 @@ class ReliefPackCalculator
         return self::REQUIRED_ITEMS;
     }
 
-    public function count($inventory): int
+    public function count($inventory, ?array $requirements = null): int
     {
         $inventory = collect($inventory);
+        if ($requirements !== null) {
+            return $this->countForItems($this->eligibleInventory($inventory), $requirements);
+        }
+
         $standardPacks = $inventory->filter(fn ($item) => is_array($item) && ($item['type'] ?? '') === 'standard')->count();
 
         return $standardPacks + $this->countForItems($inventory, self::REQUIRED_ITEMS);
+    }
+
+    public function eligibleInventory($inventory): Collection
+    {
+        return collect($inventory)
+            ->filter(fn ($item) => is_array($item)
+                && (empty($item['expirationDate']) || !\Carbon\Carbon::parse($item['expirationDate'])->startOfDay()->lt(now()->startOfDay())))
+            ->map(fn ($item) => array_merge($item, ['stock' => max(0, (int) ($item['stock'] ?? 0))]));
     }
 
     public function countForItems($inventory, array $requirements): int
@@ -69,8 +81,8 @@ class ReliefPackCalculator
             ->min() ?? 0;
     }
 
-    private function inventoryKey(string $name, string $unit): string
+    public function inventoryKey(string $name, string $unit): string
     {
-        return mb_strtolower(trim($name)).'|'.mb_strtolower(trim($unit));
+        return json_encode([mb_strtolower(trim($name)), mb_strtolower(trim($unit))], JSON_THROW_ON_ERROR);
     }
 }

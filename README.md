@@ -69,7 +69,8 @@ deleted, so their ledger entries are retained.
 ## Relief pack planning
 
 Admins can open **Configure relief pack plan** from Inventory to choose the
-items and quantities in a planned pack. The estimate uses unexpired inventory
-and matching units; it excludes preassembled packs. This plan is for planning
-only: saving it does not reserve stock or change QR generation, scanning, or
-the standard relief pack.
+items and quantities in a relief pack. Saving activates the plan for estimates,
+QR generation, and scanning. Existing unscanned QR codes use the active plan at
+scan time. The estimate uses unexpired inventory and matching units, excludes
+preassembled packs, and does not reserve stock. New scan records retain their
+distributed contents even if the plan later changes.

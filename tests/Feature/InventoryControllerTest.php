@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 it('combines inventory list rows with the same name and sums their stock', function () {
     $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getReliefPackPlan')->andReturn(null);
     $firebase->shouldReceive('getInventory')->andReturn([
         'first' => [
             'name' => 'Toothbrush',
@@ -94,6 +95,7 @@ it('preserves an item starting-stock baseline when updating inventory details', 
 
 it('calculates low stock from the combined starting and remaining stock across batches', function () {
     $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getReliefPackPlan')->andReturn(null);
     $firebase->shouldReceive('getInventory')->andReturn([
         'batch-a' => [
             'name' => 'Rice',
@@ -148,6 +150,9 @@ it('releases a selected batch record and shows the release in the outbound ledge
         }
         if (str_ends_with($request->url(), '/inventory.json')) {
             return \Illuminate\Support\Facades\Http::response($inventory);
+        }
+        if (str_ends_with($request->url(), '/reliefPackPlan.json')) {
+            return \Illuminate\Support\Facades\Http::response(null);
         }
         if (str_contains($request->url(), '/reliefPackScans.json')) {
             return \Illuminate\Support\Facades\Http::response(null);

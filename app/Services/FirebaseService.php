@@ -84,6 +84,14 @@ class FirebaseService
             throw new \UnexpectedValueException('Invalid relief pack plan returned by Firebase.');
         }
 
+        $keys = collect($plan['items'])->map(fn ($item) => json_encode([
+            mb_strtolower(trim($item['name'])),
+            mb_strtolower(trim($item['unit'])),
+        ], JSON_THROW_ON_ERROR));
+        if ($keys->unique()->count() !== $keys->count()) {
+            throw new \UnexpectedValueException('Relief pack plan contains duplicate items.');
+        }
+
         return $plan;
     }
 
@@ -189,31 +197,36 @@ class FirebaseService
     public function consumeReliefPack(int $packNumber, array $requiredItems, ?string $accountName = null): array
     {
         $scanPath = "reliefPackScans/{$packNumber}";
-        $existingScan = $this->get($scanPath);
+        $existingScan = $this->get($scanPath, true);
+
+        if ($existingScan !== null && !is_array($existingScan)) {
+            throw new \UnexpectedValueException('Invalid relief pack scan data returned by Firebase.');
+        }
 
         if (is_array($existingScan) && !empty($existingScan['scanned_at'])) {
             return ['status' => 'already_scanned'];
         }
 
-        $inventory = $this->getInventory();
-        $inventory = is_array($inventory) ? $inventory : [];
-        $itemsByName = [];
+        $calculator = new ReliefPackCalculator();
+        $inventory = $calculator->eligibleInventory($this->getInventory(true));
+        $itemsByNameAndUnit = [];
 
         foreach ($inventory as $id => $item) {
-            if (is_array($item) && filled($item['name'] ?? null)) {
-                $itemsByName[mb_strtolower(trim($item['name']))][] = [$id, $item];
+            if (is_string($item['name'] ?? null) && filled($item['name'])
+                && is_string($item['unit'] ?? null) && filled($item['unit'])) {
+                $itemsByNameAndUnit[$calculator->inventoryKey($item['name'], $item['unit'])][] = [$id, $item];
             }
         }
 
-        foreach ($requiredItems as $name => $quantity) {
-            $available = collect($itemsByName[mb_strtolower(trim($name))] ?? [])
+        foreach ($requiredItems as $required) {
+            $available = collect($itemsByNameAndUnit[$calculator->inventoryKey($required['name'], $required['unit'])] ?? [])
                 ->sum(fn($entry) => (int) ($entry[1]['stock'] ?? 0));
 
-            if ($available < $quantity) {
+            if ($available < $required['quantity']) {
                 return [
                     'status' => 'insufficient_stock',
-                    'item' => $name,
-                    'required' => $quantity,
+                    'item' => $required['name'] . ' (' . $required['unit'] . ')',
+                    'required' => $required['quantity'],
                     'available' => $available,
                 ];
             }
@@ -221,9 +234,9 @@ class FirebaseService
 
         $updates = [];
 
-        foreach ($requiredItems as $name => $quantity) {
-            $remaining = $quantity;
-            foreach ($itemsByName[mb_strtolower(trim($name))] ?? [] as [$id, $item]) {
+        foreach ($requiredItems as $required) {
+            $remaining = (int) $required['quantity'];
+            foreach ($itemsByNameAndUnit[$calculator->inventoryKey($required['name'], $required['unit'])] ?? [] as [$id, $item]) {
                 if ($remaining <= 0) {
                     break;
                 }
@@ -243,6 +256,7 @@ class FirebaseService
             'pack_number' => $packNumber,
             'scanned_at' => now()->toIso8601String(),
             'accountName' => $accountName,
+            'items' => array_values($requiredItems),
         ];
 
         $response = Http::withoutVerifying()->patch("{$this->databaseUrl}/.json", $updates);

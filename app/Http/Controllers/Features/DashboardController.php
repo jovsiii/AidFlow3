@@ -19,7 +19,8 @@ class DashboardController extends Controller
     public function index(FirebaseService $firebase, ?ReliefPackCalculator $reliefPackCalculator = null)
     {
         $reliefPackCalculator ??= new ReliefPackCalculator();
-        $inventory = collect($firebase->getInventory());
+        $planItems = $firebase->getReliefPackPlan()['items'] ?? null;
+        $inventory = collect($firebase->getInventory(true));
 
         $forecastDataset = collect(json_decode(
             file_get_contents(public_path('js/cleaned_dataset.json')),
@@ -175,7 +176,7 @@ class DashboardController extends Controller
 
             'totalStock' => $inventory->sum('stock'),
 
-            'standardReliefPacks' => $reliefPackCalculator->count($inventory),
+            'standardReliefPacks' => $reliefPackCalculator->count($inventory, $planItems),
 
             'occupiedTentsCount' => $occupiedTents->count(),
 

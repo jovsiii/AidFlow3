@@ -44,7 +44,11 @@ class InventoryLedgerController extends Controller
                 'date' => $scan['scanned_at'],
                 'timestamp' => Carbon::parse($scan['scanned_at'])->timestamp,
                 'pack' => $scan['pack_number'] ?? null,
-                'items' => $packItems,
+                'items' => isset($scan['items']) && is_array($scan['items'])
+                    ? collect($scan['items'])->mapWithKeys(fn ($item) => [
+                        $item['name'] . ' (' . $item['unit'] . ')' => (int) $item['quantity'],
+                    ])->all()
+                    : $packItems,
                 'distributedBy' => $scan['accountName'] ?? null,
                 'batch' => null,
                 'purpose' => null,

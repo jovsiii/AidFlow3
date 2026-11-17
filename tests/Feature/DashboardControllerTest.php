@@ -7,6 +7,7 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
     config(['app.timezone' => 'Asia/Manila']);
 
     $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getReliefPackPlan')->andReturn(null);
     $firebase->shouldReceive('getInventory')->andReturn([]);
     $firebase->shouldReceive('getScans')->once()->andReturn([
         [
@@ -58,6 +59,7 @@ it('passes occupancy counts and barangay summary from occupied tents', function 
 it('shows inventory releases alongside scans in the audit log, newest first', function () {
     config(['app.timezone' => 'Asia/Manila']);
     $firebase = Mockery::mock(FirebaseService::class);
+    $firebase->shouldReceive('getReliefPackPlan')->andReturn(null);
     $firebase->shouldReceive('getInventory')->andReturn([
         'rice' => [
             'name' => 'Rice', 'stock' => 7, 'unit' => 'Kg',

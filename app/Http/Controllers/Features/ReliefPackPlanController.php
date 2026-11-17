@@ -18,10 +18,7 @@ class ReliefPackPlanController extends Controller
         $plan = $firebase->getReliefPackPlan();
         $items = $plan['items'] ?? $calculator->requiredItemDetails();
         $options = $this->itemOptions($inventory, $items);
-        $activeInventory = $inventory->filter(fn ($item) => is_array($item)
-            && (empty($item['expirationDate']) || !\Carbon\Carbon::parse($item['expirationDate'])->startOfDay()->lt(now()->startOfDay())))
-            ->map(fn ($item) => array_merge($item, ['stock' => max(0, (int) ($item['stock'] ?? 0))]));
-        $availablePacks = $calculator->countForItems($activeInventory, $items);
+        $availablePacks = $calculator->count($inventory, $items);
         $defaultFormItems = collect($items)->map(fn ($item) => [
             'item' => $this->itemKey($item['name'], $item['unit']),
             'quantity' => $item['quantity'],

@@ -21,8 +21,9 @@ class QRCodeController extends Controller
     /** Display the QR scanning page. */
     public function index(FirebaseService $firebase, ReliefPackCalculator $reliefPackCalculator)
     {
-        $availableReliefPacks = $reliefPackCalculator->count($firebase->getInventory());
-        $reliefPackRequirements = $reliefPackCalculator->requiredItemDetails();
+        $planItems = $firebase->getReliefPackPlan()['items'] ?? null;
+        $availableReliefPacks = $reliefPackCalculator->count($firebase->getInventory(true), $planItems);
+        $reliefPackRequirements = $planItems ?? $reliefPackCalculator->requiredItemDetails();
 
         return view('features.qrcode.index', compact('availableReliefPacks', 'reliefPackRequirements'));
     }

@@ -34,7 +34,8 @@ class InventoryController extends Controller
     public function index(Request $request, FirebaseService $firebase, ?ReliefPackCalculator $reliefPackCalculator = null)
     {
         $reliefPackCalculator ??= new ReliefPackCalculator();
-        $allInventoryItems = $this->normalizeInventoryItems($firebase->getInventory());
+        $planItems = $firebase->getReliefPackPlan()['items'] ?? null;
+        $allInventoryItems = $this->normalizeInventoryItems($firebase->getInventory(true));
         $inventoryItems = $allInventoryItems;
         $batchGroups = $inventoryItems
             ->filter(fn ($item) => filled($item['batch'] ?? null))
@@ -99,7 +100,7 @@ class InventoryController extends Controller
                 return $expirationDate && \Carbon\Carbon::parse($expirationDate)->between($today, $today->copy()->addMonths(self::NEAR_EXPIRY_MONTHS));
             })
             ->values();
-        $standardReliefPackSupply = $reliefPackCalculator->count($activeInventoryItems);
+        $standardReliefPackSupply = $reliefPackCalculator->count($activeInventoryItems, $planItems);
         $minimumStandardReliefPacks = self::MINIMUM_STANDARD_RELIEF_PACKS;
         $inventoryListItems = $inventoryItems
             ->reject(function ($item) use ($today) {
@@ -134,7 +135,7 @@ class InventoryController extends Controller
 
             return $expirationDate && \Carbon\Carbon::parse($expirationDate)->lt($today);
         })->count();
-        $standardReliefPacks = $reliefPackCalculator->count($inventoryItems);
+        $standardReliefPacks = $reliefPackCalculator->count($inventoryItems, $planItems);
         $foodCount = $inventoryItems->filter(function ($item) {
             return mb_strtolower($item['category'] ?? '') === 'food';
         })->count();

@@ -34,6 +34,7 @@
                     </p>
                     <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
                         <h3 class="text-sm font-semibold text-gray-900">Requirements for each relief pack</h3>
+                        <p class="mt-1 text-xs text-gray-600">QR codes use the active relief pack plan at scan time, which may change after generation.</p>
                         <ul class="mt-2 grid grid-cols-1 gap-1 text-sm text-gray-700 sm:grid-cols-2">
                             @foreach ($reliefPackRequirements as $item)
                                 <li>{{ $item['name'] }}: {{ $item['quantity'] }} {{ $item['unit'] }}</li>
