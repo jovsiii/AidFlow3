@@ -27,15 +27,31 @@
         .info-board-status { padding: 1rem 1.5rem; color: #6b7280; font-size: .875rem; }
         .info-board-status.error { color: #b91c1c; background: #fef2f2; }
         .info-board-note { padding: 0 1.5rem 1.25rem; color: #6b7280; font-size: .8rem; }
-        .info-board-export { border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; }
-        .info-board-export:hover { background: #7f1d1d; }
-        .info-board-export:disabled { opacity: .5; cursor: not-allowed; }
+        .info-board-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+        .info-board-csv { border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; text-decoration: none; }
+        .info-board-csv:hover { background: #7f1d1d; }
+        .info-board-delete { border: 1px solid #b91c1c; border-radius: .5rem; background: #b91c1c; padding: .5rem .85rem; color: white; font-weight: 600; }
+        .info-board-delete:hover { background: #991b1b; }
     </style>
 
     <div class="info-board">
         <div class="info-board-header">
             <a class="info-board-back" href="{{ route('family-profiles.index') }}">&larr; Back to Family Profiles</a>
-            <button type="button" class="info-board-export" id="board-export" disabled>Export to PDF</button>
+            <div class="info-board-actions">
+                <a class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
+                    <i class="fas fa-download mr-2" aria-hidden="true"></i>Download
+                </a>
+                @if(mb_strtolower((string) session('user.role', '')) === 'admin')
+                    <form method="POST" action="{{ route('family-profiles.destroy-all') }}"
+                        onsubmit="return confirm('Delete all displayed family profiles? This cannot be undone.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="info-board-delete">
+                            <i class="fas fa-trash mr-2" aria-hidden="true"></i>Delete
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
         <section class="info-board-card" aria-labelledby="board-title">
             <div class="info-board-heading">
@@ -69,8 +85,6 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script>
         (() => {
             const url = @json(route('family-profiles.info-board.data'));
@@ -80,13 +94,11 @@
             const families = document.getElementById('board-families');
             const individuals = document.getElementById('board-individuals');
             const note = document.getElementById('board-note');
-            const exportButton = document.getElementById('board-export');
             const formatter = new Intl.NumberFormat();
             let currentRefresh = null;
             let pending = false;
             let live = false;
             let missingSizes = 0;
-            let latestReport = null;
 
             function updateNote() {
                 note.textContent = (missingSizes
@@ -144,99 +156,20 @@
                     asOf.textContent = 'As of: ' + new Intl.DateTimeFormat('en-PH', {
                         dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Manila'
                     }).format(new Date(data.asOf));
-                    latestReport = { rows: data.rows, totalFamilies, totalIndividuals, missing, asOf: asOf.textContent };
                     status.classList.remove('error');
                     status.textContent = data.rows.length ? '' : 'No family profiles have been added yet.';
                     status.hidden = data.rows.length > 0;
                     missingSizes = missing;
                     updateNote();
-                    exportButton.disabled = false;
                     return true;
                 } catch (error) {
                     status.hidden = false;
                     status.classList.add('error');
                     status.textContent = 'Unable to refresh the info board. Displayed data may be out of date; retrying automatically.';
-                    exportButton.disabled = true;
                     console.error('Info board refresh failed:', error);
                     return false;
                 }
             }
-
-            exportButton.addEventListener('click', async () => {
-                exportButton.disabled = true;
-                if (!await refresh()) return;
-                exportButton.disabled = true;
-                try {
-                    if (!window.jspdf?.jsPDF || !window.jspdf.jsPDF.API.autoTable) {
-                        throw new Error('PDF tools could not be loaded.');
-                    }
-                    const report = latestReport;
-                    const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-                    const body = report.rows.map((row) => [
-                        row.barangay,
-                        row.evacuationCenter,
-                        formatter.format(row.families),
-                        formatter.format(row.individuals) + (row.missingHouseholdSizes ? ' *' : ''),
-                    ]);
-                    pdf.autoTable({
-                        startY: 58,
-                        margin: { top: 32, bottom: 20 },
-                        head: [['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']],
-                        body: body.length ? body : [[{ content: 'No family profiles have been added yet.', colSpan: 4 }]],
-                        foot: [[{ content: 'GRAND TOTAL', colSpan: 2 }, formatter.format(report.totalFamilies),
-                            formatter.format(report.totalIndividuals) + (report.missing ? ' *' : '')]],
-                        showFoot: 'lastPage',
-                        theme: 'grid',
-                        headStyles: { fillColor: [150, 5, 5] },
-                        footStyles: { fillColor: [150, 5, 5], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 11 },
-                        columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' } },
-                        didDrawPage: (page) => {
-                            pdf.setTextColor(17, 24, 39);
-                            pdf.setFont('helvetica', 'bold');
-                            pdf.setFontSize(16);
-                            pdf.text('Family Profile Info Board', 14, 14);
-                            pdf.setFont('helvetica', 'normal');
-                            pdf.setFontSize(9);
-                            pdf.text(report.asOf, 14, 22);
-                            if (page.pageNumber === 1) {
-                                const cardWidth = (pdf.internal.pageSize.getWidth() - 34) / 2;
-                                [
-                                    ['TOTAL FAMILIES', formatter.format(report.totalFamilies)],
-                                    ['TOTAL INDIVIDUALS', formatter.format(report.totalIndividuals) + (report.missing ? ' *' : '')],
-                                ].forEach(([label, value], index) => {
-                                    const x = 14 + index * (cardWidth + 6);
-                                    pdf.setFillColor(253, 247, 247);
-                                    pdf.setDrawColor(243, 217, 217);
-                                    pdf.roundedRect(x, 28, cardWidth, 22, 2, 2, 'FD');
-                                    pdf.setTextColor(100, 100, 100);
-                                    pdf.setFont('helvetica', 'bold');
-                                    pdf.setFontSize(8);
-                                    pdf.text(label, x + 5, 35);
-                                    pdf.setTextColor(150, 5, 5);
-                                    pdf.setFontSize(15);
-                                    pdf.text(value, x + 5, 44);
-                                });
-                            }
-                            pdf.setTextColor(75, 85, 99);
-                            pdf.setFont('helvetica', 'normal');
-                            pdf.setFontSize(9);
-                            const pageHeight = pdf.internal.pageSize.getHeight();
-                            if (report.missing) {
-                                pdf.text('* Individual counts exclude ' + formatter.format(report.missing) + ' profile(s) without a valid household size.', 14, pageHeight - 12);
-                            }
-                            pdf.text('Page ' + page.pageNumber, pdf.internal.pageSize.getWidth() - 14, pageHeight - 6, { align: 'right' });
-                        },
-                    });
-                    pdf.save('family-profile-info-board.pdf');
-                } catch (error) {
-                    console.error('Unable to export the info board:', error);
-                    status.hidden = false;
-                    status.classList.add('error');
-                    status.textContent = 'Unable to export the PDF. Please check your connection and try again.';
-                } finally {
-                    exportButton.disabled = false;
-                }
-            });
             document.addEventListener('family-board-change', refresh);
             document.addEventListener('family-board-connection', (event) => {
                 live = event.detail;

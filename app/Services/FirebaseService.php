@@ -376,6 +376,15 @@ class FirebaseService
         return $response->successful();
     }
 
+    public function deleteAllFamilyProfiles(): bool
+    {
+        $response = Http::withoutVerifying()->delete(
+            "{$this->databaseUrl}/familyProfiles.json"
+        );
+
+        return $response->successful();
+    }
+
     public function getOccupiedTent(string $tentCode): ?array
     {
         $response = Http::get(

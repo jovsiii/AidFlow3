@@ -181,6 +181,20 @@ class FamilyProfileController extends Controller
         ]);
     }
 
+    public function destroyAll(Request $request, FirebaseService $firebase)
+    {
+        abort_unless(mb_strtolower((string) $request->session()->get('user.role', '')) === 'admin', 403);
+
+        if ($firebase->deleteAllFamilyProfiles()) {
+            return redirect()->route('family-profiles.info-board')
+                ->with('success', 'All family profiles deleted successfully.');
+        }
+
+        return back()->withErrors([
+            'error' => 'Unable to delete all family profiles. Please try again.',
+        ]);
+    }
+
     private function standardLocation(): array
     {
         return [

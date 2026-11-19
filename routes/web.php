@@ -52,6 +52,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/features/family-profiles/summary/data', [FamilyProfileController::class, 'summaryData'])->name('family-profiles.summary.data');
     Route::get('/features/family-profiles/summary/csv', [FamilyProfileController::class, 'summaryCsv'])->name('family-profiles.summary.csv');
     Route::post('/features/family-profiles', [FamilyProfileController::class, 'store'])->name('family-profiles.store');
+    Route::delete('/features/family-profiles/all', [FamilyProfileController::class, 'destroyAll'])->name('family-profiles.destroy-all');
     Route::put('/features/family-profiles/{profileId}', [FamilyProfileController::class, 'update'])
         ->where('profileId', '[A-Za-z0-9_-]+')
         ->name('family-profiles.update');

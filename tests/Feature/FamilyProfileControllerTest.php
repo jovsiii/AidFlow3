@@ -161,10 +161,26 @@ it('shows the info board to family profile users', function () {
         ->assertSee('Barangay (address)')
         ->assertSee('Barangay evacuation center')
         ->assertSee('Back to menu')
-        ->assertSee('Export to PDF')
+        ->assertSee('Download')
+        ->assertDontSee('Delete')
         ->assertDontSee('Refresh now')
-        ->assertSee('jspdf.plugin.autotable.min.js')
+        ->assertDontSee('jspdf')
         ->assertSee(json_encode(route('family-profiles.info-board.data')), false);
+});
+
+it('allows admins to delete all family profiles from the info board', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('deleteAllFamilyProfiles')->once()->andReturn(true);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->delete(route('family-profiles.destroy-all'))
+        ->assertRedirect(route('family-profiles.info-board'))
+        ->assertSessionHas('success', 'All family profiles deleted successfully.');
+
+    $this->withSession(['user' => ['role' => 'user']])
+        ->delete(route('family-profiles.destroy-all'))
+        ->assertForbidden();
 });
 
 it('groups current profiles by barangay and evacuation center and counts recorded household sizes', function () {
