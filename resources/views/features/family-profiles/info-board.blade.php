@@ -28,33 +28,23 @@
         .info-board-status.error { color: #b91c1c; background: #fef2f2; }
         .info-board-note { padding: 0 1.5rem 1.25rem; color: #6b7280; font-size: .8rem; }
         .info-board-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
-        .info-board-menu { position: relative; }
-        .info-board-menu summary { list-style: none; cursor: pointer; border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; }
-        .info-board-menu summary::-webkit-details-marker { display: none; }
-        .info-board-menu summary:hover { background: #7f1d1d; }
-        .info-board-menu-options { position: absolute; right: 0; z-index: 20; margin-top: .35rem; min-width: 190px; overflow: hidden; border: 1px solid #e5e7eb; border-radius: .5rem; background: white; box-shadow: 0 8px 24px rgba(15, 23, 42, .14); }
-        .info-board-csv { display: block; padding: .65rem .85rem; color: #374151; font-weight: 600; text-decoration: none; }
-        .info-board-csv:hover { background: #fef2f2; color: #960505; }
+        .info-board-csv { display: inline-flex; align-items: center; cursor: pointer; border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; text-decoration: none; }
+        .info-board-csv:hover { background: #7f1d1d; }
     </style>
 
     <div class="info-board">
         <div class="info-board-header">
             <a class="info-board-back" href="{{ route('family-profiles.index') }}">&larr; Back to Family Profiles</a>
             <div class="info-board-actions">
-                <details class="info-board-menu">
-                    <summary><i class="fas fa-right-left mr-2" aria-hidden="true"></i>Export and Delete</summary>
-                    <div class="info-board-menu-options">
-                        <a id="export-and-delete-csv" class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
-                            <i class="fas fa-download mr-2" aria-hidden="true"></i>Export and Delete
-                        </a>
-                        @if(mb_strtolower((string) session('user.role', '')) === 'admin')
-                            <form id="export-and-delete-form" method="POST" action="{{ route('family-profiles.destroy-all') }}" class="hidden">
-                                @csrf
-                                @method('DELETE')
-                            </form>
-                        @endif
-                    </div>
-                </details>
+                <a id="export-and-delete-csv" class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
+                    <i class="fas fa-download mr-2" aria-hidden="true"></i>Export and Delete
+                </a>
+                @if(mb_strtolower((string) session('user.role', '')) === 'admin')
+                    <form id="export-and-delete-form" method="POST" action="{{ route('family-profiles.destroy-all') }}" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endif
             </div>
         </div>
         <section class="info-board-card" aria-labelledby="board-title">
