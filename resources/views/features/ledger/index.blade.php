@@ -6,19 +6,28 @@
 @section('content')
     @php
         $search = mb_strtolower(trim(request('search', '')));
-        $rows = $tab === 'inbound' ? $inbound : $outbound;
+        $rows = $transactions;
         $batches = $inbound->pluck('batch')->filter()->unique()->sort(SORT_NATURAL | SORT_FLAG_CASE)->values();
+        $batches = $batches->merge($outbound->pluck('batch'))->filter()->unique()->sort(SORT_NATURAL | SORT_FLAG_CASE)->values();
         $selectedBatch = (string) request('batch', '');
 
-        if ($tab === 'inbound' && $selectedBatch !== '') {
+        if ($selectedBatch !== '') {
             $rows = $rows->filter(fn ($row) => (string) ($row['batch'] ?? '') === $selectedBatch)->values();
         }
 
         if ($search !== '') {
-            $rows = $rows->filter(function ($row) use ($tab, $search) {
-                $haystack = $tab === 'inbound'
-                    ? [$row['name'], $row['category'], $row['batch'], $row['receivedBy']]
-                    : [$row['pack'], $row['distributedBy'], $row['batch'], $row['purpose'], collect($row['items'])->keys()->implode(' ')];
+            $rows = $rows->filter(function ($row) use ($search) {
+                $haystack = [
+                    $row['direction'],
+                    $row['details'],
+                    $row['name'] ?? null,
+                    $row['category'] ?? null,
+                    $row['batch'] ?? null,
+                    $row['purpose'] ?? null,
+                    $row['receivedBy'] ?? null,
+                    $row['distributedBy'] ?? null,
+                    collect($row['items'] ?? [])->keys()->implode(' '),
+                ];
 
                 return str_contains(mb_strtolower(implode(' ', array_filter($haystack, fn ($v) => $v !== null))), $search);
             })->values();
@@ -50,114 +59,86 @@
     </div>
 
     <form method="GET" action="{{ route('ledger.index') }}" class="flex flex-wrap gap-3 items-center mb-4 mt-4">
-        <input type="hidden" name="tab" value="{{ $tab }}">
         <input type="text" name="search" value="{{ request('search') }}"
-            placeholder="{{ $tab === 'inbound' ? 'Search item, batch or account' : 'Search pack, item, batch, purpose or account' }}"
+            placeholder="Search item, pack, batch, purpose or account"
             class="flex-1 min-w-[220px] rounded-full pl-4 py-2 border-2 border-pink-200" />
-        @if ($tab === 'inbound')
-            <select name="batch" class="px-3 py-2 rounded-md border-2 border-pink-200" onchange="this.form.submit()">
-                <option value="">All Batches</option>
-                @foreach ($batches as $batch)
-                    <option value="{{ $batch }}" @selected($selectedBatch === (string) $batch)>{{ $batch }}</option>
-                @endforeach
-            </select>
-        @endif
+        <select name="batch" class="px-3 py-2 rounded-md border-2 border-pink-200" onchange="this.form.submit()">
+            <option value="">All Batches</option>
+            @foreach ($batches as $batch)
+                <option value="{{ $batch }}" @selected($selectedBatch === (string) $batch)>{{ $batch }}</option>
+            @endforeach
+        </select>
         <button type="submit"
             class="px-4 py-2 rounded-md bg-pink-200 border-2 border-red-600 text-red-800 font-semibold">Search</button>
-        <a href="{{ route('ledger.index', ['tab' => $tab]) }}"
+        <a href="{{ route('ledger.index') }}"
             class="px-4 py-2 rounded-md bg-gray-200 border-2 border-gray-400 text-gray-700">Reset</a>
     </form>
 
     <div class="flex flex-col bg-white rounded-lg border-2 border-red-600 p-4 min-h-[calc(82vh-120px)] max-h-[calc(82vh-120px)]">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h3 class="text-red-700 text-xl font-semibold">
-                {{ $tab === 'inbound' ? 'Inbound — Items Received' : 'Outbound — Items Distributed' }}
+                Combined Inventory Ledger
             </h3>
-            <div class="inline-flex overflow-hidden rounded-md border-2 border-red-600" role="tablist" aria-label="Ledger tables">
-                <a href="{{ route('ledger.index', ['tab' => 'inbound']) }}" role="tab" aria-selected="{{ $tab === 'inbound' ? 'true' : 'false' }}"
-                    @class(['px-5 py-2 font-semibold transition', 'bg-red-600 text-white' => $tab === 'inbound', 'bg-white text-red-700 hover:bg-pink-100' => $tab !== 'inbound'])>
-                    <i class="fas fa-arrow-down mr-2"></i>Inbound
-                </a>
-                <a href="{{ route('ledger.index', ['tab' => 'outbound']) }}" role="tab" aria-selected="{{ $tab === 'outbound' ? 'true' : 'false' }}"
-                    @class(['px-5 py-2 font-semibold border-l-2 border-red-600 transition', 'bg-red-600 text-white' => $tab === 'outbound', 'bg-white text-red-700 hover:bg-pink-100' => $tab !== 'outbound'])>
-                    <i class="fas fa-arrow-up mr-2"></i>Outbound
-                </a>
-            </div>
+            <span class="rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-red-700">
+                <i class="fas fa-right-left mr-1"></i>Inbound + Outbound
+            </span>
         </div>
 
         <div class="overflow-auto h-full max-h-full border border-red-200 rounded-md">
-            @if ($tab === 'inbound')
-                <table class="w-full text-sm">
+            <table class="w-full text-sm">
                     <thead class="sticky top-0 bg-pink-50 text-red-800 font-semibold">
                         <tr>
                             <th class="px-3 py-2 text-left">Date</th>
-                            <th class="px-3 py-2 text-left">Item</th>
-                            <th class="px-3 py-2 text-left">Category</th>
-                            <th class="px-3 py-2 text-left">Batch</th>
-                            <th class="px-3 py-2 text-left">Quantity</th>
-                            <th class="px-3 py-2 text-left">Received By</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700">
-                        @forelse ($rows as $row)
-                            <tr class="border-b hover:bg-pink-50">
-                                <td class="px-3 py-2 whitespace-nowrap">{{ $row['date'] ? \Carbon\Carbon::parse($row['date'])->format('M d, Y') : '—' }}</td>
-                                <td class="px-3 py-2 font-semibold text-red-700">{{ $row['name'] }}</td>
-                                <td class="px-3 py-2">{{ $row['category'] }}</td>
-                                <td class="px-3 py-2">{{ $row['batch'] ?? '—' }}</td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <span class="rounded-full bg-green-100 px-2 py-0.5 font-semibold text-green-700">+{{ number_format($row['quantity']) }}</span>
-                                    {{ $row['unit'] }}
-                                </td>
-                                <td class="px-3 py-2">
-                                    @if ($row['receivedBy'])
-                                        <i class="fas fa-user-circle mr-1 text-red-400"></i>{{ $row['receivedBy'] }}
-                                    @else
-                                        <span class="text-gray-400">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="py-10 text-center text-gray-500">No inbound records found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            @else
-                <table class="w-full text-sm">
-                    <thead class="sticky top-0 bg-pink-50 text-red-800 font-semibold">
-                        <tr>
-                            <th class="px-3 py-2 text-left">Date</th>
-                            <th class="px-3 py-2 text-left">Relief Pack</th>
-                            <th class="px-3 py-2 text-left">Items Distributed</th>
+                            <th class="px-3 py-2 text-left">Type</th>
+                            <th class="px-3 py-2 text-left">Details</th>
                             <th class="px-3 py-2 text-left">Batch</th>
                             <th class="px-3 py-2 text-left">Purpose</th>
-                            <th class="px-3 py-2 text-left">Total Units</th>
-                            <th class="px-3 py-2 text-left">Still Available</th>
-                            <th class="px-3 py-2 text-left">Distributed By</th>
+                            <th class="px-3 py-2 text-left">Quantity</th>
+                            <th class="px-3 py-2 text-left">Balance</th>
+                            <th class="px-3 py-2 text-left">Account</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
                         @forelse ($rows as $row)
                             <tr class="border-b align-top hover:bg-pink-50">
-                                <td class="px-3 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($row['date'])->format('M d, Y h:i A') }}</td>
-                                <td class="px-3 py-2 font-semibold text-red-700">{{ $row['type'] === 'pack' ? '#' . $row['pack'] : 'Manual release' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap">{{ $row['date'] ? \Carbon\Carbon::parse($row['date'])->format('M d, Y h:i A') : '—' }}</td>
                                 <td class="px-3 py-2">
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach ($row['items'] as $name => $qty)
-                                            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">{{ $name }} × {{ $qty }} {{ $row['unit'] }}</span>
-                                        @endforeach
-                                    </div>
+                                    @if ($row['direction'] === 'inbound')
+                                        <span class="rounded-full bg-green-100 px-2 py-0.5 font-semibold text-green-700"><i class="fas fa-arrow-down mr-1"></i>Inbound</span>
+                                    @else
+                                        <span class="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700"><i class="fas fa-arrow-up mr-1"></i>Outbound</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2">
+                                    @if ($row['direction'] === 'inbound')
+                                        <div class="font-semibold text-red-700">{{ $row['name'] }}</div>
+                                        <div class="text-xs text-gray-500">{{ $row['category'] }}</div>
+                                    @else
+                                        <div class="font-semibold text-red-700">{{ $row['details'] }}</div>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            @foreach (($row['items'] ?? []) as $name => $qty)
+                                                <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">{{ $name }} × {{ $qty }}{{ $row['unit'] ? ' ' . $row['unit'] : '' }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-3 py-2">{{ $row['batch'] ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ $row['purpose'] ?? '—' }}</td>
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    <span class="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">−{{ number_format(collect($row['items'])->sum()) }}</span> units
+                                    @if ($row['direction'] === 'inbound')
+                                        <span class="rounded-full bg-green-100 px-2 py-0.5 font-semibold text-green-700">+{{ number_format($row['change']) }}</span>
+                                        {{ $row['unit'] }}
+                                    @else
+                                        <span class="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{{ number_format($row['change']) }}</span> units
+                                    @endif
                                 </td>
-                                                                   <td class="px-3 py-2 whitespace-nowrap">
-                                                                       <span class="rounded-full bg-green-100 px-2 py-0.5 font-semibold text-green-700">{{ number_format($row['remaining']) }}</span> units left
-                                                                   </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    @if ($row['distributedBy'])
+                                    <span class="rounded-full bg-gray-100 px-2 py-0.5 font-semibold text-gray-700">{{ number_format($row['remaining']) }}</span> units{{ $row['direction'] === 'outbound' ? ' left' : '' }}
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    @if ($row['direction'] === 'inbound' && $row['receivedBy'])
+                                        <i class="fas fa-user-circle mr-1 text-red-400"></i>{{ $row['receivedBy'] }}
+                                    @elseif ($row['direction'] === 'outbound' && $row['distributedBy'])
                                         <i class="fas fa-user-circle mr-1 text-red-400"></i>{{ $row['distributedBy'] }}
                                     @else
                                         <span class="text-gray-400">—</span>
@@ -165,11 +146,10 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="py-10 text-center text-gray-500">No outbound records found.</td></tr>
+                            <tr><td colspan="8" class="py-10 text-center text-gray-500">No inventory records found.</td></tr>
                         @endforelse
                     </tbody>
-                </table>
-            @endif
+            </table>
         </div>
     </div>
 

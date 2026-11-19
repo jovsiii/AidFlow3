@@ -14,7 +14,7 @@ class InventoryLedgerController extends Controller
 {
     public function index(Request $request, FirebaseService $firebase, ReliefPackCalculator $calculator)
     {
-        $tab = $request->query('tab') === 'outbound' ? 'outbound' : 'inbound';
+        $tab = 'combined';
 
         $inventory = collect($firebase->getInventory())->filter(fn ($item) => is_array($item));
         $inbound = $inventory
@@ -71,10 +71,29 @@ class InventoryLedgerController extends Controller
 
         $outbound = $outbound->concat($releases)->sortBy('timestamp')->values();
 
-        // Running balance: total units received minus units distributed up to each event.
-        $balance = (int) $inbound->sum('quantity');
-        $outbound = $outbound->map(function ($row) use (&$balance) {
-            $balance -= (int) collect($row['items'])->sum();
+        $balance = 0;
+        $transactions = $inbound
+            ->map(fn ($row) => array_merge($row, [
+                'direction' => 'inbound',
+                'details' => $row['name'],
+            ]))
+            ->concat($outbound->map(fn ($row) => array_merge($row, [
+                'direction' => 'outbound',
+                'details' => $row['type'] === 'pack'
+                    ? '#' . $row['pack']
+                    : 'Manual release',
+            ])))
+            ->sortBy('timestamp')
+            ->values();
+
+        $transactions = $transactions->map(function ($row) use (&$balance) {
+            if ($row['direction'] === 'inbound') {
+                $balance += (int) $row['quantity'];
+                $row['change'] = (int) $row['quantity'];
+            } else {
+                $row['change'] = -(int) collect($row['items'])->sum();
+                $balance += $row['change'];
+            }
             $row['remaining'] = $balance;
 
             return $row;
@@ -82,7 +101,7 @@ class InventoryLedgerController extends Controller
 
         $version = $this->fingerprint($firebase, $inventory->all());
 
-        return view('features.ledger.index', compact('tab', 'inbound', 'outbound', 'version'));
+        return view('features.ledger.index', compact('tab', 'inbound', 'outbound', 'transactions', 'version'));
     }
 
     /** Return a fingerprint of the ledger data so open pages can detect new records. */
