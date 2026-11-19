@@ -35,8 +35,6 @@
         .info-board-menu-options { position: absolute; right: 0; z-index: 20; margin-top: .35rem; min-width: 190px; overflow: hidden; border: 1px solid #e5e7eb; border-radius: .5rem; background: white; box-shadow: 0 8px 24px rgba(15, 23, 42, .14); }
         .info-board-csv { display: block; padding: .65rem .85rem; color: #374151; font-weight: 600; text-decoration: none; }
         .info-board-csv:hover { background: #fef2f2; color: #960505; }
-        .info-board-delete { width: 100%; border: 0; border-top: 1px solid #fee2e2; background: white; padding: .65rem .85rem; text-align: left; color: #b91c1c; font-weight: 600; }
-        .info-board-delete:hover { background: #fef2f2; }
     </style>
 
     <div class="info-board">
@@ -46,17 +44,13 @@
                 <details class="info-board-menu">
                     <summary><i class="fas fa-right-left mr-2" aria-hidden="true"></i>Export and Delete</summary>
                     <div class="info-board-menu-options">
-                        <a class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
-                            <i class="fas fa-download mr-2" aria-hidden="true"></i>Export CSV
+                        <a id="export-and-delete-csv" class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
+                            <i class="fas fa-download mr-2" aria-hidden="true"></i>Export and Delete
                         </a>
                         @if(mb_strtolower((string) session('user.role', '')) === 'admin')
-                            <form method="POST" action="{{ route('family-profiles.destroy-all') }}"
-                                onsubmit="return confirm('Delete all displayed family profiles? This cannot be undone.')">
+                            <form id="export-and-delete-form" method="POST" action="{{ route('family-profiles.destroy-all') }}" class="hidden">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="info-board-delete">
-                                    <i class="fas fa-trash mr-2" aria-hidden="true"></i>Delete All
-                                </button>
                             </form>
                         @endif
                     </div>
@@ -95,6 +89,25 @@
 @endsection
 
 @push('scripts')
+    <script>
+        document.getElementById('export-and-delete-csv')?.addEventListener('click', (event) => {
+            const form = document.getElementById('export-and-delete-form');
+            if (!form) return;
+            event.preventDefault();
+
+            const csvUrl = document.getElementById('export-and-delete-csv').href;
+            const downloadFrame = document.createElement('iframe');
+            downloadFrame.name = 'family-profile-export';
+            downloadFrame.className = 'hidden';
+            downloadFrame.src = csvUrl;
+            document.body.appendChild(downloadFrame);
+            window.setTimeout(() => {
+                if (window.confirm('The export has started. Do you still want to continue and delete all family profiles?')) {
+                    form.requestSubmit();
+                }
+            }, 750);
+        });
+    </script>
     <script>
         (() => {
             const url = @json(route('family-profiles.info-board.data'));
