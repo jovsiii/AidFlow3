@@ -49,13 +49,17 @@ class AddInventoryController extends Controller
             ->pluck('batch')
             ->map(fn ($batch) => (string) $batch)
             ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
+        $itemDefaults = collect(self::ITEM_DEFAULTS)
+            ->sortBy(fn ($defaults, $item) => mb_strtolower($item), SORT_NATURAL)
+            ->all();
 
         return view('phoneFeatures.addInventory', [
             'batches' => $batches,
             'expirationCategories' => self::EXPIRATION_CATEGORIES,
             'noExpirationItems' => self::NO_EXPIRATION_ITEMS,
-            'itemDefaults' => self::ITEM_DEFAULTS,
+            'itemDefaults' => $itemDefaults,
         ]);
     }
 

@@ -27,6 +27,10 @@
                     <span id="family-summary-count">Families: &mdash;</span> &middot;
                     <span id="family-summary-asof">As of: waiting for data</span>
                 </div>
+                <a href="{{ route('family-profiles.summary.csv') }}"
+                    class="inline-flex items-center rounded-lg border border-[#960505] bg-[#960505] px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
+                    <i class="fas fa-file-csv mr-2" aria-hidden="true"></i>Download CSV
+                </a>
             </div>
             <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Family profile summary table">
                 <table class="family-summary-table border-collapse text-left text-sm">

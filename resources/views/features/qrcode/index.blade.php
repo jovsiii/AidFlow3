@@ -123,7 +123,7 @@
     }
 
     function buildTentOptions() {
-        tentBarangaySelect.innerHTML = barangayList.map((barangay) => `
+        tentBarangaySelect.innerHTML = [...barangayList].sort((a, b) => a.name.localeCompare(b.name)).map((barangay) => `
             <option value="${barangay.code}">${barangay.name} (${barangay.code})</option>
         `).join('');
         showSelectedBarangayCount();

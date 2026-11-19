@@ -53,6 +53,54 @@ class FamilyProfileController extends Controller
         ])->header('Cache-Control', 'no-store');
     }
 
+    public function summaryCsv(FirebaseService $firebase)
+    {
+        $profiles = collect($firebase->getFamilyProfiles(true))
+            ->sortBy('fullName', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+
+        $columns = [];
+        $rows = [];
+
+        foreach ($profiles as $profile) {
+            $fields = [];
+            foreach ($profile as $key => $value) {
+                if ($key === 'fullName') {
+                    continue;
+                }
+                foreach ($this->flattenCsvValue($value, [$key], [$this->csvFieldLabel($key)]) as $field) {
+                    $columns[$field['key']] = $field['label'];
+                    $fields[$field['key']] = $field['value'];
+                }
+            }
+            $rows[] = [
+                'Family head' => (string) ($profile['fullName'] ?? $profile['headOfFamily'] ?? $profile['familyName'] ?? 'Unnamed'),
+                'fields' => $fields,
+            ];
+        }
+
+        $filename = 'family-profile-summary-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($columns, $rows) {
+            $output = fopen('php://output', 'wb');
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, array_merge(['Family head'], array_values($columns)));
+
+            foreach ($rows as $row) {
+                $values = [$row['Family head']];
+                foreach (array_keys($columns) as $key) {
+                    $values[] = $row['fields'][$key] ?? '-';
+                }
+                fputcsv($output, array_map(fn ($value) => $this->csvSafeValue((string) $value), $values));
+            }
+
+            fclose($output);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store',
+        ]);
+    }
+
     public function infoBoardData(FirebaseService $firebase)
     {
         $groups = [];
@@ -140,6 +188,45 @@ class FamilyProfileController extends Controller
             'province' => 'Metro Manila',
             'cityMunicipality' => 'San Juan',
         ];
+    }
+
+    private function csvFieldLabel(string $key): string
+    {
+        return ucfirst(trim(preg_replace('/([a-z0-9])([A-Z])/', '$1 $2', str_replace(['_', '-'], ' ', $key))));
+    }
+
+    private function flattenCsvValue(mixed $value, array $keys = [], array $labels = []): array
+    {
+        if (is_array($value) && $value !== []) {
+            $fields = [];
+            foreach ($value as $key => $child) {
+                $isList = array_is_list($value);
+                $label = $isList ? (string) ((int) $key + 1) : $this->csvFieldLabel((string) $key);
+                $fields = array_merge(
+                    $fields,
+                    $this->flattenCsvValue($child, [...$keys, (string) $key], [...$labels, $label])
+                );
+            }
+            return $fields;
+        }
+
+        $displayValue = $value === null || $value === ''
+            ? '-'
+            : (is_bool($value) ? ($value ? 'Yes' : 'No') : (is_scalar($value) ? (string) $value : '-'));
+
+        return [[
+            'key' => json_encode($keys, JSON_THROW_ON_ERROR),
+            'label' => implode(' / ', $labels),
+            'value' => $displayValue,
+        ]];
+    }
+
+    private function csvSafeValue(string $value): string
+    {
+        if (preg_match('/^[=+\-@]/', $value)) {
+            return "'" . $value;
+        }
+        return $value;
     }
 
     private function locationBarangays(): array

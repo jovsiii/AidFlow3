@@ -221,18 +221,18 @@
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Sex
                     <select name="sex" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                         <option value="">Select</option>
-                        <option value="Male">Male</option>
                         <option value="Female">Female</option>
+                        <option value="Male">Male</option>
                     </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Civil status
                     <select name="civilStatus" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                         <option value="">Select</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Widow">Widow</option>
-                        <option value="Separated">Separated</option>
                         <option value="Common-law">Common-law</option>
+                        <option value="Married">Married</option>
+                        <option value="Separated">Separated</option>
+                        <option value="Single">Single</option>
+                        <option value="Widow">Widow</option>
                     </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Mother's maiden name
@@ -241,11 +241,11 @@
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Religion
                     <select name="religion" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
                         <option value="">Select</option>
-                        <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Born Again">Born Again</option>
+                        <option value="Dating-daan">Dating-daan</option>
                         <option value="INC">INC</option>
                         <option value="Islam">Islam</option>
-                        <option value="Dating-daan">Dating-daan</option>
+                        <option value="Roman Catholic">Roman Catholic</option>
                     </select>
                 </label>
                 <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">Occupation
@@ -347,8 +347,8 @@
                                         <select name="familyMembers[{{ $memberIndex }}][sex]" aria-label="Family member __NUMBER__ sex"
                                             class="w-full rounded border border-gray-300 px-2 py-1.5">
                                             <option value="">Select</option>
-                                            <option value="Male">Male</option>
                                             <option value="Female">Female</option>
+                                            <option value="Male">Male</option>
                                         </select>
                                     </td>
                                     <td class="border border-gray-200 p-1">

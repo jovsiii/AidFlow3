@@ -79,7 +79,7 @@
                 <select id="category" name="category" required
                     class="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-[#1F1F1F] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100">
                     <option value="" disabled {{ old('category') ? '' : 'selected' }}>Category</option>
-                    @foreach (['Food', 'Medicine', 'Drink', 'Equipment', 'Hygiene', 'Other'] as $category)
+                    @foreach (['Drink', 'Equipment', 'Food', 'Hygiene', 'Medicine', 'Other'] as $category)
                         <option value="{{ $category }}" {{ old('category') === $category ? 'selected' : '' }}>{{ $category }}</option>
                     @endforeach
                 </select>
@@ -90,7 +90,7 @@
                 <select id="unit" name="unit" required
                     class="min-h-12 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-[#1F1F1F] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100">
                     <option value="" disabled {{ old('unit') ? '' : 'selected' }}>Unit of Measurement</option>
-                    @foreach (['Piece', 'Can', 'Box', 'Pack', 'Bottle', 'Gram', 'Set', 'Sachet', 'Litre', 'Kg'] as $unitOption)
+                    @foreach (['Bottle', 'Box', 'Can', 'Gram', 'Kg', 'Litre', 'Pack', 'Piece', 'Sachet', 'Set'] as $unitOption)
                         <option value="{{ $unitOption }}" {{ old('unit') === $unitOption ? 'selected' : '' }}>{{ $unitOption }}</option>
                     @endforeach
                 </select>

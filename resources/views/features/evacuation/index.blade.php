@@ -88,7 +88,6 @@
                         <option>Addition Hills</option>
                         <option>Balong-Bato</option>
                         <option>Corazon de Jesus</option>
-                        <option>The City-managed Evacuation Center</option>
                         <option>Greenhills</option>
                         <option>Little Baguio</option>
                         <option>Maytunas</option>
@@ -98,6 +97,7 @@
                         <option>Rivera</option>
                         <option>Salapan</option>
                         <option>San Perfecto</option>
+                        <option>The City-managed Evacuation Center</option>
                         <option>Santa Lucia</option>
                         <option>Tibagan</option>
                         <option>West Crame</option>

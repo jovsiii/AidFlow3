@@ -80,7 +80,7 @@ it('shows family profiles on the family profile page', function () {
         ->assertSee('Type of vulnerability');
 });
 
-it('opens the family profile summary page without a PDF export', function () {
+it('opens the family profile summary page with CSV download', function () {
     $this->withSession(['user' => ['role' => 'user']])
         ->get(route('family-profiles.summary'))
         ->assertOk()
@@ -88,9 +88,38 @@ it('opens the family profile summary page without a PDF export', function () {
         ->assertSee('Back to Family Profiles')
         ->assertSee('id="family-summary-head"', false)
         ->assertSee('id="family-summary-body"', false)
-        ->assertDontSee('Export to PDF')
-        ->assertDontSee('jspdf')
+        ->assertSee('Download CSV')
+        ->assertSee(route('family-profiles.summary.csv'), false)
         ->assertSee(json_encode(route('family-profiles.summary.data')), false);
+});
+
+it('downloads the family profile summary as CSV', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')
+            ->once()
+            ->with(true)
+            ->andReturn([
+                familyProfileData([
+                    'id' => '-profile1',
+                    'familyMembers' => [
+                        ['fullName' => 'Ana Santos', 'relationshipToHead' => 'Daughter'],
+                    ],
+                ]),
+            ]);
+    });
+
+    $response = $this->withSession(['user' => ['role' => 'user']])
+        ->get(route('family-profiles.summary.csv'))
+        ->assertOk()
+        ->assertHeader('content-disposition', 'attachment; filename=family-profile-summary-' . now()->format('Y-m-d') . '.csv');
+
+    expect($response->headers->get('content-type'))->toStartWith('text/csv');
+    $response->streamedContent(function ($content) use ($response) {
+        $decoded = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
+        expect($decoded)->toContain('Family head')
+            ->and($decoded)->toContain('Maria Santos')
+            ->and($decoded)->toContain('Ana Santos');
+    });
 });
 
 it('provides fresh, complete family profile summary data without caching', function () {
@@ -198,8 +227,8 @@ it('provides the requested civil status and religion options', function () {
         ->get(route('family-profiles.index'))
         ->assertOk();
     foreach ([
-        'civilStatus' => ['Single', 'Married', 'Widow', 'Separated', 'Common-law'],
-        'religion' => ['Roman Catholic', 'Born Again', 'INC', 'Islam', 'Dating-daan'],
+        'civilStatus' => ['Common-law', 'Married', 'Separated', 'Single', 'Widow'],
+        'religion' => ['Born Again', 'Dating-daan', 'INC', 'Islam', 'Roman Catholic'],
     ] as $field => $expected) {
         preg_match('/<select name="' . $field . '"[^>]*>(.*?)<\/select>/s', $response->getContent(), $select);
         expect($select)->toHaveCount(2);
