@@ -77,7 +77,7 @@
     <div class="flex flex-col bg-white rounded-lg border-2 border-red-600 p-4 min-h-[calc(82vh-120px)] max-h-[calc(82vh-120px)]">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h3 class="text-red-700 text-xl font-semibold">
-                Combined Inventory Ledger
+                Inventory Ledger
             </h3>
             <span class="rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-red-700">
                 <i class="fas fa-right-left mr-1"></i>Inbound + Outbound
