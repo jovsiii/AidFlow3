@@ -51,8 +51,14 @@
     "file": "assets/instrument-sans-600-normal-DMks36a2.woff",
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
   },
+  "node_modules/firebase/database/dist/esm/index.esm.js": {
+    "file": "assets/index.esm-lMTAaT4L.js",
+    "name": "index.esm",
+    "src": "node_modules/firebase/database/dist/esm/index.esm.js",
+    "isDynamicEntry": true
+  },
   "resources/css/app.css": {
-    "file": "assets/app-DwkNdh2m.css",
+    "file": "assets/app-C2iwKJTQ.css",
     "name": "app",
     "names": [
       "app.css"
@@ -61,9 +67,22 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-1rc7c_dV.js",
+    "file": "assets/app-CFfgUYfr.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/firebase/database/dist/esm/index.esm.js",
+      "resources/js/firebase.js"
+    ]
+  },
+  "resources/js/firebase.js": {
+    "file": "assets/firebase-BC65G6uw.js",
+    "name": "firebase",
+    "src": "resources/js/firebase.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "node_modules/firebase/database/dist/esm/index.esm.js"
+    ]
   }
 }

@@ -332,44 +332,89 @@
                     <p class="text-[11px] text-gray-500">Range {{ number_format($forecastAnnualFfpLean) }}–{{ number_format($forecastAnnualFfpHigh) }}</p>
                 </div>
             </div>
-            <table class="w-full text-xs text-left">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="px-3 py-2">Month</th>
-                        <th class="px-3 py-2">Flood/rain risk</th>
-                        <th class="px-3 py-2 text-right">Families</th>
-                        <th class="px-3 py-2 text-right">Food packs (lean–high)</th>
-                        <th class="px-3 py-2 text-right">Expected packs</th>
-                    </tr>
-                </thead>
-                <tbody>
+            @php
+                $maxMonthlyPacks = max(1, (int) $monthlyForecast->max('ffp'));
+            @endphp
+            <div class="mb-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <p class="text-sm font-semibold text-gray-800">Monthly Expected Food Packs</p>
+                    <div class="flex items-center gap-3 text-[11px] text-gray-600">
+                        <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span>High risk</span>
+                        <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-amber-400"></span>Moderate risk</span>
+                        <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-gray-400"></span>Low risk</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-12 gap-1 sm:gap-2 items-end h-56 border-b border-l border-gray-300 px-2 pt-7 pb-0 bg-gray-50 rounded-t-lg" role="img" aria-label="Bar graph of expected food packs by month">
                     @foreach($monthlyForecast as $row)
                         @php
-                            $badge = match ($row['riskLevel']) {
-                                'High' => 'bg-red-100 text-red-700',
-                                'Moderate' => 'bg-amber-100 text-amber-700',
-                                default => 'bg-gray-100 text-gray-600',
+                            $height = max(4, round(((int) $row['ffp'] / $maxMonthlyPacks) * 100));
+                            $barColor = match ($row['riskLevel']) {
+                                'High' => 'bg-red-500',
+                                'Moderate' => 'bg-amber-400',
+                                default => 'bg-gray-400',
                             };
                         @endphp
-                        <tr class="border-b border-gray-200 {{ $row['riskLevel'] === 'High' ? 'bg-red-50' : '' }}">
-                            <td class="px-3 py-2 font-semibold text-gray-800">{{ $row['month'] }}</td>
-                            <td class="px-3 py-2">
-                                <span class="px-2 py-0.5 rounded-full {{ $badge }}">{{ $row['riskLevel'] }}</span>
-                                <span class="text-gray-500 ml-1">{{ number_format($row['riskScore'], 2) }}</span>
-                            </td>
-                            <td class="px-3 py-2 text-right">{{ number_format($row['families']) }}</td>
-                            <td class="px-3 py-2 text-right">{{ number_format($row['ffpLean']) }}–{{ number_format($row['ffpHigh']) }}</td>
-                            <td class="px-3 py-2 text-right font-semibold text-[#cc2929]">{{ number_format($row['ffp']) }}</td>
-                        </tr>
+                        <div class="h-full min-w-0 flex flex-col items-center justify-end">
+                            <div class="relative w-full max-w-8 h-[calc(100%-1.25rem)] flex items-end">
+                                <div class="{{ $barColor }} w-full rounded-t-md transition-all duration-300 hover:brightness-90"
+                                    style="height: {{ $height }}%"
+                                    title="{{ $row['month'] }}: {{ number_format($row['ffp']) }} expected packs">
+                                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-semibold text-gray-700 whitespace-nowrap">
+                                        {{ number_format($row['ffp']) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="mt-2 h-5 text-[9px] sm:text-[11px] text-gray-700" title="{{ $row['month'] }}">
+                                {{ strtoupper(substr($row['month'], 0, 3)) }}
+                            </span>
+                        </div>
                     @endforeach
-                    <tr class="bg-gray-100 font-semibold text-gray-800">
-                        <td class="px-3 py-2" colspan="2">Total</td>
-                        <td class="px-3 py-2 text-right">{{ number_format($monthlyForecast->sum('families')) }}</td>
-                        <td class="px-3 py-2 text-right">{{ number_format($monthlyForecast->sum('ffpLean')) }}–{{ number_format($monthlyForecast->sum('ffpHigh')) }}</td>
-                        <td class="px-3 py-2 text-right text-[#cc2929]">{{ number_format($monthlyForecast->sum('ffp')) }}</td>
-                    </tr>
-                </tbody>
-            </table>
+                </div>
+            </div>
+
+            <details class="border-t border-gray-200 pt-3">
+                <summary class="cursor-pointer text-sm font-semibold text-[#8a1c1c]">View monthly forecast details</summary>
+                <div class="mt-3 overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2">Month</th>
+                                <th class="px-3 py-2">Flood/rain risk</th>
+                                <th class="px-3 py-2 text-right">Families</th>
+                                <th class="px-3 py-2 text-right">Food packs (lean–high)</th>
+                                <th class="px-3 py-2 text-right">Expected packs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($monthlyForecast as $row)
+                                @php
+                                    $badge = match ($row['riskLevel']) {
+                                        'High' => 'bg-red-100 text-red-700',
+                                        'Moderate' => 'bg-amber-100 text-amber-700',
+                                        default => 'bg-gray-100 text-gray-600',
+                                    };
+                                @endphp
+                                <tr class="border-b border-gray-200 {{ $row['riskLevel'] === 'High' ? 'bg-red-50' : '' }}">
+                                    <td class="px-3 py-2 font-semibold text-gray-800">{{ $row['month'] }}</td>
+                                    <td class="px-3 py-2">
+                                        <span class="px-2 py-0.5 rounded-full {{ $badge }}">{{ $row['riskLevel'] }}</span>
+                                        <span class="text-gray-500 ml-1">{{ number_format($row['riskScore'], 2) }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-right">{{ number_format($row['families']) }}</td>
+                                    <td class="px-3 py-2 text-right">{{ number_format($row['ffpLean']) }}–{{ number_format($row['ffpHigh']) }}</td>
+                                    <td class="px-3 py-2 text-right font-semibold text-[#cc2929]">{{ number_format($row['ffp']) }}</td>
+                                </tr>
+                            @endforeach
+                            <tr class="bg-gray-100 font-semibold text-gray-800">
+                                <td class="px-3 py-2" colspan="2">Total</td>
+                                <td class="px-3 py-2 text-right">{{ number_format($monthlyForecast->sum('families')) }}</td>
+                                <td class="px-3 py-2 text-right">{{ number_format($monthlyForecast->sum('ffpLean')) }}–{{ number_format($monthlyForecast->sum('ffpHigh')) }}</td>
+                                <td class="px-3 py-2 text-right text-[#cc2929]">{{ number_format($monthlyForecast->sum('ffp')) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
         </div>
     </div>
     @include('features.partials.cmec-details')
