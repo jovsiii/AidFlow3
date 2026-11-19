@@ -161,8 +161,9 @@ it('shows the info board to family profile users', function () {
         ->assertSee('Barangay (address)')
         ->assertSee('Barangay evacuation center')
         ->assertSee('Back to menu')
-        ->assertSee('Download')
-        ->assertDontSee('Delete')
+        ->assertSee('Export and Delete')
+        ->assertSee('Export CSV')
+        ->assertDontSee('Delete All')
         ->assertDontSee('Refresh now')
         ->assertDontSee('jspdf')
         ->assertSee(json_encode(route('family-profiles.info-board.data')), false);

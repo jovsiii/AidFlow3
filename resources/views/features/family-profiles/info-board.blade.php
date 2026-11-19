@@ -28,29 +28,39 @@
         .info-board-status.error { color: #b91c1c; background: #fef2f2; }
         .info-board-note { padding: 0 1.5rem 1.25rem; color: #6b7280; font-size: .8rem; }
         .info-board-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
-        .info-board-csv { border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; text-decoration: none; }
-        .info-board-csv:hover { background: #7f1d1d; }
-        .info-board-delete { border: 1px solid #b91c1c; border-radius: .5rem; background: #b91c1c; padding: .5rem .85rem; color: white; font-weight: 600; }
-        .info-board-delete:hover { background: #991b1b; }
+        .info-board-menu { position: relative; }
+        .info-board-menu summary { list-style: none; cursor: pointer; border: 1px solid #960505; border-radius: .5rem; background: #960505; padding: .5rem .85rem; color: white; font-weight: 600; }
+        .info-board-menu summary::-webkit-details-marker { display: none; }
+        .info-board-menu summary:hover { background: #7f1d1d; }
+        .info-board-menu-options { position: absolute; right: 0; z-index: 20; margin-top: .35rem; min-width: 190px; overflow: hidden; border: 1px solid #e5e7eb; border-radius: .5rem; background: white; box-shadow: 0 8px 24px rgba(15, 23, 42, .14); }
+        .info-board-csv { display: block; padding: .65rem .85rem; color: #374151; font-weight: 600; text-decoration: none; }
+        .info-board-csv:hover { background: #fef2f2; color: #960505; }
+        .info-board-delete { width: 100%; border: 0; border-top: 1px solid #fee2e2; background: white; padding: .65rem .85rem; text-align: left; color: #b91c1c; font-weight: 600; }
+        .info-board-delete:hover { background: #fef2f2; }
     </style>
 
     <div class="info-board">
         <div class="info-board-header">
             <a class="info-board-back" href="{{ route('family-profiles.index') }}">&larr; Back to Family Profiles</a>
             <div class="info-board-actions">
-                <a class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
-                    <i class="fas fa-download mr-2" aria-hidden="true"></i>Download
-                </a>
-                @if(mb_strtolower((string) session('user.role', '')) === 'admin')
-                    <form method="POST" action="{{ route('family-profiles.destroy-all') }}"
-                        onsubmit="return confirm('Delete all displayed family profiles? This cannot be undone.')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="info-board-delete">
-                            <i class="fas fa-trash mr-2" aria-hidden="true"></i>Delete
-                        </button>
-                    </form>
-                @endif
+                <details class="info-board-menu">
+                    <summary><i class="fas fa-right-left mr-2" aria-hidden="true"></i>Export and Delete</summary>
+                    <div class="info-board-menu-options">
+                        <a class="info-board-csv" href="{{ route('family-profiles.summary.csv') }}">
+                            <i class="fas fa-download mr-2" aria-hidden="true"></i>Export CSV
+                        </a>
+                        @if(mb_strtolower((string) session('user.role', '')) === 'admin')
+                            <form method="POST" action="{{ route('family-profiles.destroy-all') }}"
+                                onsubmit="return confirm('Delete all displayed family profiles? This cannot be undone.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="info-board-delete">
+                                    <i class="fas fa-trash mr-2" aria-hidden="true"></i>Delete All
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </details>
             </div>
         </div>
         <section class="info-board-card" aria-labelledby="board-title">
