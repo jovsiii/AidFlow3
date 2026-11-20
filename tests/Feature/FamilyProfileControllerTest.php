@@ -160,6 +160,8 @@ it('shows the info board to family profile users', function () {
         ->assertSee('Family Profile Info Board')
         ->assertSee('Barangay (address)')
         ->assertSee('Barangay evacuation center')
+        ->assertSee('Sector')
+        ->assertSee('Age category')
         ->assertSee('Back to menu')
         ->assertSee('Export and Delete')
         ->assertSee('id="board-export"', false)
@@ -219,6 +221,46 @@ it('groups current profiles by barangay and evacuation center and counts recorde
             'families' => 1, 'individuals' => 2,
         ])
         ->and($rows->where('evacuationCenter', 'Not specified')->sum('missingHouseholdSizes'))->toBe(2);
+});
+
+it('aggregates demographic sectors and age categories from household members', function () {
+    $this->mock(FirebaseService::class, function ($mock) {
+        $mock->shouldReceive('getFamilyProfiles')->once()->with(true)->andReturn([
+            [
+                'fullName' => 'Maria Santos',
+                'age' => 40,
+                'sex' => 'Female',
+                'familyMembers' => [
+                    ['fullName' => 'Maria Santos'],
+                    ['fullName' => 'Ana Santos', 'age' => 0, 'sex' => 'Female', 'typeOfVulnerability' => 'Pregnant'],
+                    ['fullName' => 'Jose Santos', 'age' => '7', 'sex' => 'Male', 'typeOfVulnerability' => 'PWD'],
+                    ['fullName' => 'Lito Santos', 'age' => '60', 'sex' => 'Male'],
+                    ['fullName' => 'Nina Santos', 'birthDate' => '1980-04-04', 'sex' => 'Female', 'typeOfVulnerability' => 'Lactating mother'],
+                    ['fullName' => 'Pia Santos', 'sex' => 'Female', 'typeOfVulnerability' => 'Person with disability'],
+                    ['fullName' => 'Unknown Santos', 'age' => '15'],
+                ],
+            ],
+        ]);
+    });
+
+    $response = $this->withSession(['user' => ['role' => 'user']])
+        ->getJson(route('family-profiles.info-board.data'))
+        ->assertOk();
+
+    $sectors = collect($response->json('demographics.sectors'))->keyBy('label');
+    $ages = collect($response->json('demographics.ageCategories'))->keyBy('label');
+    expect($sectors->get('Senior Citizen'))->toMatchArray(['female' => 0, 'male' => 1, 'total' => 1])
+        ->and($sectors->get('PWD'))->toMatchArray(['female' => 1, 'male' => 1, 'total' => 2])
+        ->and($sectors->get('Pregnant Women'))->toMatchArray(['female' => 1, 'male' => 0, 'total' => 1])
+        ->and($sectors->get('Lactating Mother'))->toMatchArray(['female' => 1, 'male' => 0, 'total' => 1])
+        ->and($sectors->get('Adult (18+)'))->toMatchArray(['female' => 2, 'male' => 1, 'total' => 3])
+        ->and($sectors->get('TOTAL'))->toMatchArray(['female' => 3, 'male' => 2, 'total' => 5])
+        ->and($ages->get('Infant 00-11 month old'))->toMatchArray(['female' => 1, 'male' => 0, 'total' => 1])
+        ->and($ages->get('School Age 06-12 years old'))->toMatchArray(['female' => 0, 'male' => 1, 'total' => 1])
+        ->and($ages->get('Adult 20-59 years old'))->toMatchArray(['female' => 2, 'male' => 0, 'total' => 2])
+        ->and($ages->get('Senior Citizen 60 and above'))->toMatchArray(['female' => 0, 'male' => 1, 'total' => 1])
+        ->and($ages->get('TOTAL'))->toMatchArray(['female' => 3, 'male' => 2, 'total' => 5])
+        ->and($response->json('demographics.incomplete'))->toBe(2);
 });
 
 it('loads fresh info board data on each request', function () {

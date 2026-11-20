@@ -104,8 +104,9 @@ class FamilyProfileController extends Controller
     public function infoBoardData(FirebaseService $firebase)
     {
         $groups = [];
+        $profiles = $firebase->getFamilyProfiles(true);
 
-        foreach ($firebase->getFamilyProfiles(true) as $profile) {
+        foreach ($profiles as $profile) {
             $barangay = trim((string) ($profile['barangay'] ?? ''));
             $center = trim((string) ($profile['evacuationCenter'] ?? ''));
             $key = json_encode([mb_strtolower($barangay), mb_strtolower($center)], JSON_THROW_ON_ERROR);
@@ -139,7 +140,219 @@ class FamilyProfileController extends Controller
         return response()->json([
             'asOf' => now()->toIso8601String(),
             'rows' => $rows,
+            'demographics' => $this->infoBoardDemographics($profiles),
         ])->header('Cache-Control', 'no-store');
+    }
+
+    private function infoBoardDemographics(array $profiles): array
+    {
+        $sectorCounts = array_fill_keys([
+            'seniorCitizen', 'pwd', 'pregnantWomen', 'lactatingMothers',
+            'children0To6', 'children7To17', 'adults',
+        ], ['female' => 0, 'male' => 0, 'total' => 0]);
+        $ageCounts = array_fill_keys([
+            'infant', 'toddler', 'preschool', 'schoolAge', 'teenage', 'adult', 'senior',
+        ], ['female' => 0, 'male' => 0, 'total' => 0]);
+        $incomplete = 0;
+
+        foreach ($profiles as $profile) {
+            if (!is_array($profile)) {
+                continue;
+            }
+
+            foreach ($this->demographicPeople($profile) as $person) {
+                $sexValue = is_string($person['sex'] ?? null)
+                    ? mb_strtolower(trim($person['sex']))
+                    : '';
+                $sex = match ($sexValue) {
+                    'female' => 'female',
+                    'male' => 'male',
+                    default => null,
+                };
+                $age = $this->demographicAge($person);
+                if ($sex === null || $age === null) {
+                    $incomplete++;
+                }
+                if ($sex === null) {
+                    continue;
+                }
+
+                $vulnerability = is_string($person['typeOfVulnerability'] ?? null)
+                    ? mb_strtolower($person['typeOfVulnerability'])
+                    : '';
+                if ($age !== null && $age >= 60) {
+                    $this->incrementDemographicCount($sectorCounts['seniorCitizen'], $sex);
+                }
+                if (preg_match('/\bpwd\b|disabilit|disabl/', $vulnerability)) {
+                    $this->incrementDemographicCount($sectorCounts['pwd'], $sex);
+                }
+                if (str_contains($vulnerability, 'pregnant')) {
+                    $this->incrementDemographicCount($sectorCounts['pregnantWomen'], $sex);
+                }
+                if (str_contains($vulnerability, 'lactat')) {
+                    $this->incrementDemographicCount($sectorCounts['lactatingMothers'], $sex);
+                }
+
+                if ($age === null) {
+                    continue;
+                }
+
+                if ($age <= 6) {
+                    $this->incrementDemographicCount($sectorCounts['children0To6'], $sex);
+                } elseif ($age <= 17) {
+                    $this->incrementDemographicCount($sectorCounts['children7To17'], $sex);
+                } else {
+                    $this->incrementDemographicCount($sectorCounts['adults'], $sex);
+                }
+
+                $ageGroup = match (true) {
+                    $age === 0 => 'infant',
+                    $age <= 3 => 'toddler',
+                    $age <= 5 => 'preschool',
+                    $age <= 12 => 'schoolAge',
+                    $age <= 19 => 'teenage',
+                    $age <= 59 => 'adult',
+                    default => 'senior',
+                };
+                $this->incrementDemographicCount($ageCounts[$ageGroup], $sex);
+            }
+        }
+
+        $sectorLabels = [
+            'seniorCitizen' => 'Senior Citizen',
+            'pwd' => 'PWD',
+            'pregnantWomen' => 'Pregnant Women',
+            'lactatingMothers' => 'Lactating Mother',
+            'children0To6' => '0-6 years old',
+            'children7To17' => '7-17 years old',
+            'adults' => 'Adult (18+)',
+        ];
+        $ageLabels = [
+            'infant' => 'Infant 00-11 month old',
+            'toddler' => 'Toddler 01-03 years old',
+            'preschool' => 'Pre-school Age 04-05 years old',
+            'schoolAge' => 'School Age 06-12 years old',
+            'teenage' => 'Teenage 13-19 years old',
+            'adult' => 'Adult 20-59 years old',
+            'senior' => 'Senior Citizen 60 and above',
+        ];
+
+        return [
+            'sectors' => $this->demographicRows(
+                $sectorCounts,
+                $sectorLabels,
+                ['children0To6', 'children7To17', 'adults'],
+                ['children0To6' => 'Children:']
+            ),
+            'ageCategories' => $this->demographicRows($ageCounts, $ageLabels, array_keys($ageLabels)),
+            'incomplete' => $incomplete,
+        ];
+    }
+
+    private function demographicPeople(array $profile): array
+    {
+        $head = [
+            'fullName' => $profile['fullName'] ?? $profile['headOfFamily'] ?? $profile['familyName'] ?? '',
+            'age' => $profile['age'] ?? null,
+            'birthDate' => $profile['dateOfBirth'] ?? $profile['birthDate'] ?? null,
+            'sex' => $profile['sex'] ?? null,
+            'typeOfVulnerability' => $profile['typeOfVulnerability'] ?? '',
+        ];
+        $members = [];
+        $headName = is_string($head['fullName']) ? mb_strtolower(trim($head['fullName'])) : '';
+        $headMatched = false;
+
+        foreach (($profile['familyMembers'] ?? []) as $member) {
+            if (!is_array($member) || !array_filter($member, static fn ($value) => $value !== null && $value !== '')) {
+                continue;
+            }
+            $memberName = is_string($member['fullName'] ?? null)
+                ? mb_strtolower(trim($member['fullName']))
+                : '';
+            if (!$headMatched && $headName !== '' && $memberName === $headName) {
+                $headMatched = true;
+                foreach (['age', 'birthDate', 'sex', 'typeOfVulnerability'] as $field) {
+                    if (($member[$field] ?? '') === '' || ($member[$field] ?? null) === null) {
+                        $member[$field] = $head[$field];
+                    }
+                }
+            }
+            $members[] = $member;
+        }
+
+        if (!$headMatched && array_filter($head, static fn ($value) => $value !== null && $value !== '')) {
+            $members[] = $head;
+        }
+
+        return $members;
+    }
+
+    private function demographicAge(array $person): ?int
+    {
+        $ageValue = $person['age'] ?? null;
+        $age = is_int($ageValue) || is_string($ageValue)
+            ? filter_var($ageValue, FILTER_VALIDATE_INT)
+            : false;
+        if ($age !== false && $age >= 0 && $age <= 120) {
+            return $age;
+        }
+
+        $birthDate = $person['birthDate'] ?? null;
+        if (!is_string($birthDate) || trim($birthDate) === '') {
+            return null;
+        }
+        $timestamp = strtotime($birthDate);
+        if ($timestamp === false || $timestamp > now()->timestamp) {
+            return null;
+        }
+
+        return (int) date_diff(new \DateTimeImmutable('@' . $timestamp), now())->y;
+    }
+
+    private function incrementDemographicCount(array &$counts, string $sex): void
+    {
+        $counts[$sex]++;
+        $counts['total']++;
+    }
+
+    private function demographicRows(array $counts, array $labels, array $totalKeys, array $headings = []): array
+    {
+        $rows = [];
+        foreach ($labels as $key => $label) {
+            if (isset($headings[$key])) {
+                $rows[] = [
+                    'label' => $headings[$key],
+                    'female' => 0,
+                    'male' => 0,
+                    'total' => 0,
+                    'heading' => true,
+                    'grandTotal' => false,
+                ];
+            }
+            $rows[] = [
+                'label' => $label,
+                'female' => $counts[$key]['female'],
+                'male' => $counts[$key]['male'],
+                'total' => $counts[$key]['total'],
+                'heading' => false,
+                'grandTotal' => false,
+            ];
+        }
+
+        $total = ['female' => 0, 'male' => 0, 'total' => 0];
+        foreach ($totalKeys as $key) {
+            foreach (array_keys($total) as $column) {
+                $total[$column] += $counts[$key][$column];
+            }
+        }
+        $rows[] = [
+            'label' => 'TOTAL',
+            ...$total,
+            'heading' => false,
+            'grandTotal' => true,
+        ];
+
+        return $rows;
     }
 
     public function store(Request $request, FirebaseService $firebase)

@@ -19,13 +19,14 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
             addEventListener(name, callback) { this[name] = callback; },
         };
     }
-    for (const id of ['board-rows', 'board-status', 'board-as-of', 'board-families', 'board-individuals', 'board-note', 'board-export']) {
+    for (const id of ['board-rows', 'board-sector-rows', 'board-age-rows', 'board-status', 'board-as-of', 'board-families', 'board-individuals', 'board-note', 'board-export']) {
         elements[id] = element();
     }
     let interval;
     let calls = 0;
     let saved;
-    let table;
+    const tables = [];
+    let pages = 1;
     let confirmation;
     let confirmResult = false;
     let submissions = 0;
@@ -51,12 +52,25 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
             json: async () => ({
                 asOf: '2026-01-01T00:00:00+08:00',
                 rows: [{ barangay: 'Batis', evacuationCenter: 'School', families: calls, individuals: calls * 3, missingHouseholdSizes: 1 }],
+                demographics: {
+                    sectors: [
+                        { label: 'Senior Citizen', female: 0, male: 1, total: 1 },
+                        { label: 'Children:', heading: true, female: 0, male: 0, total: 0 },
+                        { label: '0-6 years old', female: 1, male: 0, total: 1 },
+                        { label: 'TOTAL', female: 1, male: 1, total: 2, grandTotal: true },
+                    ],
+                    ageCategories: [
+                        { label: 'Infant 00-11 month old', female: 1, male: 0, total: 1 },
+                        { label: 'TOTAL', female: 1, male: 1, total: 2, grandTotal: true },
+                    ],
+                    incomplete: 1,
+                },
             }),
         };
     };
     class Pdf {
         static API = { autoTable() {} };
-        internal = { pageSize: { getHeight: () => 297, getWidth: () => 210 } };
+        internal = { pageSize: { getHeight: () => 297, getWidth: () => 210 }, getNumberOfPages: () => pages };
         setFontSize() {}
         setFont() {}
         setTextColor() {}
@@ -64,7 +78,8 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
         setDrawColor() {}
         roundedRect() {}
         text(value) { pdfText.push(value); }
-        autoTable(options) { table = options; options.didDrawPage({ pageNumber: 1 }); }
+        autoTable(options) { tables.push(options); options.didDrawPage({ pageNumber: 1 }); }
+        addPage() { pages++; }
         save(name) { saved = name; }
     }
     runInNewContext(script, {
@@ -80,7 +95,10 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     await new Promise(setImmediate);
     assert.equal(elements['board-families'].textContent, '1');
     assert.equal(elements['board-individuals'].textContent, '3 *');
+    assert.equal(elements['board-sector-rows'].children[0].children[0].textContent, 'Senior Citizen');
+    assert.equal(elements['board-age-rows'].children[0].children[0].textContent, 'Infant 00-11 month old');
     assert.match(elements['board-note'].textContent, /exclude 1 profile/);
+    assert.match(elements['board-note'].textContent, /Demographic totals exclude 1 person/);
     assert.match(elements['board-as-of'].textContent, /^As of: /);
     assert.doesNotMatch(elements['board-as-of'].textContent, /Philippine time/);
 
@@ -98,11 +116,14 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     await elements['board-export'].click();
     assert.equal(calls, 4);
     assert.equal(saved, 'family-profile-info-board.pdf');
-    assert.deepEqual(Array.from(table.head[0]), ['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']);
-    assert.deepEqual(Array.from(table.body[0]), ['Batis', 'School', '4', '12 *']);
-    assert.equal(table.foot[0][0].content, 'GRAND TOTAL');
-    assert.equal(table.foot[0][0].colSpan, 2);
-    assert.deepEqual(Array.from(table.foot[0]).slice(1), ['4', '12 *']);
+    assert.deepEqual(Array.from(tables[0].head[0]), ['Barangay (address)', 'Evacuation center', 'Families', 'Individuals']);
+    assert.deepEqual(Array.from(tables[0].body[0]), ['Batis', 'School', '4', '12 *']);
+    assert.equal(tables[0].foot[0][0].content, 'GRAND TOTAL');
+    assert.equal(tables[0].foot[0][0].colSpan, 2);
+    assert.deepEqual(Array.from(tables[0].foot[0]).slice(1), ['4', '12 *']);
+    assert.deepEqual(Array.from(tables[1].head[0]), ['Category', 'F', 'M', 'TOTAL']);
+    assert.equal(tables[1].body[1][0].content, 'Children:');
+    assert.equal(tables[2].body[0][0], 'Infant 00-11 month old');
     assert.ok(pdfText.includes('TOTAL FAMILIES'));
     assert.ok(pdfText.includes('TOTAL INDIVIDUALS'));
     assert.ok(pdfText.includes(elements['board-as-of'].textContent));

@@ -24,6 +24,14 @@
         .info-board td { padding: 1rem 1.5rem; border-top: 1px solid #f3f4f6; color: #374151; font-size: .9rem; }
         .info-board td:first-child { color: #111827; font-weight: 600; }
         .info-board .info-board-number { text-align: right; font-variant-numeric: tabular-nums; }
+        .info-board-demographics { display: grid; gap: 1.5rem; padding: 1.5rem; border-top: 1px solid #e5e7eb; }
+        .info-board-demographic h3 { margin: 0 0 .75rem; color: #111827; font-size: 1rem; font-weight: 700; }
+        .info-board-demographic table { min-width: 520px; }
+        .info-board-demographic td, .info-board-demographic th { padding: .6rem .75rem; }
+        .info-board-demographic:not(.age-categories) thead th { background: #172554; color: white; }
+        .info-board-demographic .demographic-heading td { background: #f3f4f6; color: #111827; }
+        .info-board-demographic .demographic-total td { background: #172554; color: white; font-weight: 700; }
+        .info-board-demographic.age-categories thead th { background: #dc2626; color: white; }
         .info-board-status { padding: 1rem 1.5rem; color: #6b7280; font-size: .875rem; }
         .info-board-status.error { color: #b91c1c; background: #fef2f2; }
         .info-board-note { padding: 0 1.5rem 1.25rem; color: #6b7280; font-size: .8rem; }
@@ -73,6 +81,26 @@
                     <tbody id="board-rows"></tbody>
                 </table>
             </div>
+            <div class="info-board-demographics">
+                <section class="info-board-demographic" aria-labelledby="sector-summary-title">
+                    <h3 id="sector-summary-title">Sector</h3>
+                    <div class="info-board-scroll">
+                        <table>
+                            <thead><tr><th scope="col">Sector</th><th scope="col" class="info-board-number">F</th><th scope="col" class="info-board-number">M</th><th scope="col" class="info-board-number">TOTAL</th></tr></thead>
+                            <tbody id="board-sector-rows"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="info-board-demographic age-categories" aria-labelledby="age-category-title">
+                    <h3 id="age-category-title">Age category</h3>
+                    <div class="info-board-scroll">
+                        <table>
+                            <thead><tr><th scope="col">Category</th><th scope="col" class="info-board-number">F</th><th scope="col" class="info-board-number">M</th><th scope="col" class="info-board-number">TOTAL</th></tr></thead>
+                            <tbody id="board-age-rows"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
             <p id="board-status" class="info-board-status" role="status" aria-live="polite">Loading family profiles...</p>
             <p id="board-note" class="info-board-note">Individual counts are based on recorded household sizes. Checking for live updates; automatic refresh is available as a fallback.</p>
         </section>
@@ -90,6 +118,8 @@
             const asOf = document.getElementById('board-as-of');
             const families = document.getElementById('board-families');
             const individuals = document.getElementById('board-individuals');
+            const sectorRows = document.getElementById('board-sector-rows');
+            const ageRows = document.getElementById('board-age-rows');
             const note = document.getElementById('board-note');
             const exportButton = document.getElementById('board-export');
             const deleteForm = document.getElementById('export-and-delete-form');
@@ -98,14 +128,45 @@
             let pending = false;
             let live = false;
             let missingSizes = 0;
+            let missingDemographics = 0;
             let latestReport = null;
             let exporting = false;
 
             function updateNote() {
-                note.textContent = (missingSizes
-                    ? '* Individual counts exclude ' + formatter.format(missingSizes) + ' profile(s) without a valid household size. '
-                    : 'Individual counts are based on recorded household sizes. ')
-                    + (live ? 'Live updates connected.' : 'Live updates unavailable; automatically refreshing every 15 seconds.');
+                const messages = [];
+                messages.push(missingSizes
+                    ? '* Individual counts exclude ' + formatter.format(missingSizes) + ' profile(s) without a valid household size.'
+                    : 'Individual counts are based on recorded household sizes.');
+                if (missingDemographics) {
+                    messages.push('Demographic totals exclude ' + formatter.format(missingDemographics) + ' person(s) with missing age or sex.');
+                }
+                messages.push(live ? 'Live updates connected.' : 'Live updates unavailable; automatically refreshing every 15 seconds.');
+                note.textContent = messages.join(' ');
+            }
+
+            function renderDemographicRows(element, data) {
+                const fragment = document.createDocumentFragment();
+                data.forEach((item) => {
+                    const row = document.createElement('tr');
+                    if (item.heading) row.className = 'demographic-heading';
+                    if (item.grandTotal) row.className = 'demographic-total';
+                    const label = document.createElement('td');
+                    label.textContent = item.label;
+                    if (item.heading) {
+                        label.colSpan = 4;
+                        row.appendChild(label);
+                    } else {
+                        row.appendChild(label);
+                        [item.female, item.male, item.total].forEach((value) => {
+                            const cell = document.createElement('td');
+                            cell.className = 'info-board-number';
+                            cell.textContent = formatter.format(value);
+                            row.appendChild(cell);
+                        });
+                    }
+                    fragment.appendChild(row);
+                });
+                element.replaceChildren(fragment);
             }
 
             function refresh() {
@@ -133,6 +194,9 @@
                         throw new Error('Unable to load the info board.');
                     }
                     const data = await response.json();
+                    if (!Array.isArray(data.demographics?.sectors) || !Array.isArray(data.demographics?.ageCategories)) {
+                        throw new Error('Invalid info board demographic data.');
+                    }
                     const fragment = document.createDocumentFragment();
                     let totalFamilies = 0;
                     let totalIndividuals = 0;
@@ -152,12 +216,22 @@
                         missing += row.missingHouseholdSizes;
                     });
                     rows.replaceChildren(fragment);
+                    renderDemographicRows(sectorRows, data.demographics.sectors);
+                    renderDemographicRows(ageRows, data.demographics.ageCategories);
+                    missingDemographics = data.demographics.incomplete;
                     families.textContent = formatter.format(totalFamilies);
                     individuals.textContent = formatter.format(totalIndividuals) + (missing ? ' *' : '');
                     asOf.textContent = 'As of: ' + new Intl.DateTimeFormat('en-PH', {
                         dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Manila'
                     }).format(new Date(data.asOf));
-                    latestReport = { rows: data.rows, totalFamilies, totalIndividuals, missing, asOf: asOf.textContent };
+                    latestReport = {
+                        rows: data.rows,
+                        totalFamilies,
+                        totalIndividuals,
+                        missing,
+                        asOf: asOf.textContent,
+                        demographics: data.demographics,
+                    };
                     status.classList.remove('error');
                     status.textContent = data.rows.length ? '' : 'No family profiles have been added yet.';
                     status.hidden = data.rows.length > 0;
@@ -171,6 +245,7 @@
                     status.classList.add('error');
                     status.textContent = 'Unable to refresh the info board. Displayed data may be out of date; retrying automatically.';
                     exportButton.disabled = true;
+                    missingDemographics = 0;
                     console.error('Info board refresh failed:', error);
                     return false;
                 }
@@ -239,6 +314,51 @@
                             }
                             pdf.text('Page ' + page.pageNumber, pdf.internal.pageSize.getWidth() - 14, pageHeight - 6, { align: 'right' });
                         },
+                    });
+                    [
+                        { title: 'Demographic Summary by Sector', rows: report.demographics.sectors },
+                        { title: 'Demographic Summary by Age Category', rows: report.demographics.ageCategories },
+                    ].forEach((section) => {
+                        pdf.addPage();
+                        pdf.setTextColor(17, 24, 39);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.setFontSize(14);
+                        pdf.text(section.title, 14, 14);
+                        const body = section.rows.map((row) => {
+                            if (row.heading) {
+                                return [{ content: row.label, colSpan: 4, styles: { fillColor: [229, 231, 235], textColor: [17, 24, 39], fontStyle: 'bold' } }];
+                            }
+                            const values = [row.label, formatter.format(row.female), formatter.format(row.male), formatter.format(row.total)];
+                            return row.grandTotal
+                                ? values.map((content) => ({ content, styles: { fillColor: [23, 37, 84], textColor: [255, 255, 255], fontStyle: 'bold' } }))
+                                : values;
+                        });
+                        pdf.autoTable({
+                            startY: 22,
+                            margin: { left: 14, right: 14, bottom: 14 },
+                            head: [['Category', 'F', 'M', 'TOTAL']],
+                            body,
+                            theme: 'grid',
+                            headStyles: { fillColor: [150, 5, 5] },
+                            styles: { fontSize: 9, cellPadding: 2 },
+                            columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
+                            didDrawPage: () => {
+                                const pageHeight = pdf.internal.pageSize.getHeight();
+                                if (report.demographics.incomplete) {
+                                    pdf.setFont('helvetica', 'normal');
+                                    pdf.setFontSize(8);
+                                    pdf.setTextColor(75, 85, 99);
+                                    pdf.text(
+                                        'Demographic totals exclude ' + formatter.format(report.demographics.incomplete) + ' person(s) with missing age or sex.',
+                                        14,
+                                        pageHeight - 7
+                                    );
+                                }
+                                pdf.setFont('helvetica', 'normal');
+                                pdf.setFontSize(8);
+                                pdf.text('Page ' + pdf.internal.getNumberOfPages(), pdf.internal.pageSize.getWidth() - 14, pageHeight - 7, { align: 'right' });
+                            },
+                        });
                     });
                     pdf.save('family-profile-info-board.pdf');
                     if (deleteForm) {
