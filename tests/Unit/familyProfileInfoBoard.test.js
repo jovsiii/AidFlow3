@@ -26,6 +26,12 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     let calls = 0;
     let saved;
     let table;
+    let confirmation;
+    let confirmResult = false;
+    let submissions = 0;
+    let timeout;
+    let failNext = false;
+    elements['export-and-delete-form'] = { requestSubmit() { submissions++; } };
     const pdfText = [];
     let release;
     const document = {
@@ -38,7 +44,7 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     const fetch = async () => {
         calls++;
         if (calls === 2) await new Promise((resolve) => { release = resolve; });
-        if (calls === 5) throw new Error('offline');
+        if (calls === 5 || failNext) throw new Error('offline');
         return {
             ok: true,
             headers: { get: () => 'application/json' },
@@ -63,7 +69,11 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     }
     runInNewContext(script, {
         document, fetch, Intl, Date,
-        window: { jspdf: { jsPDF: Pdf } },
+        window: {
+            jspdf: { jsPDF: Pdf },
+            confirm(message) { confirmation = message; return confirmResult; },
+            setTimeout(callback, delay) { assert.equal(delay, 750); timeout = callback; },
+        },
         console: { error() {} },
         setInterval: (callback, delay) => { assert.equal(delay, 15000); interval = callback; },
     });
@@ -98,6 +108,10 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     assert.ok(pdfText.includes(elements['board-as-of'].textContent));
     assert.ok(pdfText.every((text) => !text.includes('Philippine time')));
     assert.equal(elements['board-families'].textContent, '4');
+    assert.equal(submissions, 0);
+    timeout();
+    assert.match(confirmation, /totals only, not a backup/);
+    assert.equal(submissions, 0);
 
     interval();
     await new Promise(setImmediate);
@@ -108,9 +122,27 @@ test('refreshes on live changes, exports fresh data, and preserves data on failu
     interval();
     await new Promise(setImmediate);
     Pdf.API.autoTable = undefined;
+    timeout = null;
     await elements['board-export'].click();
     assert.match(elements['board-status'].textContent, /Unable to export the PDF/);
     assert.equal(elements['board-export'].disabled, false);
+    assert.equal(timeout, null);
+    assert.equal(submissions, 0);
+
+    Pdf.API.autoTable = () => {};
+    confirmResult = true;
+    await elements['board-export'].click();
+    assert.equal(submissions, 0);
+    timeout();
+    assert.equal(submissions, 1);
+
+    timeout = null;
+    failNext = true;
+    await elements['board-export'].click();
+    assert.match(elements['board-status'].textContent, /Unable to refresh/);
+    assert.equal(elements['board-export'].disabled, true);
+    assert.equal(timeout, null);
+    assert.equal(submissions, 1);
 });
 
 test('watches the family profile database and reports connection failures', () => {

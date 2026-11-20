@@ -162,12 +162,20 @@ it('shows the info board to family profile users', function () {
         ->assertSee('Barangay evacuation center')
         ->assertSee('Back to menu')
         ->assertSee('Export and Delete')
-        ->assertSee('Export and Delete')
+        ->assertSee('id="board-export"', false)
         ->assertSee('Do you still want to continue and delete all family profiles?', false)
+        ->assertSee('It contains totals only, not a backup of individual profiles.', false)
         ->assertDontSee('Delete All')
         ->assertDontSee('Refresh now')
-        ->assertDontSee('jspdf')
+        ->assertSee('jspdf')
+        ->assertDontSee('id="export-and-delete-form"', false)
         ->assertSee(json_encode(route('family-profiles.info-board.data')), false);
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('family-profiles.info-board'))
+        ->assertOk()
+        ->assertSee('id="export-and-delete-form"', false)
+        ->assertSee(route('family-profiles.destroy-all'), false);
 });
 
 it('allows admins to delete all family profiles from the info board', function () {
