@@ -74,6 +74,29 @@ class FirebaseService
             throw new \UnexpectedValueException('Invalid relief pack plan returned by Firebase.');
         }
 
+        $items = $plan['items'] ?? null;
+        if ($items === null) {
+            \Illuminate\Support\Facades\Log::warning('Firebase relief pack plan has no items; default requirements will be used.');
+
+            return null;
+        }
+
+        if (!is_array($items)) {
+            throw new \UnexpectedValueException('Invalid relief pack plan returned by Firebase.');
+        }
+
+        $plan['items'] = array_values(array_filter($items, fn ($item) => $item !== null));
+        if ($plan['items'] === []) {
+            \Illuminate\Support\Facades\Log::warning('Firebase relief pack plan has no items; default requirements will be used.');
+
+            return null;
+        }
+        if (count($plan['items']) !== count($items)) {
+            \Illuminate\Support\Facades\Log::warning('Deleted Firebase relief pack plan entries were ignored.', [
+                'deleted_item_count' => count($items) - count($plan['items']),
+            ]);
+        }
+
         $validator = \Illuminate\Support\Facades\Validator::make($plan, [
             'items' => ['required', 'array', 'min:1', 'max:100'],
             'items.*.name' => ['required', 'string', 'max:255'],

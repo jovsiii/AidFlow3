@@ -115,6 +115,43 @@ it('starts with the standard requirements without changing them', function () {
     expect($response->viewData('formItems'))->toHaveCount(count((new ReliefPackCalculator())->requiredItemDetails()));
 });
 
+it('uses standard requirements when Firebase plan items have been deleted', function (array $plan) {
+    Http::fake(function (Request $request) use ($plan) {
+        return str_ends_with($request->url(), '/reliefPackPlan.json')
+            ? Http::response($plan)
+            : Http::response(null);
+    });
+
+    $response = $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('relief-pack-plan.index'))->assertOk();
+
+    expect($response->viewData('formItems'))->toHaveCount(count((new ReliefPackCalculator())->requiredItemDetails()));
+})->with([
+    'empty items' => [['items' => []]],
+    'deleted items node' => [['updatedAt' => '2025-01-01T00:00:00+00:00']],
+    'deleted item entries' => [['items' => [null, null]]],
+]);
+
+it('ignores deleted entries in a partially retained Firebase plan', function () {
+    \Illuminate\Support\Facades\Log::shouldReceive('warning')
+        ->once()
+        ->with('Deleted Firebase relief pack plan entries were ignored.', ['deleted_item_count' => 1]);
+    Http::fake(function (Request $request) {
+        return str_ends_with($request->url(), '/reliefPackPlan.json')
+            ? Http::response([
+                'items' => [
+                    ['name' => 'Rice', 'unit' => 'kg', 'quantity' => 6],
+                    null,
+                ],
+            ])
+            : Http::response(null);
+    });
+
+    $this->withSession(['user' => ['role' => 'admin']])
+        ->get(route('relief-pack-plan.index'))->assertOk()
+        ->assertSee('Rice');
+});
+
 it('does not present a Firebase failure as an empty plan or inventory', function (string $failedPath) {
     Http::fake(function (Request $request) use ($failedPath) {
         return str_ends_with($request->url(), $failedPath)
